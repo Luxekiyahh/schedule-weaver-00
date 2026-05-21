@@ -225,7 +225,7 @@ function BookingPage() {
             <p className="mt-1 text-sm text-slate-500">A confirmation has been recorded for {form.email}.</p>
           </div>
         ) : (
-          <div className="mt-8 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+          <div className={`mt-8 overflow-hidden ${radius} bg-white shadow-sm ring-1 ring-slate-200`}>
             {/* STEP 1: Services */}
             {step === 1 && (
               <div className="p-6 sm:p-8">
