@@ -356,7 +356,7 @@ function BookingPage() {
                     </div>
                   )}
                 </div>
-                <FooterNav onBack={() => setStep(2)} onNext={() => setStep(4)} nextDisabled={!selectedSlot} />
+                <FooterNav primary={primary} onBack={() => setStep(2)} onNext={() => setStep(4)} nextDisabled={!selectedSlot} />
               </div>
             )}
 
