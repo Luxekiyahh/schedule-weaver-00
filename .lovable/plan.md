@@ -1,35 +1,27 @@
-## Add `client` to the workspace role enum
+## Problem
 
-The database already has a `workspace_role` enum with `('staff', 'admin', 'owner')` — ordered so RLS can do `role >= 'staff'`. You're asking to add `client` as a fourth value.
+Supabase is throwing `permission denied for function is_workspace_member` whenever a query hits any RLS policy that calls it (which is most of them — `workspaces`, `services`, `customers`, `appointments`, etc.). The function exists and is `SECURITY DEFINER`, but the `authenticated` Postgres role doesn't have `EXECUTE` privilege on it, so RLS evaluation fails before any rows are returned.
 
-### Important design question first
+The same issue applies to the two sibling helpers used in policies: `has_workspace_role` and `current_member_id`.
 
-The original schema deliberately kept `client` OUT of `workspace_members` and put end-users in the `customers` table instead. Reason: clients are not staff, don't have calendars, don't count toward seat billing, and a workspace can have thousands of them. Mixing them into `workspace_members` means every "list my team" query has to filter them out, and the role-ordering trick (`role >= 'staff'`) breaks unless `client` sorts below `staff`.
+## Fix
 
-Two ways to interpret your request:
+One small migration that grants execute to `authenticated` (and `anon`, for safety on any public-read paths) on the three RLS helper functions:
 
-**Option A — Add `client` to the existing enum, keep clients in `customers`**
-Just extend the type so it matches your spec, but continue storing end-users in `customers` (with optional `customers.user_id` for portal logins). The enum value exists but is essentially unused inside `workspace_members`. Low risk, reversible.
+```sql
+grant execute on function public.is_workspace_member(uuid)            to authenticated, anon;
+grant execute on function public.has_workspace_role(uuid, public.workspace_role) to authenticated, anon;
+grant execute on function public.current_member_id(uuid)              to authenticated, anon;
+```
 
-**Option B — Add `client` AND start using `workspace_members` for clients too**
-Bigger change: clients become members with `role = 'client'`, the `customers` table either goes away or becomes a profile-extension table, and every existing RLS policy needs auditing because `is_workspace_member(ws_id)` would suddenly return true for end-users browsing a booking page. This conflicts with the multi-tenancy isolation we just built.
+No table, policy, or app-code changes. After this runs, the dashboard queries (`workspace_members`, `services`, `customers`, `appointments`) should start returning rows again for the signed-in user.
 
-### Recommended: Option A
+## Why this happened
 
-### Migration
+The functions were created without an explicit `GRANT EXECUTE`. In Postgres the default `PUBLIC` execute grant on functions has been progressively locked down, and Supabase projects generally don't rely on it — helper functions used inside RLS must be explicitly granted to `authenticated`.
 
-1. `ALTER TYPE public.workspace_role ADD VALUE 'client' BEFORE 'staff';`
-   - Placed BEFORE `staff` so the existing `role >= 'staff'` ordering in `has_workspace_role()` continues to mean "internal team member, not a client."
-2. No table changes, no RLS changes, no code changes required.
-3. The generated `src/integrations/supabase/types.ts` will regenerate with `'client'` included in the `workspace_role` union.
+## Out of scope
 
-### What this does NOT do
-
-- Does not change how clients log in or book (still via `customers` table + optional `customers.user_id`).
-- Does not add a client portal UI.
-- Does not change any RLS policy.
-
-### Confirm before I run it
-
-- Are you good with Option A (enum-only change, no behavioral impact)?
-- Or do you actually want Option B (restructure clients into `workspace_members`)? If so, I'll come back with a separate, larger plan.
+- No change to function bodies or `SECURITY DEFINER` settings.
+- No change to RLS policies themselves.
+- No change to the dashboard or onboarding code.
