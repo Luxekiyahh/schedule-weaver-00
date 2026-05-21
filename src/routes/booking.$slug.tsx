@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { normalizeTheme, fontClass, cardRadius, layoutPadding, type ThemeConfig } from "@/lib/theme";
 
 export const Route = createFileRoute("/booking/$slug")({
   component: BookingPage,
