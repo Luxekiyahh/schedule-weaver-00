@@ -183,6 +183,44 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          created_at: string
+          email_client_confirm: boolean
+          email_provider_alert: boolean
+          id: string
+          sms_client_confirm: boolean
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_client_confirm?: boolean
+          email_provider_alert?: boolean
+          id?: string
+          sms_client_confirm?: boolean
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          email_client_confirm?: boolean
+          email_provider_alert?: boolean
+          id?: string
+          sms_client_confirm?: boolean
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
