@@ -342,9 +342,10 @@ function BookingPage() {
                           <button
                             key={`${s.time}-${s.member_id}`}
                             onClick={() => setSelectedSlot(s)}
+                            style={active ? { backgroundColor: primary, borderColor: primary } : undefined}
                             className={`rounded-full px-3 py-2 text-sm font-medium ring-1 transition ${
                               active
-                                ? "bg-slate-900 text-white ring-slate-900"
+                                ? "text-white ring-transparent"
                                 : "bg-white text-slate-700 ring-slate-200 hover:ring-slate-400"
                             }`}
                           >
