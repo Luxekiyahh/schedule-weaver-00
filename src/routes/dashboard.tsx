@@ -5,7 +5,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
   beforeLoad: async ({ location }) => {
     const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/onboarding" });
+    if (!data.user) throw redirect({ to: "/login" });
     if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") {
       throw redirect({ to: "/dashboard/home" });
     }
