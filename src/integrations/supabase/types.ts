@@ -441,7 +441,7 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "no_show"
-      workspace_role: "staff" | "admin" | "owner"
+      workspace_role: "client" | "staff" | "admin" | "owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -576,7 +576,7 @@ export const Constants = {
         "cancelled",
         "no_show",
       ],
-      workspace_role: ["staff", "admin", "owner"],
+      workspace_role: ["client", "staff", "admin", "owner"],
     },
   },
 } as const
