@@ -191,11 +191,12 @@ function BookingPage() {
                   <div
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ring-1 transition ${
                       complete
-                        ? "bg-indigo-600 text-white ring-indigo-600"
+                        ? "text-white"
                         : active
                         ? "bg-white text-slate-900 ring-slate-900"
                         : "bg-white text-slate-400 ring-slate-200"
                     }`}
+                    style={complete ? { backgroundColor: primary, borderColor: primary } : undefined}
                   >
                     {complete ? <Check className="h-3.5 w-3.5" /> : n}
                   </div>
