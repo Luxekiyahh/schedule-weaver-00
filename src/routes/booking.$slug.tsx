@@ -443,11 +443,11 @@ function BookingPage() {
   );
 }
 
-function FooterNav({ onBack, onNext, nextDisabled }: { onBack: () => void; onNext: () => void; nextDisabled?: boolean }) {
+function FooterNav({ onBack, onNext, nextDisabled, primary }: { onBack: () => void; onNext: () => void; nextDisabled?: boolean; primary: string }) {
   return (
     <div className="mt-6 flex items-center justify-between">
       <Button variant="ghost" onClick={onBack}><ArrowLeft className="h-4 w-4" /> Back</Button>
-      <Button onClick={onNext} disabled={nextDisabled} className="bg-slate-900 hover:bg-slate-800">
+      <Button onClick={onNext} disabled={nextDisabled} style={{ backgroundColor: primary }} className="text-white hover:opacity-90">
         Continue <ArrowRight className="h-4 w-4" />
       </Button>
     </div>
