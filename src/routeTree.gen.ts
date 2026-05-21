@@ -15,6 +15,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
+import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
@@ -49,6 +50,11 @@ const DashboardHomeRoute = DashboardHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardCustomizeRoute = DashboardCustomizeRouteImport.update({
+  id: '/customize',
+  path: '/customize',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/services': typeof DashboardServicesRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/services': typeof DashboardServicesRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/services': typeof DashboardServicesRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/services'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/services'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/services'
   fileRoutesById: FileRoutesById
@@ -187,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHomeRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/customize': {
+      id: '/dashboard/customize'
+      path: '/customize'
+      fullPath: '/dashboard/customize'
+      preLoaderRoute: typeof DashboardCustomizeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/calendar': {
       id: '/dashboard/calendar'
       path: '/calendar'
@@ -214,6 +233,7 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteChildren {
   DashboardAvailabilityRoute: typeof DashboardAvailabilityRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
+  DashboardCustomizeRoute: typeof DashboardCustomizeRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
   DashboardServicesRoute: typeof DashboardServicesRoute
 }
@@ -221,6 +241,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAvailabilityRoute: DashboardAvailabilityRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
+  DashboardCustomizeRoute: DashboardCustomizeRoute,
   DashboardHomeRoute: DashboardHomeRoute,
   DashboardServicesRoute: DashboardServicesRoute,
 }

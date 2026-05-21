@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { normalizeTheme, fontClass, cardRadius, layoutPadding } from "@/lib/theme";
 
 export const Route = createFileRoute("/booking/$slug")({
   component: BookingPage,
@@ -158,19 +159,24 @@ function BookingPage() {
   }
 
   const ws = data.workspace;
+  const theme = normalizeTheme((ws as { theme_config?: unknown }).theme_config);
+  const pad = layoutPadding(theme.layout_mode);
+  const radius = cardRadius(theme.card_style);
+  const font = fontClass(theme.font_family);
+  const primary = theme.primary_color;
 
   const stepLabels = ["Service", "Provider", "Time", "Details"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
-      <div className="mx-auto max-w-2xl px-6 py-10 sm:py-16">
+    <div className={`min-h-screen ${font}`} style={{ backgroundColor: theme.background_color }}>
+      <div className={`mx-auto max-w-2xl px-6 ${pad.page}`}>
         {/* Header */}
         <header className="text-center">
-          <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-slate-500 shadow-sm ring-1 ring-slate-200">
-            <Sparkles className="h-3 w-3 text-indigo-500" /> Book online
+          <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-slate-500 shadow-sm ring-1 ring-slate-200">
+            <Sparkles className="h-3 w-3" style={{ color: primary }} /> Book online
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">{ws.name}</h1>
-          <p className="mt-2 text-sm text-slate-500">Pick a service, choose a time, you're set.</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">{theme.hero_text}</h1>
+          <p className="mt-2 text-sm text-slate-500">{ws.name}</p>
         </header>
 
         {/* Stepper */}
@@ -185,11 +191,12 @@ function BookingPage() {
                   <div
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ring-1 transition ${
                       complete
-                        ? "bg-indigo-600 text-white ring-indigo-600"
+                        ? "text-white"
                         : active
                         ? "bg-white text-slate-900 ring-slate-900"
                         : "bg-white text-slate-400 ring-slate-200"
                     }`}
+                    style={complete ? { backgroundColor: primary, borderColor: primary } : undefined}
                   >
                     {complete ? <Check className="h-3.5 w-3.5" /> : n}
                   </div>
@@ -205,7 +212,7 @@ function BookingPage() {
 
         {/* Confirmation */}
         {done ? (
-          <div className="mt-10 overflow-hidden rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-slate-200">
+          <div className={`mt-10 overflow-hidden ${radius} bg-white p-10 text-center shadow-sm ring-1 ring-slate-200`}>
             <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-emerald-50 ring-1 ring-emerald-200">
               <Check className="h-7 w-7 text-emerald-600" />
             </div>
@@ -218,7 +225,7 @@ function BookingPage() {
             <p className="mt-1 text-sm text-slate-500">A confirmation has been recorded for {form.email}.</p>
           </div>
         ) : (
-          <div className="mt-8 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+          <div className={`mt-8 overflow-hidden ${radius} bg-white shadow-sm ring-1 ring-slate-200`}>
             {/* STEP 1: Services */}
             {step === 1 && (
               <div className="p-6 sm:p-8">
@@ -269,7 +276,8 @@ function BookingPage() {
                   <Button
                     disabled={!serviceId}
                     onClick={() => setStep(2)}
-                    className="bg-slate-900 hover:bg-slate-800"
+                    style={{ backgroundColor: primary }}
+                    className="text-white hover:opacity-90"
                   >
                     Continue <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -303,7 +311,7 @@ function BookingPage() {
                     ))
                   )}
                 </div>
-                <FooterNav onBack={() => setStep(1)} onNext={() => setStep(3)} nextDisabled={eligibleProviders.length === 0 && providerId === ANY} />
+                <FooterNav primary={primary} onBack={() => setStep(1)} onNext={() => setStep(3)} nextDisabled={eligibleProviders.length === 0 && providerId === ANY} />
               </div>
             )}
 
@@ -334,9 +342,10 @@ function BookingPage() {
                           <button
                             key={`${s.time}-${s.member_id}`}
                             onClick={() => setSelectedSlot(s)}
+                            style={active ? { backgroundColor: primary, borderColor: primary } : undefined}
                             className={`rounded-full px-3 py-2 text-sm font-medium ring-1 transition ${
                               active
-                                ? "bg-slate-900 text-white ring-slate-900"
+                                ? "text-white ring-transparent"
                                 : "bg-white text-slate-700 ring-slate-200 hover:ring-slate-400"
                             }`}
                           >
@@ -347,7 +356,7 @@ function BookingPage() {
                     </div>
                   )}
                 </div>
-                <FooterNav onBack={() => setStep(2)} onNext={() => setStep(4)} nextDisabled={!selectedSlot} />
+                <FooterNav primary={primary} onBack={() => setStep(2)} onNext={() => setStep(4)} nextDisabled={!selectedSlot} />
               </div>
             )}
 
@@ -391,7 +400,8 @@ function BookingPage() {
                     <ArrowLeft className="h-4 w-4" /> Back
                   </Button>
                   <Button
-                    className="bg-slate-900 hover:bg-slate-800"
+                    style={{ backgroundColor: primary }}
+                    className="text-white hover:opacity-90"
                     disabled={submitting || !form.firstName || !form.lastName || !form.email || !selectedSlot || !service}
                     onClick={async () => {
                       if (!service || !selectedSlot || !selectedDate || !data.workspace) return;
@@ -433,11 +443,11 @@ function BookingPage() {
   );
 }
 
-function FooterNav({ onBack, onNext, nextDisabled }: { onBack: () => void; onNext: () => void; nextDisabled?: boolean }) {
+function FooterNav({ onBack, onNext, nextDisabled, primary }: { onBack: () => void; onNext: () => void; nextDisabled?: boolean; primary: string }) {
   return (
     <div className="mt-6 flex items-center justify-between">
       <Button variant="ghost" onClick={onBack}><ArrowLeft className="h-4 w-4" /> Back</Button>
-      <Button onClick={onNext} disabled={nextDisabled} className="bg-slate-900 hover:bg-slate-800">
+      <Button onClick={onNext} disabled={nextDisabled} style={{ backgroundColor: primary }} className="text-white hover:opacity-90">
         Continue <ArrowRight className="h-4 w-4" />
       </Button>
     </div>
