@@ -392,6 +392,7 @@ export type Database = {
           id: string
           is_solo: boolean
           name: string
+          notification_settings: Json
           owner_id: string
           slug: string
           theme_config: Json
@@ -403,6 +404,7 @@ export type Database = {
           id?: string
           is_solo?: boolean
           name: string
+          notification_settings?: Json
           owner_id: string
           slug: string
           theme_config?: Json
@@ -414,6 +416,7 @@ export type Database = {
           id?: string
           is_solo?: boolean
           name?: string
+          notification_settings?: Json
           owner_id?: string
           slug?: string
           theme_config?: Json
