@@ -311,7 +311,7 @@ function BookingPage() {
                     ))
                   )}
                 </div>
-                <FooterNav onBack={() => setStep(1)} onNext={() => setStep(3)} nextDisabled={eligibleProviders.length === 0 && providerId === ANY} />
+                <FooterNav primary={primary} onBack={() => setStep(1)} onNext={() => setStep(3)} nextDisabled={eligibleProviders.length === 0 && providerId === ANY} />
               </div>
             )}
 
