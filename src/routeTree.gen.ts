@@ -13,8 +13,10 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
+import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -36,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardServicesRoute = DashboardServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardHomeRoute = DashboardHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -46,22 +53,31 @@ const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAvailabilityRoute = DashboardAvailabilityRouteImport.update({
+  id: '/availability',
+  path: '/availability',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/home': typeof DashboardHomeRoute
+  '/dashboard/services': typeof DashboardServicesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/home': typeof DashboardHomeRoute
+  '/dashboard/services': typeof DashboardServicesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,8 +85,10 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/home': typeof DashboardHomeRoute
+  '/dashboard/services': typeof DashboardServicesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,24 +97,30 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/home'
     | '/onboarding'
+    | '/dashboard/availability'
     | '/dashboard/calendar'
     | '/dashboard/home'
+    | '/dashboard/services'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
     | '/home'
     | '/onboarding'
+    | '/dashboard/availability'
     | '/dashboard/calendar'
     | '/dashboard/home'
+    | '/dashboard/services'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/home'
     | '/onboarding'
+    | '/dashboard/availability'
     | '/dashboard/calendar'
     | '/dashboard/home'
+    | '/dashboard/services'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -136,6 +160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/services': {
+      id: '/dashboard/services'
+      path: '/services'
+      fullPath: '/dashboard/services'
+      preLoaderRoute: typeof DashboardServicesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/home': {
       id: '/dashboard/home'
       path: '/home'
@@ -150,17 +181,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCalendarRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/availability': {
+      id: '/dashboard/availability'
+      path: '/availability'
+      fullPath: '/dashboard/availability'
+      preLoaderRoute: typeof DashboardAvailabilityRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardAvailabilityRoute: typeof DashboardAvailabilityRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
+  DashboardServicesRoute: typeof DashboardServicesRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAvailabilityRoute: DashboardAvailabilityRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardHomeRoute: DashboardHomeRoute,
+  DashboardServicesRoute: DashboardServicesRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

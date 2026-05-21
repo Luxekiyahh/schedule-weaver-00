@@ -284,8 +284,8 @@ function HomePage() {
             <h2 className="mb-3 px-1 text-base font-semibold text-slate-900">Quick actions</h2>
             <div className="grid grid-cols-2 gap-3">
               <ActionCard to="/dashboard/calendar" icon={<Plus className="h-5 w-5" />} title="Book appointment" desc="Manually create a booking" tone="indigo" />
-              <ActionCard to="/dashboard/calendar" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
-              <ActionCard to="/dashboard/calendar" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />
+              <ActionCard to="/dashboard/services" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
+              <ActionCard to="/dashboard/availability" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />
               <ActionCard to="/dashboard/calendar" icon={<UserSquare2 className="h-5 w-5" />} title="Client list" desc="View profiles" tone="rose" />
             </div>
 
