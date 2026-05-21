@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, Check, Copy, DollarSign, Sparkles, Clock, Users, Briefcase,
-  Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2,
+  Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2, Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -286,7 +286,7 @@ function HomePage() {
               <ActionCard to="/dashboard/calendar" icon={<Plus className="h-5 w-5" />} title="Book appointment" desc="Manually create a booking" tone="indigo" />
               <ActionCard to="/dashboard/services" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
               <ActionCard to="/dashboard/availability" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />
-              <ActionCard to="/dashboard/calendar" icon={<UserSquare2 className="h-5 w-5" />} title="Client list" desc="View profiles" tone="rose" />
+              <ActionCard to="/dashboard/notifications" icon={<Bell className="h-5 w-5" />} title="Notifications" desc="Email & SMS alerts" tone="rose" />
             </div>
 
             <div className="mt-4 rounded-2xl border bg-white p-4 shadow-sm">
