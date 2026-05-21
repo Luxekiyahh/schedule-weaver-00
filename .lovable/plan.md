@@ -1,27 +1,35 @@
-## Problem
+## Diagnosis
 
-Supabase is throwing `permission denied for function is_workspace_member` whenever a query hits any RLS policy that calls it (which is most of them — `workspaces`, `services`, `customers`, `appointments`, etc.). The function exists and is `SECURITY DEFINER`, but the `authenticated` Postgres role doesn't have `EXECUTE` privilege on it, so RLS evaluation fails before any rows are returned.
+Routing is actually wired correctly in `src/routeTree.gen.ts` (TanStack Start auto-generates it from files in `src/routes/` — there is no `App.tsx`/`routes.tsx` to edit). The real bug is in `src/routes/dashboard.tsx`:
 
-The same issue applies to the two sibling helpers used in policies: `has_workspace_role` and `current_member_id`.
+- It is the parent of `dashboard.home.tsx` (file-based nesting via the `.` separator).
+- But its component renders the full calendar UI and **never renders `<Outlet />`**.
+- So when you visit `/dashboard/home`, the parent matches and shows the calendar, while the child `HomePage` has nowhere to mount — producing the broken/"not found"-feeling screen.
 
-## Fix
+## Plan
 
-One small migration that grants execute to `authenticated` (and `anon`, for safety on any public-read paths) on the three RLS helper functions:
+1. **Turn `/dashboard` into a layout route.**
+   Refactor `src/routes/dashboard.tsx` so its component is just the shared shell (sidebar/topbar if any) plus `<Outlet />`. Keep the existing `beforeLoad` auth guard and add a redirect so hitting `/dashboard` bare sends the user to `/dashboard/home`:
+   ```ts
+   beforeLoad: async ({ location }) => {
+     const { data } = await supabase.auth.getUser();
+     if (!data.user) throw redirect({ to: "/onboarding" });
+     if (location.pathname === "/dashboard") {
+       throw redirect({ to: "/dashboard/home" });
+     }
+   }
+   ```
 
-```sql
-grant execute on function public.is_workspace_member(uuid)            to authenticated, anon;
-grant execute on function public.has_workspace_role(uuid, public.workspace_role) to authenticated, anon;
-grant execute on function public.current_member_id(uuid)              to authenticated, anon;
-```
+2. **Move the calendar UI into its own child route.**
+   Create `src/routes/dashboard.calendar.tsx` (path `/dashboard/calendar`) containing the current `Dashboard` component body, state, queries, and dialogs from `dashboard.tsx`. Update any links/quick actions that currently point at `/dashboard` for the calendar to point at `/dashboard/calendar` instead.
 
-No table, policy, or app-code changes. After this runs, the dashboard queries (`workspace_members`, `services`, `customers`, `appointments`) should start returning rows again for the signed-in user.
+3. **Leave `dashboard.home.tsx` as-is.**
+   It already declares `createFileRoute("/dashboard/home")` and will now render correctly inside the layout's `<Outlet />`.
 
-## Why this happened
-
-The functions were created without an explicit `GRANT EXECUTE`. In Postgres the default `PUBLIC` execute grant on functions has been progressively locked down, and Supabase projects generally don't rely on it — helper functions used inside RLS must be explicitly granted to `authenticated`.
+4. **Verify.**
+   After the edit, the route tree should show `/dashboard` as a layout with `/dashboard/home` and `/dashboard/calendar` as children. Visiting `/dashboard` redirects to `/dashboard/home`; visiting `/dashboard/home` renders the home hub; `/dashboard/calendar` shows the calendar.
 
 ## Out of scope
 
-- No change to function bodies or `SECURITY DEFINER` settings.
-- No change to RLS policies themselves.
-- No change to the dashboard or onboarding code.
+- No changes to `routeTree.gen.ts` (auto-generated — never hand-edited).
+- No changes to onboarding, auth, Supabase queries, or the home/calendar component internals beyond moving the calendar file.
