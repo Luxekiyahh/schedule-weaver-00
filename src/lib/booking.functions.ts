@@ -7,7 +7,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: ws, error } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug, timezone")
+      .select("id, name, slug, timezone, theme_config")
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) throw new Error(error.message);
