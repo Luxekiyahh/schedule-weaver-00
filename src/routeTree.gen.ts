@@ -14,6 +14,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
+import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -40,12 +41,18 @@ const DashboardHomeRoute = DashboardHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/home': typeof DashboardHomeRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRouteWithChildren
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/home': typeof DashboardHomeRoute
 }
 export interface FileRoutesById {
@@ -61,19 +69,33 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/home': typeof DashboardHomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/home' | '/onboarding' | '/dashboard/home'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/home'
+    | '/onboarding'
+    | '/dashboard/calendar'
+    | '/dashboard/home'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/home' | '/onboarding' | '/dashboard/home'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/home'
+    | '/onboarding'
+    | '/dashboard/calendar'
+    | '/dashboard/home'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/home'
     | '/onboarding'
+    | '/dashboard/calendar'
     | '/dashboard/home'
   fileRoutesById: FileRoutesById
 }
@@ -121,14 +143,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHomeRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/calendar': {
+      id: '/dashboard/calendar'
+      path: '/calendar'
+      fullPath: '/dashboard/calendar'
+      preLoaderRoute: typeof DashboardCalendarRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardHomeRoute: DashboardHomeRoute,
 }
 
