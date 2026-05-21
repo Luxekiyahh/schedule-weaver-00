@@ -14,11 +14,13 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
+import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
 import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
+import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -43,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
 const DashboardServicesRoute = DashboardServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardHomeRoute = DashboardHomeRouteImport.update({
@@ -70,6 +77,12 @@ const BookingSlugRoute = BookingSlugRouteImport.update({
   path: '/booking/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAppointmentConfirmationRoute =
+  ApiPublicAppointmentConfirmationRouteImport.update({
+    id: '/api/public/appointment-confirmation',
+    path: '/api/public/appointment-confirmation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -81,7 +94,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
+  '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,7 +108,9 @@ export interface FileRoutesByTo {
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
+  '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -106,7 +123,9 @@ export interface FileRoutesById {
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
+  '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,7 +139,9 @@ export interface FileRouteTypes {
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
+    | '/dashboard/notifications'
     | '/dashboard/services'
+    | '/api/public/appointment-confirmation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,7 +153,9 @@ export interface FileRouteTypes {
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
+    | '/dashboard/notifications'
     | '/dashboard/services'
+    | '/api/public/appointment-confirmation'
   id:
     | '__root__'
     | '/'
@@ -144,7 +167,9 @@ export interface FileRouteTypes {
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
+    | '/dashboard/notifications'
     | '/dashboard/services'
+    | '/api/public/appointment-confirmation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -153,6 +178,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   OnboardingRoute: typeof OnboardingRoute
   BookingSlugRoute: typeof BookingSlugRoute
+  ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardServicesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/notifications': {
+      id: '/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof DashboardNotificationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/home': {
       id: '/dashboard/home'
       path: '/home'
@@ -227,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/appointment-confirmation': {
+      id: '/api/public/appointment-confirmation'
+      path: '/api/public/appointment-confirmation'
+      fullPath: '/api/public/appointment-confirmation'
+      preLoaderRoute: typeof ApiPublicAppointmentConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -235,6 +275,7 @@ interface DashboardRouteChildren {
   DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardCustomizeRoute: typeof DashboardCustomizeRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
+  DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardServicesRoute: typeof DashboardServicesRoute
 }
 
@@ -243,6 +284,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardCustomizeRoute: DashboardCustomizeRoute,
   DashboardHomeRoute: DashboardHomeRoute,
+  DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardServicesRoute: DashboardServicesRoute,
 }
 
@@ -256,7 +298,18 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   OnboardingRoute: OnboardingRoute,
   BookingSlugRoute: BookingSlugRoute,
+  ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
