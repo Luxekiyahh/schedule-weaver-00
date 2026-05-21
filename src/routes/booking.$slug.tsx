@@ -159,19 +159,24 @@ function BookingPage() {
   }
 
   const ws = data.workspace;
+  const theme = normalizeTheme((ws as { theme_config?: unknown }).theme_config);
+  const pad = layoutPadding(theme.layout_mode);
+  const radius = cardRadius(theme.card_style);
+  const font = fontClass(theme.font_family);
+  const primary = theme.primary_color;
 
   const stepLabels = ["Service", "Provider", "Time", "Details"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
-      <div className="mx-auto max-w-2xl px-6 py-10 sm:py-16">
+    <div className={`min-h-screen ${font}`} style={{ backgroundColor: theme.background_color }}>
+      <div className={`mx-auto max-w-2xl px-6 ${pad.page}`}>
         {/* Header */}
         <header className="text-center">
-          <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-slate-500 shadow-sm ring-1 ring-slate-200">
-            <Sparkles className="h-3 w-3 text-indigo-500" /> Book online
+          <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-slate-500 shadow-sm ring-1 ring-slate-200">
+            <Sparkles className="h-3 w-3" style={{ color: primary }} /> Book online
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">{ws.name}</h1>
-          <p className="mt-2 text-sm text-slate-500">Pick a service, choose a time, you're set.</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">{theme.hero_text}</h1>
+          <p className="mt-2 text-sm text-slate-500">{ws.name}</p>
         </header>
 
         {/* Stepper */}
