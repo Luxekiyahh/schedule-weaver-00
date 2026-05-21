@@ -120,8 +120,8 @@ function Dashboard() {
       setMyMemberId(mem.id);
       setMyRole(mem.role as Role);
       setWorkspaceId(mem.workspace_id);
-      // @ts-expect-error nested
-      setWorkspaceName(mem.workspaces?.name ?? "Workspace");
+      const ws = (mem as unknown as { workspaces?: { name?: string } | null }).workspaces;
+      setWorkspaceName(ws?.name ?? "Workspace");
       if (mem.role === "staff") setSelectedProvider(mem.id);
       setLoading(false);
     })();
