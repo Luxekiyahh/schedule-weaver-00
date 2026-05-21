@@ -212,7 +212,7 @@ function BookingPage() {
 
         {/* Confirmation */}
         {done ? (
-          <div className="mt-10 overflow-hidden rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-slate-200">
+          <div className={`mt-10 overflow-hidden ${radius} bg-white p-10 text-center shadow-sm ring-1 ring-slate-200`}>
             <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-emerald-50 ring-1 ring-emerald-200">
               <Check className="h-7 w-7 text-emerald-600" />
             </div>
