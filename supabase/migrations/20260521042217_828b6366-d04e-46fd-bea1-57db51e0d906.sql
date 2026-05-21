@@ -1,0 +1,2 @@
+ALTER TABLE public.workspaces
+ADD COLUMN IF NOT EXISTS theme_config jsonb NOT NULL DEFAULT '{"primary_color":"#4f46e5","background_color":"#ffffff","card_style":"rounded","font_family":"sans","layout_mode":"clean","hero_text":"Book an Appointment"}'::jsonb;
