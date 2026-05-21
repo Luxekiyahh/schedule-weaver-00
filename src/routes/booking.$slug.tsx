@@ -400,7 +400,8 @@ function BookingPage() {
                     <ArrowLeft className="h-4 w-4" /> Back
                   </Button>
                   <Button
-                    className="bg-slate-900 hover:bg-slate-800"
+                    style={{ backgroundColor: primary }}
+                    className="text-white hover:opacity-90"
                     disabled={submitting || !form.firstName || !form.lastName || !form.email || !selectedSlot || !service}
                     onClick={async () => {
                       if (!service || !selectedSlot || !selectedDate || !data.workspace) return;
