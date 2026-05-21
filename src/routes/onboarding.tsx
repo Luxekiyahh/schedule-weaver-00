@@ -316,7 +316,7 @@ function OnboardingWizard() {
         await handleStep3();
         setFinalizing(true);
         await new Promise((r) => setTimeout(r, 1500));
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/dashboard/home" });
         return;
       }
       setDirection(1);
