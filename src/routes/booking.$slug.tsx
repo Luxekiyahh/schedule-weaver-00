@@ -276,7 +276,8 @@ function BookingPage() {
                   <Button
                     disabled={!serviceId}
                     onClick={() => setStep(2)}
-                    className="bg-slate-900 hover:bg-slate-800"
+                    style={{ backgroundColor: primary }}
+                    className="text-white hover:opacity-90"
                   >
                     Continue <ArrowRight className="h-4 w-4" />
                   </Button>
