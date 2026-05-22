@@ -67,10 +67,57 @@ function StorefrontPage() {
   const { data } = useSuspenseQuery(storefrontQuery(params.slug));
   if (!data.workspace) return null;
 
-  if (data.workspace.slug === "dolliimarie") {
-    return <DolliimarieStorefront data={data} />;
-  }
-  return <DefaultStorefront data={data} />;
+  return (
+    <>
+      <OwnerAdminOverlay ownerId={data.workspace.owner_id} />
+      {data.workspace.slug === "dolliimarie" ? (
+        <DolliimarieStorefront data={data} />
+      ) : (
+        <DefaultStorefront data={data} />
+      )}
+    </>
+  );
+}
+
+function OwnerAdminOverlay({ ownerId }: { ownerId?: string | null }) {
+  const navigate = useNavigate();
+  const [isStorefrontOwner, setIsStorefrontOwner] = React.useState(false);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+      setIsStorefrontOwner(!!data.user && !!ownerId && data.user.id === ownerId);
+    };
+    check();
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsStorefrontOwner(!!session?.user && !!ownerId && session.user.id === ownerId);
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, [ownerId]);
+
+  if (!isStorefrontOwner) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 backdrop-blur-md bg-black/80 text-white border border-white/10 px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 transition-all hover:scale-105">
+      <Sparkles className="h-4 w-4 text-amber-300" />
+      <span className="hidden sm:inline text-xs font-medium opacity-90">
+        You are viewing your public site
+      </span>
+      <button
+        type="button"
+        onClick={() => navigate({ to: "/dashboard/home" })}
+        className="inline-flex items-center gap-1.5 rounded-full bg-white text-black text-xs font-semibold px-3 py-1.5 hover:bg-white/90 transition"
+      >
+        <LayoutDashboard className="h-3.5 w-3.5" />
+        Go to Admin Dashboard
+      </button>
+    </div>
+  );
 }
 
 /* ============================================================
