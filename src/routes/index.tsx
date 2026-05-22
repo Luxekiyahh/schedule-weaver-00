@@ -112,6 +112,7 @@ function Nav() {
 
 /* ---------------- Hero ---------------- */
 function Hero() {
+  const [demoOpen, setDemoOpen] = useState(false);
   return (
     <section className="relative pt-20 sm:pt-28 pb-12 sm:pb-20 px-5 sm:px-8">
       <div className="max-w-5xl mx-auto text-center">
