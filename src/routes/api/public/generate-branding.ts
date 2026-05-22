@@ -32,6 +32,29 @@ const brandingSchema = z.object({
 
 type Branding = z.infer<typeof brandingSchema>;
 
+function extractJsonObject(raw: string): unknown {
+  let cleaned = raw
+    .replace(/```json\s*/gi, "")
+    .replace(/```\s*/g, "")
+    .trim();
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error("No JSON object found in response");
+  }
+  cleaned = cleaned.substring(start, end + 1);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const repaired = cleaned
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F]/g, "");
+    return JSON.parse(repaired);
+  }
+}
+
 const SYSTEM_PROMPT = `You are a senior brand designer for service businesses (salons, studios, spas, clinics).
 Translate a one-line brief into a complete visual identity for a public booking storefront.
 
