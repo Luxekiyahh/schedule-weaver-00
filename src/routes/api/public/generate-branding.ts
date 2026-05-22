@@ -20,57 +20,30 @@ const bodySchema = z.object({
   prompt: z.string().trim().min(8).max(2000),
 });
 
-const heroSectionSchema = z.object({
-  id: z.string().min(1),
-  type: z.literal("hero"),
-  layout_style: z.enum(["split", "centered", "editorial"]),
-  headline: z.string().min(2).max(160),
-  subhead: z.string().min(2).max(280),
-  primary_cta_text: z.string().min(1).max(40),
-  secondary_cta_text: z.string().min(1).max(40).optional().nullable(),
+const uiTokensSchema = z.object({
+  card_layout_style: z.enum(["bento-grid", "editorial-stack", "modern-minimalist"]),
+  border_radius_class: z.enum(["rounded-none", "rounded-xl", "rounded-full"]),
+  shadow_intensity_class: z.enum(["shadow-none", "shadow-sm", "shadow-xl"]),
+  glassmorphism_enabled: z.boolean(),
+  button_hover_animation: z.enum(["scale-up", "glow-border", "slide-shimmer"]),
+  spacing_density: z.enum(["compact", "spacious", "elegant-relaxed"]),
 });
 
-const portfolioSectionSchema = z.object({
-  id: z.string().min(1),
-  type: z.literal("portfolio"),
-  layout_style: z.enum(["masonry", "grid"]),
-  section_title: z.string().min(1).max(120),
-  image_placeholders: z.array(z.string().min(1).max(80)).min(1).max(12),
-});
-
-const planTierSchema = z.object({
-  name: z.string().min(1).max(60),
-  price: z.string().min(1).max(40),
-  features: z.array(z.string().min(1).max(120)).min(1).max(8),
-});
-
-const plansSectionSchema = z.object({
-  id: z.string().min(1),
-  type: z.literal("plans"),
-  section_title: z.string().min(1).max(120),
-  tiers: z.array(planTierSchema).min(1).max(4),
-});
-
-const sectionSchema = z.discriminatedUnion("type", [
-  heroSectionSchema,
-  portfolioSectionSchema,
-  plansSectionSchema,
-]);
-
-const layoutConfigSchema = z.object({
-  card_style: z
-    .enum(["sharp", "rounded", "hyper-rounded", "hyper_rounded"])
-    .transform((v) => (v === "hyper_rounded" ? "hyper-rounded" : v)),
-  sections: z.array(sectionSchema).min(1).max(6),
+const heroVisualsSchema = z.object({
+  layout_alignment: z.enum(["left-split", "center-column"]),
+  headline_text: z.string().min(2).max(160),
+  subheadline_text: z.string().min(2).max(280),
 });
 
 const brandingSchema = z.object({
   primary_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   accent_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   background_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  card_background_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   heading_font: z.string().min(1).max(60),
   body_font: z.string().min(1).max(60),
-  layout_config: layoutConfigSchema,
+  ui_tokens: uiTokensSchema,
+  hero_visuals: heroVisualsSchema,
 });
 
 type Branding = z.infer<typeof brandingSchema>;
@@ -98,57 +71,41 @@ function extractJsonObject(raw: string): unknown {
   }
 }
 
-const SYSTEM_PROMPT = `You are a principal product designer for premium service businesses (salons, studios, spas, clinics).
-Translate a one-line brief into an ultra-premium, conversion-optimized, SECTION-DRIVEN storefront layout.
+const SYSTEM_PROMPT = `You are an elite frontend designer specializing in modern web aesthetics (Bento grid systems, minimal luxury layouts, glassmorphic UI, and fluid animations). Analyze the provider's aesthetic vibe prompt and generate a design system token JSON. Do not return markdown, backticks, or text.
 
-Return ONLY a valid JSON object — no prose, no markdown, no code fences — matching exactly this shape:
+You are STRICTLY a visual styling engine. Do NOT invent services, prices, packages, portfolio items, or business copy beyond the hero headline/subheadline. The provider already manages their own services, categories, and add-ons in the database; your output only wraps that real content in a beautiful design system.
+
+Schema:
 {
-  "primary_hex": "#RRGGBB",
-  "accent_hex": "#RRGGBB",
-  "background_hex": "#RRGGBB",
-  "heading_font": "<one of: ${FONT_CHOICES.join(", ")}>",
-  "body_font": "<one of: ${FONT_CHOICES.join(", ")}>",
-  "layout_config": {
-    "card_style": "sharp" | "rounded" | "hyper-rounded",
-    "sections": [
-      {
-        "id": "hero_section",
-        "type": "hero",
-        "layout_style": "split" | "centered" | "editorial",
-        "headline": "3-8 punchy brand-forward words",
-        "subhead": "1 warm marketing sentence specific to the brief",
-        "primary_cta_text": "Book Appointment",
-        "secondary_cta_text": "Explore Gallery"
-      },
-      {
-        "id": "portfolio_section",
-        "type": "portfolio",
-        "layout_style": "masonry" | "grid",
-        "section_title": "Our Masterpieces",
-        "image_placeholders": ["short-descriptive-slug-1", "short-descriptive-slug-2", "short-descriptive-slug-3", "short-descriptive-slug-4"]
-      },
-      {
-        "id": "packages_section",
-        "type": "plans",
-        "section_title": "Exclusive Packages & VIP Tiers",
-        "tiers": [
-          { "name": "Essential Care", "price": "$120", "features": ["Feature one", "Feature two"] },
-          { "name": "Signature", "price": "$260", "features": ["Feature one", "Feature two", "Feature three"] },
-          { "name": "The Luxury Install", "price": "$450+", "features": ["Premium feature", "Premium feature", "Priority access"] }
-        ]
-      }
-    ]
+  "primary_hex": "#hex (main branding accents & primary buttons)",
+  "accent_hex": "#hex (tag badges, highlights, secondary buttons)",
+  "background_hex": "#hex (full canvas backdrop)",
+  "card_background_hex": "#hex (content container wrappers)",
+  "heading_font": "Google Font Name (e.g., Syne, Playfair Display, Space Grotesk, Inter)",
+  "body_font": "Google Font Name (e.g., Inter, DM Sans, Plus Jakarta Sans)",
+  "ui_tokens": {
+    "card_layout_style": "bento-grid | editorial-stack | modern-minimalist",
+    "border_radius_class": "rounded-none | rounded-xl | rounded-full",
+    "shadow_intensity_class": "shadow-none | shadow-sm | shadow-xl",
+    "glassmorphism_enabled": true | false,
+    "button_hover_animation": "scale-up | glow-border | slide-shimmer",
+    "spacing_density": "compact | spacious | elegant-relaxed"
+  },
+  "hero_visuals": {
+    "layout_alignment": "left-split | center-column",
+    "headline_text": "A beautifully styled marketing headline matching their aesthetic",
+    "subheadline_text": "A clean, supportive tagline wrapper"
   }
 }
 
 Rules:
-- Output sections in this exact order: hero, portfolio, plans. Always include all three.
-- Fonts must be exactly from the allow-list (case-sensitive). Pair an expressive heading font with a refined body font.
-- Colors must contrast: background must read against text; primary is for CTAs and headings.
-- Match the vibe: moody/dark → near-black bg + saturated accent + "editorial" hero + "sharp" cards; soft luxury → cream/pink + "centered" hero + "hyper-rounded" cards; clean modern → white/neutral + "split" hero + "rounded".
-- Portfolio: use "masonry" for visual/lifestyle brands (hair, nails, tattoo, photography), "grid" for clinical/professional. image_placeholders: 4-6 short kebab-case descriptive slugs that imply the brand.
-- Plans: always return exactly 3 tiers, ascending price, concise feature bullets (max ~6 words each).
-- All copy must feel brand-specific to the brief — never generic.
+- Output ONLY the raw JSON object. No prose, no markdown, no code fences.
+- Use valid Google Font names exactly as they appear on fonts.google.com.
+- card_background_hex must subtly differ from background_hex to create elevation; both must support legible text.
+- All hex colors must produce accessible contrast; primary_hex is reserved for CTAs.
+- Match the vibe holistically: moody/dark luxury → near-black bg + saturated accent + "editorial-stack" + "shadow-xl" + glassmorphism true; soft pastel → cream/pink + "modern-minimalist" + "rounded-full" + "shadow-sm"; bold modern → "bento-grid" + "rounded-xl" + "scale-up".
+- glassmorphism_enabled true works best on darker or vivid backgrounds; avoid on flat white.
+- hero_visuals copy must feel brand-specific — short, evocative, never generic boilerplate.
 `;
 
 export const Route = createFileRoute("/api/public/generate-branding")({
@@ -275,14 +232,18 @@ export const Route = createFileRoute("/api/public/generate-branding")({
         const { error: upErr } = await supabaseAdmin.from("workspace_branding").upsert(
           {
             workspace_id: ws.id,
-            primary_hex: branding.primary_color,
-            accent_hex: branding.secondary_color,
-            background_hex: branding.background_color,
-            heading_font: branding.font_family,
-            body_font: branding.font_family,
-            hero_headline: branding.hero_headline,
-            hero_subhead: branding.hero_subheading,
-            layout_config: branding.layout_config,
+            primary_hex: branding.primary_hex,
+            accent_hex: branding.accent_hex,
+            background_hex: branding.background_hex,
+            heading_font: branding.heading_font,
+            body_font: branding.body_font,
+            hero_headline: branding.hero_visuals.headline_text,
+            hero_subhead: branding.hero_visuals.subheadline_text,
+            layout_config: {
+              card_background_hex: branding.card_background_hex,
+              ui_tokens: branding.ui_tokens,
+              hero_visuals: branding.hero_visuals,
+            },
             updated_at: new Date().toISOString(),
           },
           { onConflict: "workspace_id" },

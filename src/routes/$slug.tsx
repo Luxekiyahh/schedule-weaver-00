@@ -295,59 +295,57 @@ function DolliimarieStorefront({ data }: { data: any }) {
 }
 
 /* ============================================================
-   DEFAULT tenant storefront — premium, conversion-optimized
+   DEFAULT tenant storefront — AI design-tokens driven, real DB content
    ============================================================ */
 
+type UiTokens = {
+  card_layout_style?: "bento-grid" | "editorial-stack" | "modern-minimalist";
+  border_radius_class?: "rounded-none" | "rounded-xl" | "rounded-full";
+  shadow_intensity_class?: "shadow-none" | "shadow-sm" | "shadow-xl";
+  glassmorphism_enabled?: boolean;
+  button_hover_animation?: "scale-up" | "glow-border" | "slide-shimmer";
+  spacing_density?: "compact" | "spacious" | "elegant-relaxed";
+};
+
+type HeroVisuals = {
+  layout_alignment?: "left-split" | "center-column";
+  headline_text?: string;
+  subheadline_text?: string;
+};
+
 type LayoutConfig = {
-  hero_style?: "split_screen" | "minimalist_centered" | "ambient_glow";
-  card_corners?: "sharp" | "rounded" | "hyper_rounded";
-  enable_sticky_booking_bar?: boolean;
-  enable_portfolio_gallery?: boolean;
+  card_background_hex?: string;
+  ui_tokens?: UiTokens;
+  hero_visuals?: HeroVisuals;
 };
 
-const GALLERY_SETS: Record<string, { src: string; tag: string }[]> = {
-  hair: [
-    { src: "https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=800&q=80&auto=format&fit=crop", tag: "Luxury Sew-In • 22\"" },
-    { src: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=80&auto=format&fit=crop", tag: "Honey Blonde • Tape-In" },
-    { src: "https://images.unsplash.com/photo-1560869713-7d0a29430803?w=800&q=80&auto=format&fit=crop", tag: "Natural Black • K-Tip" },
-    { src: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80&auto=format&fit=crop", tag: "Chestnut Layers • 20\"" },
-    { src: "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=800&q=80&auto=format&fit=crop", tag: "Platinum Install • 24\"" },
-    { src: "https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=800&q=80&auto=format&fit=crop", tag: "Burgundy Tips • 18\"" },
-  ],
-  nail: [
-    { src: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80&auto=format&fit=crop", tag: "Almond • Nude" },
-    { src: "https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=800&q=80&auto=format&fit=crop", tag: "French Tip Set" },
-    { src: "https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=800&q=80&auto=format&fit=crop", tag: "Chrome Detail" },
-    { src: "https://images.unsplash.com/photo-1607779097040-26e80aa78e66?w=800&q=80&auto=format&fit=crop", tag: "Stiletto • Red" },
-  ],
-  spa: [
-    { src: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80&auto=format&fit=crop", tag: "Deep Tissue" },
-    { src: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80&auto=format&fit=crop", tag: "Hot Stone" },
-    { src: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=800&q=80&auto=format&fit=crop", tag: "Aromatherapy" },
-    { src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80&auto=format&fit=crop", tag: "Facial Glow" },
-  ],
-  default: [
-    { src: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80&auto=format&fit=crop", tag: "Signature Service" },
-    { src: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=800&q=80&auto=format&fit=crop", tag: "Premium Finish" },
-    { src: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&q=80&auto=format&fit=crop", tag: "Client Favorite" },
-    { src: "https://images.unsplash.com/photo-1554519515-242161756769?w=800&q=80&auto=format&fit=crop", tag: "Best Seller" },
-  ],
-};
-
-function pickGallerySet(workspace: any, categories: any[]) {
-  const haystack = (workspace.name + " " + categories.map((c) => c.name).join(" ")).toLowerCase();
-  if (/hair|extension|salon|braid/.test(haystack)) return GALLERY_SETS.hair;
-  if (/nail|manicure|pedicure/.test(haystack)) return GALLERY_SETS.nail;
-  if (/spa|massage|facial|wellness/.test(haystack)) return GALLERY_SETS.spa;
-  return GALLERY_SETS.default;
+function densityPadding(d?: UiTokens["spacing_density"]) {
+  switch (d) {
+    case "compact": return "p-4";
+    case "elegant-relaxed": return "p-8";
+    case "spacious":
+    default: return "p-6";
+  }
 }
 
-function radiusClass(corners?: LayoutConfig["card_corners"]) {
-  switch (corners) {
-    case "sharp": return "rounded-none";
-    case "hyper_rounded": return "rounded-[2rem]";
-    case "rounded":
-    default: return "rounded-2xl";
+function densityGap(d?: UiTokens["spacing_density"]) {
+  switch (d) {
+    case "compact": return "gap-3";
+    case "elegant-relaxed": return "gap-8";
+    case "spacious":
+    default: return "gap-5";
+  }
+}
+
+function hoverClasses(a?: UiTokens["button_hover_animation"]) {
+  switch (a) {
+    case "glow-border":
+      return "transition-all duration-300 hover:ring-2 hover:ring-offset-2 hover:ring-offset-transparent";
+    case "slide-shimmer":
+      return "relative overflow-hidden transition-all duration-300 before:absolute before:inset-0 before:-translate-x-full before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:transition-transform before:duration-700 hover:before:translate-x-full";
+    case "scale-up":
+    default:
+      return "transition-transform duration-300 hover:-translate-y-0.5 hover:scale-[1.02]";
   }
 }
 
@@ -361,18 +359,43 @@ function DefaultStorefront({ data }: { data: any }) {
   const bodyFont = branding?.body_font ?? "Inter";
 
   const layout: LayoutConfig = (branding?.layout_config as LayoutConfig) ?? {};
-  const heroStyle = layout.hero_style ?? "minimalist_centered";
-  const radius = radiusClass(layout.card_corners);
-  const showGallery = layout.enable_portfolio_gallery !== false;
-  const showStickyBar = layout.enable_sticky_booking_bar !== false;
+  const cardBg = layout.card_background_hex ?? "#ffffff";
+  const tokens: UiTokens = layout.ui_tokens ?? {};
+  const hero: HeroVisuals = layout.hero_visuals ?? {};
+
+  const cardLayout = tokens.card_layout_style ?? "modern-minimalist";
+  const radiusClass = tokens.border_radius_class ?? "rounded-xl";
+  const shadowClass = tokens.shadow_intensity_class ?? "shadow-sm";
+  const glass = tokens.glassmorphism_enabled === true;
+  const hoverCls = hoverClasses(tokens.button_hover_animation);
+  const pad = densityPadding(tokens.spacing_density);
+  const gap = densityGap(tokens.spacing_density);
+
+  const heroAlign = hero.layout_alignment ?? "center-column";
+  const headlineText = hero.headline_text ?? branding?.hero_headline ?? workspace.name;
+  const subheadText = hero.subheadline_text ?? branding?.hero_subhead ?? `Book your appointment with ${workspace.name}.`;
 
   const themeStyle = {
-    fontFamily: `${bodyFont}, system-ui, sans-serif`,
+    fontFamily: `'${bodyFont}', system-ui, sans-serif`,
     backgroundColor: bg,
+    color: `color-mix(in srgb, ${primary} 92%, black)`,
   } as React.CSSProperties;
-  const headingStyle = { fontFamily: `${headingFont}, Georgia, serif` };
+  const headingStyle = { fontFamily: `'${headingFont}', Georgia, serif` };
 
-  // Interactive selection state
+  // Glassmorphism card style — applied via inline style + utility classes
+  const cardClass = [
+    radiusClass,
+    shadowClass,
+    pad,
+    "border",
+    glass ? "backdrop-blur-md bg-opacity-70 border-white/10" : "",
+  ].filter(Boolean).join(" ");
+
+  const cardStyle: React.CSSProperties = glass
+    ? { backgroundColor: `${cardBg}b3`, borderColor: `${primary}26` }
+    : { backgroundColor: cardBg, borderColor: `${primary}1f` };
+
+  // Interactive state
   const [activeVariant, setActiveVariant] = React.useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [selectedLengthId, setSelectedLengthId] = React.useState<string | null>(null);
@@ -386,33 +409,41 @@ function DefaultStorefront({ data }: { data: any }) {
   const currentTotalCents = basePrice + lengthPrice;
   const depositCents = Math.round(currentTotalCents * 0.25);
 
-  const openServiceDrawer = (v: any) => {
-    setActiveVariant(v);
-    setDrawerOpen(true);
-  };
-
-  const galleryImages = pickGallerySet(workspace, categories);
+  const openServiceDrawer = (v: any) => { setActiveVariant(v); setDrawerOpen(true); };
 
   const bookingHref = `/booking/${workspace.slug}`;
   const bookingQuery = (() => {
-    const params = new URLSearchParams();
-    if (activeVariant) params.set("variant", activeVariant.id);
-    if (selectedLengthId) params.set("length", selectedLengthId);
-    if (selectedColor) params.set("color", selectedColor.code);
-    const q = params.toString();
+    const p = new URLSearchParams();
+    if (activeVariant) p.set("variant", activeVariant.id);
+    if (selectedLengthId) p.set("length", selectedLengthId);
+    if (selectedColor) p.set("color", selectedColor.code);
+    const q = p.toString();
     return q ? `?${q}` : "";
   })();
+
+  // Bento-grid sizing helper — alternates large/small to create asymmetry
+  const bentoSpan = (i: number) => {
+    const pattern = [
+      "md:col-span-2 md:row-span-2",
+      "md:col-span-1",
+      "md:col-span-1",
+      "md:col-span-1 md:row-span-2",
+      "md:col-span-1",
+      "md:col-span-1",
+    ];
+    return pattern[i % pattern.length];
+  };
 
   return (
     <div className="min-h-screen" style={themeStyle}>
       <link
         rel="stylesheet"
-        href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(headingFont)}:wght@400;700&family=${encodeURIComponent(bodyFont)}:wght@400;500;600&display=swap`}
+        href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(headingFont)}:wght@400;600;700&family=${encodeURIComponent(bodyFont)}:wght@400;500;600&display=swap`}
       />
 
       {/* ============ HERO ============ */}
-      {heroStyle === "split_screen" ? (
-        <section className="relative grid md:grid-cols-2 min-h-[80vh] overflow-hidden">
+      {heroAlign === "left-split" ? (
+        <section className="relative grid md:grid-cols-2 min-h-[70vh] overflow-hidden">
           <div className="relative flex items-center px-6 md:px-16 py-20">
             <div>
               {branding?.logo_url && (
@@ -423,94 +454,63 @@ function DefaultStorefront({ data }: { data: any }) {
                 className="text-4xl md:text-6xl font-bold tracking-tight"
                 style={{ ...headingStyle, color: primary }}
               >
-                {branding?.hero_headline ?? workspace.name}
+                {headlineText}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="mt-5 text-lg md:text-xl opacity-80 max-w-md"
               >
-                {branding?.hero_subhead ?? `Book your appointment with ${workspace.name}.`}
+                {subheadText}
               </motion.p>
               <Link
                 to="/booking/$slug" params={{ slug: workspace.slug }}
-                className={`mt-8 inline-flex items-center gap-2 ${radius} px-8 py-4 text-base font-medium text-white shadow-lg hover:shadow-xl transition-all hover:scale-105`}
+                className={`mt-8 inline-flex items-center gap-2 ${radiusClass} ${shadowClass} ${hoverCls} px-8 py-4 text-base font-medium text-white`}
                 style={{ backgroundColor: primary }}
               >
                 {branding?.cta_label ?? "Book now"} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
-          <div className="relative min-h-[40vh] md:min-h-full overflow-hidden">
-            <img
-              src={branding?.hero_image_url ?? galleryImages[0].src}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+          <div
+            className="relative min-h-[40vh] md:min-h-full overflow-hidden"
+            style={{ background: `linear-gradient(135deg, ${primary}22, ${accent}22)` }}
+          >
+            {branding?.hero_image_url && (
+              <img src={branding.hero_image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 70% 30%, ${accent}40, transparent 60%)` }} />
           </div>
         </section>
-      ) : heroStyle === "ambient_glow" ? (
+      ) : (
         <section className="relative overflow-hidden">
           <div
-            className="absolute inset-0 opacity-60"
+            className="absolute inset-0 opacity-70"
             style={{
-              background: `radial-gradient(circle at 20% 20%, ${primary}55, transparent 50%), radial-gradient(circle at 80% 60%, ${accent}44, transparent 55%)`,
+              background: `radial-gradient(circle at 20% 20%, ${primary}33, transparent 50%), radial-gradient(circle at 80% 60%, ${accent}33, transparent 55%)`,
             }}
           />
-          <div className="relative max-w-5xl mx-auto px-6 pt-24 pb-28 md:pt-36 md:pb-44 text-center">
+          <div className="relative max-w-5xl mx-auto px-6 pt-24 pb-20 md:pt-36 md:pb-28 text-center">
+            {branding?.logo_url && (
+              <img src={branding.logo_url} alt={workspace.name} className="h-16 mx-auto mb-8 object-contain" />
+            )}
             <motion.h1
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               className="text-5xl md:text-7xl font-bold tracking-tight"
               style={{ ...headingStyle, color: primary }}
             >
-              {branding?.hero_headline ?? workspace.name}
+              {headlineText}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mt-6 text-lg md:text-2xl opacity-80 max-w-2xl mx-auto"
+              className="mt-6 text-lg md:text-xl opacity-80 max-w-2xl mx-auto"
             >
-              {branding?.hero_subhead ?? `Book your appointment with ${workspace.name}.`}
+              {subheadText}
             </motion.p>
             <Link
               to="/booking/$slug" params={{ slug: workspace.slug }}
-              className={`mt-10 inline-flex items-center gap-2 ${radius} px-10 py-5 text-base font-medium text-white shadow-2xl hover:shadow-xl transition-all hover:scale-105`}
-              style={{ backgroundColor: primary }}
-            >
-              {branding?.cta_label ?? "Book now"} <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </section>
-      ) : (
-        <section className="relative overflow-hidden">
-          {branding?.hero_image_url && (
-            <div className="absolute inset-0">
-              <img src={branding.hero_image_url} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent, ${bg} 90%)` }} />
-            </div>
-          )}
-          <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 md:pt-32 md:pb-40 text-center">
-            {branding?.logo_url && (
-              <img src={branding.logo_url} alt={workspace.name} className="h-16 mx-auto mb-8 object-contain" />
-            )}
-            <motion.h1
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-6xl font-bold tracking-tight"
-              style={{ ...headingStyle, color: primary }}
-            >
-              {branding?.hero_headline ?? workspace.name}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="mt-4 text-lg md:text-xl opacity-80 max-w-2xl mx-auto"
-            >
-              {branding?.hero_subhead ?? `Book your appointment with ${workspace.name}.`}
-            </motion.p>
-            <Link
-              to="/booking/$slug" params={{ slug: workspace.slug }}
-              className={`mt-8 inline-flex items-center gap-2 ${radius} px-8 py-4 text-base font-medium text-white shadow-lg hover:shadow-xl transition-all hover:scale-105`}
+              className={`mt-10 inline-flex items-center gap-2 ${radiusClass} ${shadowClass} ${hoverCls} px-10 py-5 text-base font-medium text-white`}
               style={{ backgroundColor: primary }}
             >
               {branding?.cta_label ?? "Book now"} <ArrowRight className="w-4 h-4" />
@@ -519,84 +519,116 @@ function DefaultStorefront({ data }: { data: any }) {
         </section>
       )}
 
-      {/* ============ INSPIRATION GALLERY ============ */}
-      {showGallery && (
-        <section className="max-w-6xl mx-auto px-6 py-14">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] opacity-60">Book the Look</p>
-              <h2 className="mt-2 text-3xl md:text-4xl font-bold" style={{ ...headingStyle, color: primary }}>
-                Inspiration Gallery
-              </h2>
-            </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-3 md:gap-5 md:overflow-visible">
-            {galleryImages.map((img, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                className={`group relative shrink-0 w-[78%] sm:w-[55%] md:w-auto snap-center overflow-hidden ${radius} shadow-md`}
-                style={{ aspectRatio: i % 3 === 1 ? "3/4" : "4/5" }}
-              >
-                <img src={img.src} alt={img.tag} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute inset-x-0 bottom-0 p-5 translate-y-3 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <p className="text-white text-sm font-medium mb-3">{img.tag}</p>
-                  <button
-                    onClick={() => {
-                      const first = variants[0];
-                      if (first) openServiceDrawer(first);
-                    }}
-                    className={`inline-flex items-center gap-2 ${radius} px-4 py-2 text-xs font-semibold text-white backdrop-blur bg-white/15 ring-1 ring-white/30 hover:bg-white/25 transition`}
-                  >
-                    Book This Look <ArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ============ SERVICES ============ */}
-      <section className="max-w-5xl mx-auto px-6 py-12 pb-32">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ ...headingStyle, color: primary }}>
+      {/* ============ SERVICES (real DB data, styled by ui_tokens) ============ */}
+      <section className="max-w-6xl mx-auto px-6 py-16 pb-32">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-10" style={{ ...headingStyle, color: primary }}>
           Services
         </h2>
 
         {categories.length === 0 ? (
           <p className="text-center opacity-70">Services coming soon.</p>
-        ) : (
-          <div className="space-y-12">
+        ) : cardLayout === "editorial-stack" ? (
+          /* EDITORIAL STACK — centered single column premium list */
+          <div className={`max-w-2xl mx-auto flex flex-col ${gap}`}>
             {categories.map((cat: any) => {
               const catVariants = variants.filter((v: any) => v.category_id === cat.id);
+              if (catVariants.length === 0) return null;
               return (
                 <div key={cat.id}>
-                  <h3 className="text-2xl font-semibold mb-2" style={headingStyle}>{cat.name}</h3>
-                  {cat.description && <p className="opacity-70 mb-6">{cat.description}</p>}
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <h3 className="text-2xl font-semibold mb-1 text-center" style={headingStyle}>{cat.name}</h3>
+                  {cat.description && <p className="opacity-70 mb-5 text-center text-sm">{cat.description}</p>}
+                  <div className={`flex flex-col ${gap}`}>
                     {catVariants.map((v: any) => (
                       <button
                         key={v.id}
                         type="button"
                         onClick={() => openServiceDrawer(v)}
-                        className={`group ${radius} border bg-white/60 backdrop-blur p-5 text-left hover:shadow-lg transition-all hover:-translate-y-0.5`}
-                        style={{ borderColor: `${primary}20` }}
+                        className={`${cardClass} ${hoverCls} text-left w-full group`}
+                        style={cardStyle}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <h4 className="font-semibold text-lg" style={headingStyle}>{v.name}</h4>
                             {v.description && <p className="text-sm opacity-70 mt-1">{v.description}</p>}
                             <div className="flex items-center gap-3 mt-3 text-sm opacity-70">
-                              <Clock className="w-3.5 h-3.5" />
-                              {v.duration_min} min
+                              <Clock className="w-3.5 h-3.5" /> {v.duration_min} min
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-xl font-bold" style={{ color: accent }}>
-                              {formatPrice(v.price_cents)}
+                            <div className="text-xl font-bold" style={{ color: accent }}>{formatPrice(v.price_cents)}</div>
+                            <div className="text-xs opacity-60 mt-1">Customize →</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : cardLayout === "bento-grid" ? (
+          /* BENTO GRID — asymmetric modular blocks */
+          <div className={`grid grid-cols-1 md:grid-cols-3 auto-rows-[minmax(160px,auto)] ${gap}`}>
+            {categories.flatMap((cat: any) =>
+              variants
+                .filter((v: any) => v.category_id === cat.id)
+                .map((v: any, i: number) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => openServiceDrawer(v)}
+                    className={`${cardClass} ${hoverCls} ${bentoSpan(i)} text-left flex flex-col justify-between group`}
+                    style={cardStyle}
+                  >
+                    <div>
+                      <span
+                        className={`inline-block text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 ${radiusClass} mb-3`}
+                        style={{ backgroundColor: `${accent}1f`, color: accent }}
+                      >
+                        {cat.name}
+                      </span>
+                      <h4 className="font-semibold text-xl leading-tight" style={headingStyle}>{v.name}</h4>
+                      {v.description && <p className="text-sm opacity-70 mt-2 line-clamp-3">{v.description}</p>}
+                    </div>
+                    <div className="flex items-end justify-between mt-4">
+                      <div className="flex items-center gap-1.5 text-xs opacity-70">
+                        <Clock className="w-3 h-3" /> {v.duration_min} min
+                      </div>
+                      <div className="text-lg font-bold" style={{ color: primary }}>{formatPrice(v.price_cents)}</div>
+                    </div>
+                  </button>
+                ))
+            )}
+          </div>
+        ) : (
+          /* MODERN MINIMALIST — clean two-column grid */
+          <div className={`flex flex-col ${gap}`}>
+            {categories.map((cat: any) => {
+              const catVariants = variants.filter((v: any) => v.category_id === cat.id);
+              if (catVariants.length === 0) return null;
+              return (
+                <div key={cat.id}>
+                  <h3 className="text-2xl font-semibold mb-2" style={headingStyle}>{cat.name}</h3>
+                  {cat.description && <p className="opacity-70 mb-5">{cat.description}</p>}
+                  <div className={`grid sm:grid-cols-2 ${gap}`}>
+                    {catVariants.map((v: any) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => openServiceDrawer(v)}
+                        className={`${cardClass} ${hoverCls} text-left group`}
+                        style={cardStyle}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-lg" style={headingStyle}>{v.name}</h4>
+                            {v.description && <p className="text-sm opacity-70 mt-1">{v.description}</p>}
+                            <div className="flex items-center gap-3 mt-3 text-sm opacity-70">
+                              <Clock className="w-3.5 h-3.5" /> {v.duration_min} min
                             </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xl font-bold" style={{ color: accent }}>{formatPrice(v.price_cents)}</div>
                             <div className="text-xs opacity-60 mt-1">Customize →</div>
                           </div>
                         </div>
@@ -632,10 +664,11 @@ function DefaultStorefront({ data }: { data: any }) {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+            {/* Length add-on chips */}
             {lengthOptions.length > 0 && (
               <div>
                 <h4 className="text-xs uppercase tracking-[0.2em] opacity-60 mb-3">Length</h4>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="flex flex-wrap gap-2">
                   {lengthOptions.map((l: any) => {
                     const active = selectedLengthId === l.id;
                     return (
@@ -643,16 +676,17 @@ function DefaultStorefront({ data }: { data: any }) {
                         key={l.id}
                         type="button"
                         onClick={() => setSelectedLengthId(active ? null : l.id)}
-                        className={`${radius} border-2 p-3 text-left transition-all ${active ? "shadow-md scale-[1.02]" : "hover:border-opacity-60"}`}
+                        className={`${radiusClass} ${hoverCls} border-2 px-4 py-2 text-sm font-medium`}
                         style={{
-                          borderColor: active ? primary : `${primary}25`,
-                          backgroundColor: active ? `${primary}08` : "transparent",
+                          borderColor: active ? primary : `${primary}33`,
+                          backgroundColor: active ? `${primary}14` : "transparent",
+                          color: active ? primary : undefined,
                         }}
                       >
-                        <div className="font-semibold text-sm">{l.name}</div>
-                        <div className="text-xs mt-0.5" style={{ color: accent }}>
+                        <span>{l.name}</span>
+                        <span className="ml-2 text-xs opacity-70">
                           {l.price_cents === 0 ? "Base" : `+${formatPrice(l.price_cents)}`}
-                        </div>
+                        </span>
                       </button>
                     );
                   })}
@@ -660,6 +694,7 @@ function DefaultStorefront({ data }: { data: any }) {
               </div>
             )}
 
+            {/* Color add-on chips */}
             {hairColors.length > 0 && (
               <div>
                 <h4 className="text-xs uppercase tracking-[0.2em] opacity-60 mb-3">Color</h4>
@@ -671,7 +706,7 @@ function DefaultStorefront({ data }: { data: any }) {
                         key={c.id}
                         type="button"
                         onClick={() => setSelectedColorId(active ? null : c.id)}
-                        className="flex flex-col items-center gap-1.5 group"
+                        className={`flex flex-col items-center gap-1.5 ${hoverCls}`}
                         title={c.label}
                       >
                         <div
@@ -689,7 +724,8 @@ function DefaultStorefront({ data }: { data: any }) {
               </div>
             )}
 
-            <div className={`${radius} p-4`} style={{ backgroundColor: `${primary}08` }}>
+            {/* Live total */}
+            <div className={`${radiusClass} p-4`} style={{ backgroundColor: `${primary}10` }}>
               <div className="flex justify-between text-sm">
                 <span className="opacity-70">Base</span>
                 <span className="font-medium">{formatPrice(basePrice)}</span>
@@ -715,7 +751,7 @@ function DefaultStorefront({ data }: { data: any }) {
           <div className="border-t p-4" style={{ borderColor: `${primary}15` }}>
             <a
               href={`${bookingHref}${bookingQuery}`}
-              className={`flex items-center justify-center gap-2 w-full ${radius} px-6 py-4 text-white font-semibold shadow-lg`}
+              className={`flex items-center justify-center gap-2 w-full ${radiusClass} ${shadowClass} ${hoverCls} px-6 py-4 text-white font-semibold`}
               style={{ backgroundColor: primary }}
             >
               Secure Appointment Slot <ArrowRight className="w-4 h-4" />
@@ -725,13 +761,13 @@ function DefaultStorefront({ data }: { data: any }) {
       </Sheet>
 
       {/* ============ STICKY MOBILE CHECKOUT BAR ============ */}
-      {showStickyBar && activeVariant && !drawerOpen && (
+      {activeVariant && !drawerOpen && (
         <motion.div
           initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
           className="fixed inset-x-0 bottom-0 z-40 px-3 pb-3"
         >
           <div
-            className={`mx-auto max-w-3xl ${radius} shadow-2xl ring-1 backdrop-blur-xl flex items-center gap-3 p-3`}
+            className={`mx-auto max-w-3xl ${radiusClass} ${shadowClass} ring-1 backdrop-blur-xl flex items-center gap-3 p-3`}
             style={{
               backgroundColor: `${bg}f0`,
               boxShadow: `0 10px 40px -10px ${primary}40`,
@@ -751,7 +787,7 @@ function DefaultStorefront({ data }: { data: any }) {
             </div>
             <a
               href={`${bookingHref}${bookingQuery}`}
-              className={`relative inline-flex items-center gap-1.5 ${radius} px-5 py-3 text-sm font-semibold text-white shadow-lg whitespace-nowrap`}
+              className={`relative inline-flex items-center gap-1.5 ${radiusClass} ${hoverCls} px-5 py-3 text-sm font-semibold text-white shadow-lg whitespace-nowrap`}
               style={{ backgroundColor: primary }}
             >
               <span
@@ -767,3 +803,4 @@ function DefaultStorefront({ data }: { data: any }) {
     </div>
   );
 }
+
