@@ -21,6 +21,8 @@ import {
   DollarSign,
   Users,
 } from "lucide-react";
+import { getTenantSlugFromHost } from "@/lib/subdomain";
+import { TenantStorefrontBySlug } from "./$slug";
 
 export const Route = createFileRoute("/")({
   component: Landing,
