@@ -20,11 +20,22 @@ export const Route = createFileRoute("/setup")({
   }),
 });
 
-const SUGGESTIONS = [
-  "A sleek, high-end luxury hair studio with monochrome dark themes, gold metallic accent colors, and editorial serif headers.",
-  "A bright, friendly nail salon with soft pastel pinks, playful rounded type, and welcoming copy for first-time clients.",
-  "A modern men's barbershop with charcoal backgrounds, sharp sans-serif headers, and bold orange accents.",
-  "A serene wellness spa featuring sage greens, warm sand neutrals, and a calming editorial tone.",
+const SUGGESTIONS: Array<{ label: string; prompt: string }> = [
+  {
+    label: "Soft Baby Pink Luxury",
+    prompt:
+      "A high-end, minimalist luxury nail salon with soft baby pink accents, clean white backgrounds, and elegant serif typography.",
+  },
+  {
+    label: "Moody Dark & Neon Green",
+    prompt:
+      "A moody, dark barbershop with deep charcoal and black backgrounds, sharp neon green accents, and bold modern sans-serif type.",
+  },
+  {
+    label: "Earthy Clean Wellness",
+    prompt:
+      "A calming, earthy wellness spa with sage greens, warm beige neutrals, soft cream backgrounds, and a serene editorial tone.",
+  },
 ];
 
 const DEFAULTS: GeneratedBranding = {
