@@ -20,11 +20,22 @@ export const Route = createFileRoute("/setup")({
   }),
 });
 
-const SUGGESTIONS = [
-  "A sleek, high-end luxury hair studio with monochrome dark themes, gold metallic accent colors, and editorial serif headers.",
-  "A bright, friendly nail salon with soft pastel pinks, playful rounded type, and welcoming copy for first-time clients.",
-  "A modern men's barbershop with charcoal backgrounds, sharp sans-serif headers, and bold orange accents.",
-  "A serene wellness spa featuring sage greens, warm sand neutrals, and a calming editorial tone.",
+const SUGGESTIONS: Array<{ label: string; prompt: string }> = [
+  {
+    label: "Soft Baby Pink Luxury",
+    prompt:
+      "A high-end, minimalist luxury nail salon with soft baby pink accents, clean white backgrounds, and elegant serif typography.",
+  },
+  {
+    label: "Moody Dark & Neon Green",
+    prompt:
+      "A moody, dark barbershop with deep charcoal and black backgrounds, sharp neon green accents, and bold modern sans-serif type.",
+  },
+  {
+    label: "Earthy Clean Wellness",
+    prompt:
+      "A calming, earthy wellness spa with sage greens, warm beige neutrals, soft cream backgrounds, and a serene editorial tone.",
+  },
 ];
 
 const DEFAULTS: GeneratedBranding = {
@@ -110,13 +121,13 @@ function SetupWizard() {
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 text-xs font-mono tracking-widest uppercase text-muted-foreground mb-3">
               <Sparkles className="w-3.5 h-3.5" />
-              AI Setup Wizard · Step 2
+              AI Design Engine · Step 2
             </div>
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-3">
-              Describe your brand.
+              Design Your Storefront with AI
             </h1>
             <p className="text-muted-foreground text-lg">
-              One sentence is enough. We'll design colors, type, and copy for your storefront.
+              Describe the vibe in plain English. We'll generate colors, type, and copy you can publish in one click.
             </p>
           </div>
 
@@ -124,21 +135,24 @@ function SetupWizard() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="e.g. A sleek, high-end luxury hair studio with monochrome dark themes, gold metallic accents, and editorial serif headers."
+            placeholder="Describe your studio's look and feel (e.g., A high-end, minimalist luxury nail salon with soft baby pink accents, clean white backgrounds, and elegant serif typography)..."
             rows={6}
             className="w-full rounded-xl border border-input bg-card/50 backdrop-blur px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
             disabled={generating || publishing}
           />
 
           <div className="mt-3 flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s, i) => (
+            <span className="text-xs uppercase tracking-widest text-muted-foreground self-center mr-1">
+              Try
+            </span>
+            {SUGGESTIONS.map((s) => (
               <button
-                key={i}
-                onClick={() => setPrompt(s)}
-                className="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent hover:text-accent-foreground transition truncate max-w-[280px]"
-                title={s}
+                key={s.label}
+                onClick={() => setPrompt(s.prompt)}
+                className="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent hover:text-accent-foreground transition"
+                title={s.prompt}
               >
-                {s.slice(0, 48)}…
+                {s.label}
               </button>
             ))}
           </div>
@@ -157,7 +171,7 @@ function SetupWizard() {
             {generating ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Conjuring your brand…
+                Generating brand vibe…
                 <motion.span
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                   animate={{ x: ["-100%", "100%"] }}
@@ -167,7 +181,7 @@ function SetupWizard() {
             ) : (
               <>
                 <Wand2 className="w-5 h-5" />
-                Generate Brand Identity
+                Generate Brand Vibe
                 <motion.span
                   className="absolute -top-1 -right-1 text-yellow-300"
                   animate={{ scale: [1, 1.3, 1], rotate: [0, 15, 0] }}
@@ -179,25 +193,23 @@ function SetupWizard() {
             )}
           </button>
 
-          {hasGenerated && (
-            <motion.button
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              onClick={handlePublish}
-              disabled={publishing || generating}
-              className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary/30 bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition px-6 py-3.5 font-semibold disabled:opacity-60"
-            >
-              {publishing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" /> Publishing…
-                </>
-              ) : (
-                <>
-                  <Rocket className="w-5 h-5" /> Publish Storefront
-                </>
-              )}
-            </motion.button>
-          )}
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={handlePublish}
+            disabled={!hasGenerated || publishing || generating}
+            className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary/30 bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition px-6 py-3.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:text-foreground disabled:hover:border-primary/30"
+          >
+            {publishing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" /> Publishing…
+              </>
+            ) : (
+              <>
+                <Rocket className="w-5 h-5" /> Publish & Launch Storefront
+              </>
+            )}
+          </motion.button>
 
           {hasGenerated && (
             <motion.div

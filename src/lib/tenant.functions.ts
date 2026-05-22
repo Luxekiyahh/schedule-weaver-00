@@ -265,6 +265,11 @@ Rules:
 - hero_headline: 3-8 words, punchy, brand-forward (not generic).
 - hero_subheading: 1 sentence, warm, specific to the brief.
 - cta_label: 2-3 words ("Book now", "Reserve seat", "Start booking").
+
+Palette hints (use as inspiration when keywords match the brief, but adapt freely):
+- "pink" / "baby pink" / "soft luxury": background near #FFF0F5, accents like #FFB6C1 and #DB7093, elegant serif heading.
+- "dark" / "moody" / "neon": near-black backgrounds (#121212, #1E1E1E) with a single saturated accent (neon green, electric blue, magenta) and bold sans heading.
+- "earthy" / "wellness" / "spa" / "natural": warm creams (#FDFBF7), sage greens (#606C38), warm clay (#DDA15E), serene serif + clean sans pairing.
 Return ONLY valid JSON matching the schema. No prose, no markdown.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
