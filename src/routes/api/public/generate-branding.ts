@@ -52,7 +52,7 @@ Rules:
 - Match the vibe of the brief (moody/dark → near-black bg + saturated accent; soft luxury → cream/pink; earthy → warm naturals).
 `;
 
-export const Route = createFileRoute("/api/generate-branding")({
+export const Route = createFileRoute("/api/public/generate-branding")({
   server: {
     handlers: {
       POST: async ({ request }) => {

@@ -95,7 +95,7 @@ function SetupWizard() {
       const token = sess.session?.access_token;
       if (!token) throw new Error("Please sign in again.");
 
-      const resp = await fetch("/api/generate-branding", {
+      const resp = await fetch("/api/public/generate-branding", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
