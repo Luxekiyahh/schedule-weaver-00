@@ -21,6 +21,8 @@ import {
   DollarSign,
   Users,
 } from "lucide-react";
+import { getTenantSlugFromHost } from "@/lib/subdomain";
+import { TenantStorefrontBySlug } from "./$slug";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -43,6 +45,19 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const [tenantSlug, setTenantSlug] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    setTenantSlug(getTenantSlugFromHost());
+  }, []);
+
+  // Avoid hydration mismatch — render nothing until we've inspected the hostname.
+  if (tenantSlug === undefined) return null;
+
+  if (tenantSlug) {
+    return <TenantStorefrontBySlug slug={tenantSlug} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white overflow-hidden selection:bg-indigo-500/30">
       <BackgroundFx />
@@ -54,6 +69,7 @@ function Landing() {
     </div>
   );
 }
+
 
 /* ---------------- Background ---------------- */
 function BackgroundFx() {

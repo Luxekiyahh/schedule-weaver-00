@@ -1,6 +1,6 @@
 import * as React from "react";
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { Clock, ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
@@ -66,7 +66,14 @@ function StorefrontPage() {
   const params = Route.useParams();
   const { data } = useSuspenseQuery(storefrontQuery(params.slug));
   if (!data.workspace) return null;
+  return <StorefrontView data={data} />;
+}
 
+/**
+ * Reusable storefront renderer — used by /$slug route AND by the index route
+ * when a tenant subdomain (e.g. dolliimarie.procschedule.com) is detected.
+ */
+export function StorefrontView({ data }: { data: any }) {
   return (
     <>
       <OwnerAdminOverlay ownerId={data.workspace.owner_id} />
@@ -79,8 +86,40 @@ function StorefrontPage() {
   );
 }
 
+/**
+ * Client-side fetcher variant used by the subdomain-routed root path.
+ * The /$slug file route preloads via loader; this component fetches at
+ * mount time because hostname parsing can only happen on the client.
+ */
+export function TenantStorefrontBySlug({ slug }: { slug: string }) {
+  const { data, isLoading, error } = useQuery(storefrontQuery(slug));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-sm text-muted-foreground">Loading storefront…</div>
+      </div>
+    );
+  }
+  if (error || !data?.workspace) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 bg-background">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-2">Storefront not found</h1>
+          <p className="text-muted-foreground mb-6">
+            No business is registered at <code>{slug}</code>.
+          </p>
+          <a href="https://procschedule.com/signup" className="text-primary hover:underline">
+            Claim this subdomain
+          </a>
+        </div>
+      </div>
+    );
+  }
+  return <StorefrontView data={data} />;
+}
+
 function OwnerAdminOverlay({ ownerId }: { ownerId?: string | null }) {
-  const navigate = useNavigate();
   const [isStorefrontOwner, setIsStorefrontOwner] = React.useState(false);
 
   React.useEffect(() => {
@@ -110,7 +149,9 @@ function OwnerAdminOverlay({ ownerId }: { ownerId?: string | null }) {
       </span>
       <button
         type="button"
-        onClick={() => navigate({ to: "/dashboard/home" })}
+        onClick={() => {
+          window.location.href = "https://procschedule.com/dashboard/home";
+        }}
         className="inline-flex items-center gap-1.5 rounded-full bg-white text-black text-xs font-semibold px-3 py-1.5 hover:bg-white/90 transition"
       >
         <LayoutDashboard className="h-3.5 w-3.5" />
@@ -119,6 +160,7 @@ function OwnerAdminOverlay({ ownerId }: { ownerId?: string | null }) {
     </div>
   );
 }
+
 
 /* ============================================================
    DOLLIIMARIE — Luxury black + gold, script-driven, mobile-first
