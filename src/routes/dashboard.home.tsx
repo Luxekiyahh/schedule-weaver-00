@@ -138,7 +138,9 @@ function HomePage() {
     return { revenue, hoursToday, topService };
   }, [weekAppts, today]);
 
-  const bookingUrl = ctx ? `${typeof window !== "undefined" ? window.location.origin : ""}/book/${ctx.workspaceSlug}` : "";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const hasSlug = Boolean(ctx?.workspaceSlug);
+  const bookingUrl = ctx && hasSlug ? `${origin}/${ctx.workspaceSlug}` : "";
 
   const copy = async () => {
     if (!bookingUrl) return;
