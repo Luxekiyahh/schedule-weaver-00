@@ -194,14 +194,27 @@ function HomePage() {
               <p className="text-xs uppercase tracking-wider text-indigo-200">Your public booking link</p>
               <p className="mt-1 truncate font-mono text-sm text-white/90">{bookingUrl || "—"}</p>
             </div>
-            <button
-              onClick={copy}
-              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                copied ? "bg-emerald-400 text-emerald-950" : "bg-white text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              {copied ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy link</>}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={copy}
+                disabled={!hasSlug}
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  copied ? "bg-emerald-400 text-emerald-950" : "bg-white text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                {copied ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy link</>}
+              </button>
+              {hasSlug && (
+                <a
+                  href={`/${ctx.workspaceSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+                >
+                  <ExternalLink className="h-4 w-4" /> View Live Site
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
