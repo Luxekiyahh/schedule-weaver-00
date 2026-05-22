@@ -360,6 +360,7 @@ const TONES: Record<string, string> = {
   emerald: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
   amber: "bg-amber-50 text-amber-600 group-hover:bg-amber-100",
   rose: "bg-rose-50 text-rose-600 group-hover:bg-rose-100",
+  violet: "bg-violet-50 text-violet-600 group-hover:bg-violet-100",
 };
 
 function ActionCard({
