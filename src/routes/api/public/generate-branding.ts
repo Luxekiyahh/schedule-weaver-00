@@ -157,7 +157,7 @@ export const Route = createFileRoute("/api/public/generate-branding")({
             },
             signal: controller.signal,
             body: JSON.stringify({
-              model: "claude-3-5-sonnet-20241022",
+              model: "claude-3-5-sonnet-latest",
               max_tokens: 1024,
               system: SYSTEM_PROMPT,
               messages: [{ role: "user", content: parsedBody.prompt }],
