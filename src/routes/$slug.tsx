@@ -61,8 +61,241 @@ function formatPrice(cents: number) {
 function StorefrontPage() {
   const params = Route.useParams();
   const { data } = useSuspenseQuery(storefrontQuery(params.slug));
+  if (!data.workspace) return null;
+
+  if (data.workspace.slug === "dolliimarie") {
+    return <DolliimarieStorefront data={data} />;
+  }
+  return <DefaultStorefront data={data} />;
+}
+
+/* ============================================================
+   DOLLIIMARIE — Luxury black + gold, script-driven, mobile-first
+   ============================================================ */
+function DolliimarieStorefront({ data }: { data: any }) {
   const { workspace, branding, categories, variants, lengthOptions, hairColors } = data;
-  if (!workspace) return null;
+  const handle = workspace.slug;
+
+  return (
+    <div className="dm-root min-h-screen">
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Allura&family=Inter:wght@300;400;500;600&display=swap"
+      />
+      <style>{`
+        .dm-root {
+          --dm-bg: oklch(0.08 0.01 30);
+          --dm-fg: oklch(0.95 0.02 80);
+          --dm-primary: oklch(0.78 0.13 80);
+          --dm-primary-glow: oklch(0.88 0.10 85);
+          --dm-muted: oklch(0.65 0.03 70);
+          --dm-card: oklch(0.11 0.01 30);
+          --dm-border: color-mix(in oklab, oklch(0.78 0.13 80) 30%, transparent);
+          --dm-gradient-gold: linear-gradient(135deg,#b8862f 0%,#f3d27a 35%,#fff4c2 50%,#f3d27a 65%,#8a5e1f 100%);
+          --dm-shadow: 0 10px 40px -10px color-mix(in oklab, oklch(0.78 0.13 80) 40%, transparent);
+          background-color: var(--dm-bg);
+          color: var(--dm-fg);
+          font-family: 'Inter', system-ui, sans-serif;
+          background-image:
+            radial-gradient(circle at 20% 30%, rgba(243,210,122,0.06), transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(243,210,122,0.05), transparent 40%),
+            radial-gradient(circle at 50% 110%, rgba(243,210,122,0.04), transparent 50%);
+        }
+        .dm-script { font-family: 'Allura', cursive; font-weight: 400; }
+        .dm-text-gold {
+          background: var(--dm-gradient-gold);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: dm-shimmer 6s ease-in-out infinite;
+        }
+        @keyframes dm-shimmer {
+          0%,100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .dm-card {
+          background: var(--dm-card);
+          border: 1px solid var(--dm-border);
+          border-radius: 18px;
+          padding: 1.25rem;
+          box-shadow: var(--dm-shadow);
+        }
+        .dm-pill {
+          display: inline-flex; align-items: center; justify-content: center;
+          padding: 0.45rem 1.1rem; border-radius: 999px;
+          border: 1px solid var(--dm-border);
+          color: var(--dm-primary);
+          text-transform: uppercase; letter-spacing: 0.32em;
+          font-size: 11px; font-weight: 500;
+        }
+        .dm-ornament { color: color-mix(in oklab, var(--dm-primary) 60%, transparent); letter-spacing: 0.6em; }
+        .dm-cta {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; padding: 0.95rem 1.25rem; border-radius: 999px;
+          border: 1px solid var(--dm-border);
+          color: var(--dm-primary);
+          text-transform: uppercase; letter-spacing: 0.32em; font-size: 11px;
+          transition: all .3s ease;
+        }
+        .dm-cta:hover { background: color-mix(in oklab, var(--dm-primary) 8%, transparent); transform: translateY(-1px); }
+        .dm-eyebrow { text-transform: uppercase; letter-spacing: 0.5em; font-size: 10px; color: var(--dm-muted); }
+        .dm-label { text-transform: uppercase; letter-spacing: 0.32em; font-size: 11px; color: var(--dm-muted); }
+        .dm-price { color: var(--dm-primary); font-weight: 500; letter-spacing: 0.1em; }
+        .dm-divider {
+          display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0;
+          color: color-mix(in oklab, var(--dm-primary) 50%, transparent);
+        }
+        .dm-divider::before, .dm-divider::after {
+          content: ""; flex: 1; height: 1px;
+          background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--dm-primary) 40%, transparent), transparent);
+        }
+        .dm-swatch {
+          width: 36px; height: 36px; border-radius: 999px;
+          border: 1px solid var(--dm-border);
+          box-shadow: 0 0 0 2px color-mix(in oklab, var(--dm-primary) 10%, transparent);
+        }
+      `}</style>
+
+      <div className="mx-auto max-w-[560px] px-5 py-10">
+        {/* Header */}
+        <header className="text-center">
+          <div className="dm-eyebrow">Welcome to {workspace.name}</div>
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="dm-script dm-text-gold text-7xl md:text-8xl leading-none mt-4"
+          >
+            {branding?.hero_headline ?? workspace.name}
+          </motion.h1>
+          <nav className="mt-6 flex items-center justify-center gap-4 dm-label">
+            <Link to="/$slug" params={{ slug: handle }} className="hover:text-[color:var(--dm-primary)] transition">Home</Link>
+            <span className="text-[color:var(--dm-border)]">·</span>
+            <Link to="/booking/$slug" params={{ slug: handle }} className="hover:text-[color:var(--dm-primary)] transition">Services</Link>
+          </nav>
+        </header>
+
+        {branding?.hero_subhead && (
+          <p className="mt-8 text-center text-sm text-[color:var(--dm-muted)] italic max-w-sm mx-auto leading-relaxed">
+            {branding.hero_subhead}
+          </p>
+        )}
+
+        {/* Ornament + Menu heading */}
+        <div className="mt-12 text-center">
+          <div className="dm-ornament text-sm">✦ ✦ ✦</div>
+          <div className="mt-4 flex items-center justify-center">
+            <span className="dm-pill">The Menu</span>
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="mt-8 space-y-10">
+          {categories.length === 0 && (
+            <p className="text-center text-sm text-[color:var(--dm-muted)] italic">Services coming soon.</p>
+          )}
+          {categories.map((cat: any) => {
+            const catVariants = variants.filter((v: any) => v.category_id === cat.id);
+            if (catVariants.length === 0) return null;
+            return (
+              <section key={cat.id}>
+                <h2 className="dm-script dm-text-gold text-4xl text-center leading-none">{cat.name}</h2>
+                {cat.description && (
+                  <p className="mt-2 text-center text-xs text-[color:var(--dm-muted)] italic">{cat.description}</p>
+                )}
+                <div className="dm-divider"><span>✦</span></div>
+                <div className="space-y-4">
+                  {catVariants.map((v: any) => (
+                    <div key={v.id} className="dm-card">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="dm-label text-[color:var(--dm-fg)]">{v.name}</h3>
+                          {v.description && (
+                            <p className="mt-2 text-xs text-[color:var(--dm-muted)] italic leading-relaxed">{v.description}</p>
+                          )}
+                          <div className="mt-3 flex items-center gap-1.5 dm-label">
+                            <Clock className="w-3 h-3" />
+                            <span>{v.duration_min} min</span>
+                          </div>
+                        </div>
+                        <div className="dm-price text-lg">{formatPrice(v.price_cents)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        {/* Length options */}
+        {lengthOptions.length > 0 && (
+          <section className="mt-12">
+            <div className="text-center">
+              <span className="dm-pill">Length</span>
+            </div>
+            <div className="mt-5 dm-card">
+              <ul className="divide-y" style={{ borderColor: "var(--dm-border)" }}>
+                {lengthOptions.map((l: any) => (
+                  <li key={l.id} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                    <span className="dm-label text-[color:var(--dm-fg)]">{l.name}</span>
+                    <span className="dm-price text-sm">+{formatPrice(l.price_cents)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
+
+        {/* Hair colors */}
+        {hairColors.length > 0 && (
+          <section className="mt-12">
+            <div className="text-center">
+              <span className="dm-pill">Color</span>
+            </div>
+            <div className="mt-5 dm-card">
+              <div className="flex flex-wrap gap-4 justify-center">
+                {hairColors.map((c: any) => (
+                  <div key={c.id} className="flex flex-col items-center gap-2">
+                    <div className="dm-swatch" style={{ backgroundColor: c.swatch_hex }} title={c.label} />
+                    <span className="dm-label text-[10px]">{c.code}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* CTA */}
+        <div className="mt-12">
+          <Link to="/booking/$slug" params={{ slug: handle }} className="dm-cta">
+            <span>{branding?.cta_label ?? "Reserve your seat"}</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-14 text-center">
+          <div className="dm-ornament text-sm">✦</div>
+          <p className="dm-script dm-text-gold text-3xl mt-2 leading-none">@{handle}</p>
+          <p className="mt-6 dm-label text-[10px]">
+            Powered by{" "}
+            <Link to="/signup" className="underline underline-offset-4 hover:text-[color:var(--dm-primary)]">
+              ProcSchedule
+            </Link>
+          </p>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   DEFAULT tenant storefront (unchanged behavior for others)
+   ============================================================ */
+function DefaultStorefront({ data }: { data: any }) {
+  const { workspace, branding, categories, variants, lengthOptions, hairColors } = data;
 
   const primary = branding?.primary_hex ?? "#4f46e5";
   const accent = branding?.accent_hex ?? "#ec4899";
@@ -70,11 +303,7 @@ function StorefrontPage() {
   const headingFont = branding?.heading_font ?? "Playfair Display";
   const bodyFont = branding?.body_font ?? "Inter";
 
-  // Inline style with CSS variables for branding.
   const themeStyle = {
-    "--brand-primary": primary,
-    "--brand-accent": accent,
-    "--brand-bg": bg,
     fontFamily: `${bodyFont}, system-ui, sans-serif`,
     backgroundColor: bg,
   } as React.CSSProperties;
@@ -84,21 +313,15 @@ function StorefrontPage() {
 
   return (
     <div className="min-h-screen" style={themeStyle}>
-      {/* Google Fonts — load both heading and body fonts dynamically */}
       <link
         rel="stylesheet"
         href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(headingFont)}:wght@400;700&family=${encodeURIComponent(bodyFont)}:wght@400;500;600&display=swap`}
       />
 
-      {/* Hero */}
       <section className="relative overflow-hidden">
         {branding?.hero_image_url && (
           <div className="absolute inset-0">
-            <img
-              src={branding.hero_image_url}
-              alt=""
-              className="w-full h-full object-cover"
-            />
+            <img src={branding.hero_image_url} alt="" className="w-full h-full object-cover" />
             <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent, ${bg} 90%)` }} />
           </div>
         )}
@@ -141,12 +364,8 @@ function StorefrontPage() {
         </div>
       </section>
 
-      {/* Service menu */}
       <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2
-          className="text-3xl md:text-4xl font-bold text-center mb-12"
-          style={{ ...headingStyle, color: primary }}
-        >
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ ...headingStyle, color: primary }}>
           Services
         </h2>
 
@@ -154,18 +373,14 @@ function StorefrontPage() {
           <p className="text-center opacity-70">Services coming soon.</p>
         ) : (
           <div className="space-y-12">
-            {categories.map((cat) => {
-              const catVariants = variants.filter((v) => v.category_id === cat.id);
+            {categories.map((cat: any) => {
+              const catVariants = variants.filter((v: any) => v.category_id === cat.id);
               return (
                 <div key={cat.id}>
-                  <h3 className="text-2xl font-semibold mb-2" style={headingStyle}>
-                    {cat.name}
-                  </h3>
-                  {cat.description && (
-                    <p className="opacity-70 mb-6">{cat.description}</p>
-                  )}
+                  <h3 className="text-2xl font-semibold mb-2" style={headingStyle}>{cat.name}</h3>
+                  {cat.description && <p className="opacity-70 mb-6">{cat.description}</p>}
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {catVariants.map((v) => (
+                    {catVariants.map((v: any) => (
                       <Link
                         key={v.id}
                         to="/booking/$slug"
@@ -197,19 +412,14 @@ function StorefrontPage() {
           </div>
         )}
 
-        {/* Length & color (hair extensions) */}
         {hasExtensions && (
           <div className="mt-16 grid md:grid-cols-2 gap-8">
             {lengthOptions.length > 0 && (
               <div>
                 <h3 className="text-xl font-semibold mb-4" style={headingStyle}>Length add-ons</h3>
                 <div className="flex flex-wrap gap-2">
-                  {lengthOptions.map((l) => (
-                    <div
-                      key={l.id}
-                      className="px-4 py-2 rounded-full border text-sm"
-                      style={{ borderColor: `${primary}30` }}
-                    >
+                  {lengthOptions.map((l: any) => (
+                    <div key={l.id} className="px-4 py-2 rounded-full border text-sm" style={{ borderColor: `${primary}30` }}>
                       <span className="font-medium">{l.name}</span>
                       <span className="ml-2 opacity-70">+{formatPrice(l.price_cents)}</span>
                     </div>
@@ -221,7 +431,7 @@ function StorefrontPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-4" style={headingStyle}>Color options</h3>
                 <div className="flex flex-wrap gap-3">
-                  {hairColors.map((c) => (
+                  {hairColors.map((c: any) => (
                     <div key={c.id} className="flex flex-col items-center gap-1">
                       <div
                         className="w-10 h-10 rounded-full border-2 shadow-sm"
@@ -253,9 +463,7 @@ function StorefrontPage() {
       <footer className="border-t mt-16 py-8 text-center text-sm opacity-60" style={{ borderColor: `${primary}15` }}>
         <p>
           Powered by{" "}
-          <Link to="/signup" className="underline">
-            ProcSchedule
-          </Link>
+          <Link to="/signup" className="underline">ProcSchedule</Link>
         </p>
       </footer>
     </div>
