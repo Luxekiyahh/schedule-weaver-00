@@ -20,14 +20,18 @@ export type Database = {
           cancelled_by: string | null
           created_at: string
           customer_id: string
+          deposit_cents: number
           end_at: string
+          hair_color: string | null
           id: string
+          length_option_id: string | null
           notes: string | null
           provider_id: string
           service_id: string
           start_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          variant_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -35,14 +39,18 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string
           customer_id: string
+          deposit_cents?: number
           end_at: string
+          hair_color?: string | null
           id?: string
+          length_option_id?: string | null
           notes?: string | null
           provider_id: string
           service_id: string
           start_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
+          variant_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -50,14 +58,18 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string
           customer_id?: string
+          deposit_cents?: number
           end_at?: string
+          hair_color?: string | null
           id?: string
+          length_option_id?: string | null
           notes?: string | null
           provider_id?: string
           service_id?: string
           start_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
+          variant_id?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -66,6 +78,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_length_option_id_fkey"
+            columns: ["length_option_id"]
+            isOneToOne: false
+            referencedRelation: "service_length_options"
             referencedColumns: ["id"]
           },
           {
@@ -80,6 +99,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "service_variants"
             referencedColumns: ["id"]
           },
           {
@@ -296,6 +322,132 @@ export type Database = {
           },
         ]
       }
+      service_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_categories_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_hair_colors: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          label: string
+          sort_order: number
+          swatch_hex: string
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          label: string
+          sort_order?: number
+          swatch_hex: string
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          label?: string
+          sort_order?: number
+          swatch_hex?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_hair_colors_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_length_options: {
+        Row: {
+          active: boolean
+          created_at: string
+          duration_min: number
+          id: string
+          name: string
+          price_cents: number
+          sort_order: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          duration_min?: number
+          id?: string
+          name: string
+          price_cents?: number
+          sort_order?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          duration_min?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          sort_order?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_length_options_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_providers: {
         Row: {
           created_at: string
@@ -332,6 +484,63 @@ export type Database = {
           },
           {
             foreignKeyName: "service_providers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_variants: {
+        Row: {
+          active: boolean
+          category_id: string
+          created_at: string
+          description: string | null
+          duration_min: number
+          id: string
+          name: string
+          price_cents: number
+          sort_order: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          category_id: string
+          created_at?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          name: string
+          price_cents?: number
+          sort_order?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          sort_order?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_variants_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_variants_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -384,6 +593,59 @@ export type Database = {
             foreignKeyName: "services_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_branding: {
+        Row: {
+          accent_hex: string
+          background_hex: string
+          body_font: string
+          cta_label: string
+          heading_font: string
+          hero_headline: string
+          hero_image_url: string | null
+          hero_subhead: string
+          logo_url: string | null
+          primary_hex: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          accent_hex?: string
+          background_hex?: string
+          body_font?: string
+          cta_label?: string
+          heading_font?: string
+          hero_headline?: string
+          hero_image_url?: string | null
+          hero_subhead?: string
+          logo_url?: string | null
+          primary_hex?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          accent_hex?: string
+          background_hex?: string
+          body_font?: string
+          cta_label?: string
+          heading_font?: string
+          hero_headline?: string
+          hero_image_url?: string | null
+          hero_subhead?: string
+          logo_url?: string | null
+          primary_hex?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_branding_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
