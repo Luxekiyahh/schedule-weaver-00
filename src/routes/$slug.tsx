@@ -12,7 +12,8 @@ const storefrontQuery = (slug: string) =>
 
 export const Route = createFileRoute("/$slug")({
   loader: async ({ params, context }) => {
-    const data = await context.queryClient.ensureQueryData(storefrontQuery(params.slug));
+    const slug = params.slug.toLowerCase();
+    const data = await context.queryClient.ensureQueryData(storefrontQuery(slug));
     if (!data.workspace) throw notFound();
     return data;
   },
