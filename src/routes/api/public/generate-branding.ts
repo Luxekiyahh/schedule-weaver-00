@@ -32,6 +32,29 @@ const brandingSchema = z.object({
 
 type Branding = z.infer<typeof brandingSchema>;
 
+function extractJsonObject(raw: string): unknown {
+  let cleaned = raw
+    .replace(/```json\s*/gi, "")
+    .replace(/```\s*/g, "")
+    .trim();
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error("No JSON object found in response");
+  }
+  cleaned = cleaned.substring(start, end + 1);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const repaired = cleaned
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F]/g, "");
+    return JSON.parse(repaired);
+  }
+}
+
 const SYSTEM_PROMPT = `You are a senior brand designer for service businesses (salons, studios, spas, clinics).
 Translate a one-line brief into a complete visual identity for a public booking storefront.
 
@@ -120,7 +143,9 @@ export const Route = createFileRoute("/api/public/generate-branding")({
         }
 
         let branding: Branding;
+        let rawText = "";
         try {
+          console.log("Anthropic API Key present:", !!process.env.ANTHROPIC_API_KEY);
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 25_000);
           const resp = await fetch("https://api.anthropic.com/v1/messages", {
@@ -140,22 +165,27 @@ export const Route = createFileRoute("/api/public/generate-branding")({
           }).finally(() => clearTimeout(timeoutId));
 
           if (!resp.ok) {
-            const txt = await resp.text();
-            console.error("Anthropic error", resp.status, txt);
+            const errorText = await resp.text();
+            console.error("Anthropic API Error Details:", resp.status, errorText);
             throw new Error("upstream");
           }
 
           const json = (await resp.json()) as {
             content?: Array<{ type: string; text?: string }>;
           };
-          const raw = json.content?.find((c) => c.type === "text")?.text ?? "";
-          const cleaned = raw
-            .trim()
-            .replace(/^```(?:json)?\s*/i, "")
-            .replace(/```\s*$/i, "")
-            .trim();
-          const parsed = JSON.parse(cleaned);
-          branding = brandingSchema.parse(parsed);
+          rawText = json.content?.find((c) => c.type === "text")?.text ?? "";
+
+          try {
+            const parsed = extractJsonObject(rawText);
+            branding = brandingSchema.parse(parsed);
+          } catch (parseErr) {
+            console.error(
+              "Failed to parse or validate Claude's JSON payload. Raw text received:",
+              rawText,
+              parseErr,
+            );
+            throw parseErr;
+          }
         } catch (e) {
           console.error("Generation failed", e);
           await supabaseAdmin.rpc("refund_ai_credit", { _workspace_id: ws.id });
