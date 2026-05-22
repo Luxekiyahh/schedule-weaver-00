@@ -212,3 +212,167 @@ export const getStorefront = createServerFn({ method: "POST" })
       hairColors: hairColors.data ?? [],
     };
   });
+
+// ============================================================
+// AI Setup Wizard
+// ============================================================
+
+const FONT_CHOICES = [
+  "Playfair Display",
+  "Inter",
+  "Montserrat",
+  "Cormorant Garamond",
+  "DM Serif Display",
+  "Space Grotesk",
+  "Bebas Neue",
+  "Lora",
+  "Manrope",
+  "Archivo Black",
+] as const;
+
+const brandingSchema = z.object({
+  primary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  secondary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  background_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  heading_font: z.string().min(1).max(60),
+  body_font: z.string().min(1).max(60),
+  hero_headline: z.string().min(2).max(120),
+  hero_subheading: z.string().min(2).max(240),
+  cta_label: z.string().min(2).max(40).optional().default("Book now"),
+});
+
+export type GeneratedBranding = z.infer<typeof brandingSchema>;
+
+/**
+ * Use Lovable AI to translate a free-form brand brief into a structured
+ * workspace_branding payload. Returns JSON only; does not write to DB.
+ */
+export const generateBrandingFromPrompt = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ prompt: z.string().trim().min(8).max(2000) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("AI gateway not configured");
+
+    const systemPrompt = `You are a senior brand designer for service businesses (salons, studios, spas, clinics).
+Translate a one-line brief into a complete visual identity for a public booking storefront.
+
+Rules:
+- Colors must be readable: background should contrast with primary text; primary is used for CTAs and accents.
+- Choose fonts from this allow-list (Google Fonts): ${FONT_CHOICES.join(", ")}.
+- heading_font and body_font should pair tastefully (typically serif heading + sans body, or distinctive display + clean sans).
+- hero_headline: 3-8 words, punchy, brand-forward (not generic).
+- hero_subheading: 1 sentence, warm, specific to the brief.
+- cta_label: 2-3 words ("Book now", "Reserve seat", "Start booking").
+Return ONLY valid JSON matching the schema. No prose, no markdown.`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: data.prompt },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "emit_branding",
+              description: "Emit a workspace_branding JSON payload",
+              parameters: {
+                type: "object",
+                properties: {
+                  primary_color: { type: "string", description: "Hex like #4F46E5" },
+                  secondary_color: { type: "string", description: "Accent hex" },
+                  background_color: { type: "string", description: "Page bg hex" },
+                  heading_font: { type: "string", enum: [...FONT_CHOICES] },
+                  body_font: { type: "string", enum: [...FONT_CHOICES] },
+                  hero_headline: { type: "string" },
+                  hero_subheading: { type: "string" },
+                  cta_label: { type: "string" },
+                },
+                required: [
+                  "primary_color",
+                  "secondary_color",
+                  "background_color",
+                  "heading_font",
+                  "body_font",
+                  "hero_headline",
+                  "hero_subheading",
+                  "cta_label",
+                ],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "emit_branding" } },
+      }),
+    });
+
+    if (response.status === 429) throw new Error("AI is busy — please retry in a moment.");
+    if (response.status === 402) throw new Error("AI credits exhausted. Add credits in Workspace Settings.");
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("AI gateway error:", response.status, text);
+      throw new Error("AI generation failed. Please try again.");
+    }
+
+    const payload = await response.json();
+    const toolCall = payload?.choices?.[0]?.message?.tool_calls?.[0];
+    const argsStr = toolCall?.function?.arguments;
+    if (!argsStr) throw new Error("AI returned no result. Try a more specific prompt.");
+
+    const parsed = brandingSchema.parse(JSON.parse(argsStr));
+    return parsed;
+  });
+
+/**
+ * Persist a generated branding payload to workspace_branding for the
+ * authenticated user's owned workspace.
+ */
+export const publishBranding = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        branding: brandingSchema,
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: ws, error: wsErr } = await supabaseAdmin
+      .from("workspaces")
+      .select("id, slug")
+      .eq("owner_id", data.userId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (wsErr) throw new Error(wsErr.message);
+    if (!ws) throw new Error("No workspace found for this account.");
+
+    const { error: upErr } = await supabaseAdmin.from("workspace_branding").upsert(
+      {
+        workspace_id: ws.id,
+        primary_hex: data.branding.primary_color,
+        accent_hex: data.branding.secondary_color,
+        background_hex: data.branding.background_color,
+        heading_font: data.branding.heading_font,
+        body_font: data.branding.body_font,
+        hero_headline: data.branding.hero_headline,
+        hero_subhead: data.branding.hero_subheading,
+        cta_label: data.branding.cta_label ?? "Book now",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "workspace_id" },
+    );
+    if (upErr) throw new Error(upErr.message);
+
+    return { ok: true, slug: ws.slug };
+  });
