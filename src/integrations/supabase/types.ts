@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generation_logs: {
+        Row: {
+          created_at: string
+          credits_deducted: number
+          id: string
+          prompt_text: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_deducted?: number
+          id?: string
+          prompt_text: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_deducted?: number
+          id?: string
+          prompt_text?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           cancelled_at: string | null
@@ -608,6 +632,7 @@ export type Database = {
           hero_headline: string
           hero_image_url: string | null
           hero_subhead: string
+          layout_config: Json
           logo_url: string | null
           primary_hex: string
           updated_at: string
@@ -622,6 +647,7 @@ export type Database = {
           hero_headline?: string
           hero_image_url?: string | null
           hero_subhead?: string
+          layout_config?: Json
           logo_url?: string | null
           primary_hex?: string
           updated_at?: string
@@ -636,6 +662,7 @@ export type Database = {
           hero_headline?: string
           hero_image_url?: string | null
           hero_subhead?: string
+          layout_config?: Json
           logo_url?: string | null
           primary_hex?: string
           updated_at?: string
@@ -688,6 +715,7 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          ai_credits: number
           created_at: string
           id: string
           is_solo: boolean
@@ -700,6 +728,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_credits?: number
           created_at?: string
           id?: string
           is_solo?: boolean
@@ -712,6 +741,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_credits?: number
           created_at?: string
           id?: string
           is_solo?: boolean
@@ -730,6 +760,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_ai_credit: {
+        Args: { _prompt: string; _workspace_id: string }
+        Returns: number
+      }
       current_member_id: { Args: { _workspace_id: string }; Returns: string }
       has_workspace_role: {
         Args: {
@@ -739,6 +773,7 @@ export type Database = {
         Returns: boolean
       }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
+      refund_ai_credit: { Args: { _workspace_id: string }; Returns: number }
     }
     Enums: {
       appointment_status:
