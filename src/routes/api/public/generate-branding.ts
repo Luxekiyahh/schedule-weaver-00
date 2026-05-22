@@ -220,7 +220,7 @@ export const Route = createFileRoute("/api/public/generate-branding")({
             body_font: branding.font_family,
             hero_headline: branding.hero_headline,
             hero_subhead: branding.hero_subheading,
-            layout_config: { card_style: branding.card_style },
+            layout_config: branding.layout_config,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "workspace_id" },
