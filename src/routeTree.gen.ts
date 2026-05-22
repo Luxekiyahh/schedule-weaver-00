@@ -24,6 +24,7 @@ import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.custo
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
+import { Route as ApiGenerateBrandingRouteImport } from './routes/api/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 
 const SignupRoute = SignupRouteImport.update({
@@ -101,6 +102,11 @@ const BookingSlugRoute = BookingSlugRouteImport.update({
   path: '/booking/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateBrandingRoute = ApiGenerateBrandingRouteImport.update({
+  id: '/api/generate-branding',
+  path: '/api/generate-branding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAppointmentConfirmationRoute =
   ApiPublicAppointmentConfirmationRouteImport.update({
     id: '/api/public/appointment-confirmation',
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/api/generate-branding': typeof ApiGenerateBrandingRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/api/generate-branding': typeof ApiGenerateBrandingRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/api/generate-branding': typeof ApiGenerateBrandingRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/signup'
+    | '/api/generate-branding'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/signup'
+    | '/api/generate-branding'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/signup'
+    | '/api/generate-branding'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -229,6 +241,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
+  ApiGenerateBrandingRoute: typeof ApiGenerateBrandingRoute
   BookingSlugRoute: typeof BookingSlugRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
 }
@@ -340,6 +353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-branding': {
+      id: '/api/generate-branding'
+      path: '/api/generate-branding'
+      fullPath: '/api/generate-branding'
+      preLoaderRoute: typeof ApiGenerateBrandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/appointment-confirmation': {
       id: '/api/public/appointment-confirmation'
       path: '/api/public/appointment-confirmation'
@@ -381,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
+  ApiGenerateBrandingRoute: ApiGenerateBrandingRoute,
   BookingSlugRoute: BookingSlugRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
 }
