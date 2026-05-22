@@ -161,7 +161,10 @@ function Hero() {
             Launch Your Storefront
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
           </Link>
-          <button className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 px-6 py-3.5 text-sm font-semibold transition backdrop-blur">
+          <button
+            onClick={() => setDemoOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 px-6 py-3.5 text-sm font-semibold transition backdrop-blur"
+          >
             <PlayCircle className="w-4 h-4" /> Watch Demo
           </button>
         </motion.div>
@@ -171,7 +174,277 @@ function Hero() {
           <span className="hidden sm:flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> 60s setup</span>
         </div>
       </div>
+      <DemoModal open={demoOpen} onOpenChange={setDemoOpen} />
     </section>
+  );
+}
+
+/* ---------------- Demo Modal ---------------- */
+const DEMO_SCENES = [
+  {
+    key: "prompt",
+    label: "01 · AI Brand Wizard",
+    title: "Describe your business. Get a storefront.",
+    caption: "Gemini generates colors, fonts, and copy in seconds.",
+  },
+  {
+    key: "storefront",
+    label: "02 · Themed Storefront",
+    title: "Your brand, live at procschedule.com/you",
+    caption: "Multi-tenant routing with per-workspace theming.",
+  },
+  {
+    key: "booking",
+    label: "03 · Deep Booking Flow",
+    title: "Variants, add-ons, and length options — native.",
+    caption: "Complex services without plugins or workarounds.",
+  },
+  {
+    key: "automation",
+    label: "04 · Instant Automations",
+    title: "Confirmations fire the moment a booking lands.",
+    caption: "Postgres webhooks → TanStack routes → SMS + email.",
+  },
+] as const;
+
+function DemoModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    setIdx(0);
+    const t = setInterval(() => setIdx((i) => (i + 1) % DEMO_SCENES.length), 4200);
+    return () => clearInterval(t);
+  }, [open]);
+
+  const scene = DEMO_SCENES[idx];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-5xl w-[95vw] p-0 border-white/10 bg-[#0a0a0f] text-white overflow-hidden [&>button]:hidden"
+      >
+        <VisuallyHidden>
+          <DialogTitle>Proc Schedule product walkthrough</DialogTitle>
+          <DialogDescription>An animated tour of the AI wizard, storefronts, booking, and automations.</DialogDescription>
+        </VisuallyHidden>
+
+        <div className="relative aspect-video w-full bg-gradient-to-br from-[#0b0b14] via-[#0a0a0f] to-[#120a1a]">
+          {/* ambient glow */}
+          <div className="pointer-events-none absolute -top-32 -left-32 h-80 w-80 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl" />
+
+          {/* close */}
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 right-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/70 hover:bg-white/10 hover:text-white transition backdrop-blur"
+            aria-label="Close demo"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* scene label */}
+          <div className="absolute top-4 left-4 z-20 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-[11px] font-mono tracking-wider text-white/70 backdrop-blur">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fuchsia-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-fuchsia-500" />
+            </span>
+            {scene.label}
+          </div>
+
+          {/* scene stage */}
+          <div className="absolute inset-0 flex items-center justify-center px-6 sm:px-12">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={scene.key}
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -16, scale: 0.98 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="w-full max-w-3xl"
+              >
+                <DemoScene sceneKey={scene.key} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* caption */}
+          <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/70 to-transparent p-6 sm:p-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={scene.key + "-cap"}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35 }}
+              >
+                <h3 className="text-lg sm:text-2xl font-semibold tracking-tight">{scene.title}</h3>
+                <p className="mt-1 text-xs sm:text-sm text-white/60">{scene.caption}</p>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* progress dots */}
+            <div className="mt-4 flex items-center gap-2">
+              {DEMO_SCENES.map((s, i) => (
+                <button
+                  key={s.key}
+                  onClick={() => setIdx(i)}
+                  className="group relative h-1 flex-1 overflow-hidden rounded-full bg-white/10"
+                  aria-label={`Go to ${s.label}`}
+                >
+                  <motion.span
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-400 to-fuchsia-400"
+                    initial={{ width: "0%" }}
+                    animate={{ width: i < idx ? "100%" : i === idx ? "100%" : "0%" }}
+                    transition={{ duration: i === idx ? 4.2 : 0.3, ease: "linear" }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-black/40 px-6 py-4">
+          <p className="text-xs text-white/50">No signup required · 60-second product tour</p>
+          <Link
+            to="/signup"
+            onClick={() => onOpenChange(false)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-xs font-semibold shadow-lg shadow-indigo-500/30 hover:scale-[1.02] transition"
+          >
+            Start Building <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DemoScene({ sceneKey }: { sceneKey: string }) {
+  if (sceneKey === "prompt") {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-black/40 p-5 sm:p-7 backdrop-blur-xl shadow-2xl">
+        <div className="flex items-center gap-2 text-xs font-mono text-white/40">
+          <WandIcon className="w-3.5 h-3.5 text-fuchsia-300" /> AI CONSOLE
+        </div>
+        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4 font-mono text-sm">
+          <TypewriterLine text="A luxury hair extensions studio — warm cream, deep burgundy, editorial serif headings." />
+        </div>
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {["#FAF6EF", "#7A1F2B", "#C9A86A", "#1A0E10"].map((c, i) => (
+            <motion.div
+              key={c}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 + i * 0.1 }}
+              className="aspect-square rounded-lg border border-white/10"
+              style={{ background: c }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (sceneKey === "storefront") {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-[#FAF6EF] text-[#1A0E10] overflow-hidden shadow-2xl">
+        <div className="flex items-center gap-1.5 border-b border-black/10 px-4 py-2.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+          <span className="ml-3 text-[11px] font-mono text-black/50">procschedule.com/dolliimarie</span>
+        </div>
+        <div className="px-6 py-8 sm:px-10 sm:py-10" style={{ fontFamily: "Georgia, serif" }}>
+          <p className="text-[11px] font-mono tracking-[0.2em] text-[#7A1F2B]">DOLLIIMARIE · LUXURY EXTENSIONS</p>
+          <motion.h2
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-3 text-3xl sm:text-5xl font-semibold leading-tight"
+          >
+            Hair, crafted like couture.
+          </motion.h2>
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#7A1F2B] px-5 py-2.5 text-sm font-semibold text-white">
+            Book your consultation <ArrowRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (sceneKey === "booking") {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-black/40 p-5 sm:p-7 backdrop-blur-xl shadow-2xl">
+        <p className="text-xs font-mono text-white/40">SELECT SERVICE</p>
+        <div className="mt-3 space-y-2">
+          {[
+            { name: "Full Install", price: "$650", dur: "4h" },
+            { name: "Maintenance", price: "$280", dur: "2h", active: true },
+            { name: "Color + Install", price: "$890", dur: "5h" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.name}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 + i * 0.1 }}
+              className={`flex items-center justify-between rounded-xl border px-4 py-3 ${s.active ? "border-fuchsia-400/60 bg-fuchsia-500/10" : "border-white/10 bg-white/5"}`}
+            >
+              <div>
+                <div className="text-sm font-semibold">{s.name}</div>
+                <div className="text-xs text-white/50">{s.dur}</div>
+              </div>
+              <div className="text-sm font-mono text-white/80">{s.price}</div>
+            </motion.div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-2 text-xs text-white/50">
+          <CalendarCheck className="w-4 h-4 text-indigo-300" /> Thu · Nov 14 · 2:30 PM
+        </div>
+      </div>
+    );
+  }
+
+  // automation
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/40 p-5 sm:p-7 backdrop-blur-xl shadow-2xl font-mono text-xs sm:text-sm">
+      <div className="flex items-center gap-2 text-white/40">
+        <Send className="w-3.5 h-3.5 text-emerald-300" /> WEBHOOK PIPELINE
+      </div>
+      <div className="mt-4 space-y-2">
+        {[
+          { t: "00.00s", msg: "INSERT bookings → trigger fired", color: "text-indigo-300" },
+          { t: "00.04s", msg: "POST /api/public/appointment-confirmation", color: "text-fuchsia-300" },
+          { t: "00.12s", msg: "✓ SMS dispatched via Twilio", color: "text-emerald-300" },
+          { t: "00.18s", msg: "✓ Email queued via Resend", color: "text-emerald-300" },
+        ].map((l, i) => (
+          <motion.div
+            key={l.msg}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 + i * 0.25 }}
+            className="flex items-start gap-3 rounded-md border border-white/5 bg-white/5 px-3 py-2"
+          >
+            <span className="text-white/40">{l.t}</span>
+            <span className={l.color}>{l.msg}</span>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TypewriterLine({ text }: { text: string }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    setN(0);
+    const t = setInterval(() => setN((v) => (v >= text.length ? v : v + 1)), 28);
+    return () => clearInterval(t);
+  }, [text]);
+  return (
+    <span className="text-white/90">
+      {text.slice(0, n)}
+      <span className="ml-0.5 inline-block w-1.5 h-4 -mb-0.5 bg-fuchsia-400 animate-pulse" />
+    </span>
   );
 }
 
