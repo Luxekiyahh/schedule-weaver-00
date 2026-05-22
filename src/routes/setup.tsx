@@ -171,7 +171,7 @@ function SetupWizard() {
             {generating ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Conjuring your brand…
+                Generating brand vibe…
                 <motion.span
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                   animate={{ x: ["-100%", "100%"] }}
@@ -181,7 +181,7 @@ function SetupWizard() {
             ) : (
               <>
                 <Wand2 className="w-5 h-5" />
-                Generate Brand Identity
+                Generate Brand Vibe
                 <motion.span
                   className="absolute -top-1 -right-1 text-yellow-300"
                   animate={{ scale: [1, 1.3, 1], rotate: [0, 15, 0] }}
@@ -193,25 +193,23 @@ function SetupWizard() {
             )}
           </button>
 
-          {hasGenerated && (
-            <motion.button
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              onClick={handlePublish}
-              disabled={publishing || generating}
-              className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary/30 bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition px-6 py-3.5 font-semibold disabled:opacity-60"
-            >
-              {publishing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" /> Publishing…
-                </>
-              ) : (
-                <>
-                  <Rocket className="w-5 h-5" /> Publish Storefront
-                </>
-              )}
-            </motion.button>
-          )}
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={handlePublish}
+            disabled={!hasGenerated || publishing || generating}
+            className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary/30 bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition px-6 py-3.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:text-foreground disabled:hover:border-primary/30"
+          >
+            {publishing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" /> Publishing…
+              </>
+            ) : (
+              <>
+                <Rocket className="w-5 h-5" /> Publish & Launch Storefront
+              </>
+            )}
+          </motion.button>
 
           {hasGenerated && (
             <motion.div
