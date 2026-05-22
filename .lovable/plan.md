@@ -1,35 +1,43 @@
-## Diagnosis
+## Context
 
-Routing is actually wired correctly in `src/routeTree.gen.ts` (TanStack Start auto-generates it from files in `src/routes/` — there is no `App.tsx`/`routes.tsx` to edit). The real bug is in `src/routes/dashboard.tsx`:
+There is no shared dashboard sidebar component today — `src/routes/dashboard.tsx` is a bare layout that just renders `<Outlet />`, and each dashboard page has its own header / back-link. The de-facto nav hub on the dashboard is the **Quick actions** grid on `/dashboard/home`. I'll add the new "AI Storefront Designer" entry there. (If you want a true persistent left sidebar across all dashboard pages, that's a larger refactor — say the word and I'll fold it in.)
 
-- It is the parent of `dashboard.home.tsx` (file-based nesting via the `.` separator).
-- But its component renders the full calendar UI and **never renders `<Outlet />`**.
-- So when you visit `/dashboard/home`, the parent matches and shows the calendar, while the child `HomePage` has nowhere to mount — producing the broken/"not found"-feeling screen.
+The current booking URL on `/dashboard/home` is built as `${origin}/book/${slug}`. You want it to be the public storefront root: `${origin}/${slug}` — which matches the live `/$slug` route already wired up (e.g. `/dolliimarie`).
 
 ## Plan
 
-1. **Turn `/dashboard` into a layout route.**
-   Refactor `src/routes/dashboard.tsx` so its component is just the shared shell (sidebar/topbar if any) plus `<Outlet />`. Keep the existing `beforeLoad` auth guard and add a redirect so hitting `/dashboard` bare sends the user to `/dashboard/home`:
-   ```ts
-   beforeLoad: async ({ location }) => {
-     const { data } = await supabase.auth.getUser();
-     if (!data.user) throw redirect({ to: "/onboarding" });
-     if (location.pathname === "/dashboard") {
-       throw redirect({ to: "/dashboard/home" });
-     }
-   }
-   ```
+### 1. Fix Copy Booking Link (`src/routes/dashboard.home.tsx`)
+- Change `bookingUrl` from `` `${origin}/book/${ctx.workspaceSlug}` `` to `` `${origin}/${ctx.workspaceSlug}` ``.
+- Guard against an empty slug: if `ctx.workspaceSlug` is missing, disable the copy button and show "—" instead of writing a half-built URL.
+- Keep the existing clipboard + toast flow.
 
-2. **Move the calendar UI into its own child route.**
-   Create `src/routes/dashboard.calendar.tsx` (path `/dashboard/calendar`) containing the current `Dashboard` component body, state, queries, and dialogs from `dashboard.tsx`. Update any links/quick actions that currently point at `/dashboard` for the calendar to point at `/dashboard/calendar` instead.
+### 2. Add "View Live Site" button (same gradient card on `/dashboard/home`)
+- Place a secondary action immediately to the right of "Copy link".
+- Use an `<a>` (not `<Link>`) so it opens externally:
+  ```tsx
+  <a
+    href={`/${ctx.workspaceSlug}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+  >
+    <ExternalLink className="h-4 w-4" /> View Live Site
+  </a>
+  ```
+- Disable / hide when slug is missing.
+- Import `ExternalLink` from `lucide-react`.
+- On the narrow viewport (the user is on a 447px-wide preview), the two buttons should wrap cleanly via the existing `flex-wrap`.
 
-3. **Leave `dashboard.home.tsx` as-is.**
-   It already declares `createFileRoute("/dashboard/home")` and will now render correctly inside the layout's `<Outlet />`.
+### 3. Add "AI Storefront Designer" entry to dashboard nav
+Since there is no shared sidebar, add this in the most visible nav surface on the dashboard:
+- **`/dashboard/home` → Quick actions grid**: add a 5th `ActionCard` linking to `/setup`, labeled **"AI Storefront Designer"**, with the Lucide `Sparkles` (or `Wand2`) icon and a violet tone. Adjust grid to `sm:grid-cols-2 lg:grid-cols-3` (or keep 2-col and let it wrap) so five cards lay out cleanly.
+- Add a `violet` entry to the local `TONES` map.
 
-4. **Verify.**
-   After the edit, the route tree should show `/dashboard` as a layout with `/dashboard/home` and `/dashboard/calendar` as children. Visiting `/dashboard` redirects to `/dashboard/home`; visiting `/dashboard/home` renders the home hub; `/dashboard/calendar` shows the calendar.
+### Out of scope
+- Building a new persistent dashboard sidebar layout across all `/dashboard/*` pages. Call it out if you want it and I'll plan that separately.
+- Changes to `/setup`, `/$slug`, or the booking flow itself.
 
-## Out of scope
-
-- No changes to `routeTree.gen.ts` (auto-generated — never hand-edited).
-- No changes to onboarding, auth, Supabase queries, or the home/calendar component internals beyond moving the calendar file.
+## Technical notes
+- File touched: `src/routes/dashboard.home.tsx` only.
+- No DB / RLS / server-function changes.
+- Uses existing `lucide-react`, no new deps.

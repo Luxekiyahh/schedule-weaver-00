@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, Check, Copy, DollarSign, Sparkles, Clock, Users, Briefcase,
   Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2, Bell,
+  ExternalLink, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -137,7 +138,9 @@ function HomePage() {
     return { revenue, hoursToday, topService };
   }, [weekAppts, today]);
 
-  const bookingUrl = ctx ? `${typeof window !== "undefined" ? window.location.origin : ""}/book/${ctx.workspaceSlug}` : "";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const hasSlug = Boolean(ctx?.workspaceSlug);
+  const bookingUrl = ctx && hasSlug ? `${origin}/${ctx.workspaceSlug}` : "";
 
   const copy = async () => {
     if (!bookingUrl) return;
@@ -191,14 +194,27 @@ function HomePage() {
               <p className="text-xs uppercase tracking-wider text-indigo-200">Your public booking link</p>
               <p className="mt-1 truncate font-mono text-sm text-white/90">{bookingUrl || "—"}</p>
             </div>
-            <button
-              onClick={copy}
-              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                copied ? "bg-emerald-400 text-emerald-950" : "bg-white text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              {copied ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy link</>}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={copy}
+                disabled={!hasSlug}
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  copied ? "bg-emerald-400 text-emerald-950" : "bg-white text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                {copied ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy link</>}
+              </button>
+              {hasSlug && (
+                <a
+                  href={`/${ctx.workspaceSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+                >
+                  <ExternalLink className="h-4 w-4" /> View Live Site
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
@@ -283,6 +299,7 @@ function HomePage() {
           <section>
             <h2 className="mb-3 px-1 text-base font-semibold text-slate-900">Quick actions</h2>
             <div className="grid grid-cols-2 gap-3">
+              <ActionCard to="/setup" icon={<Wand2 className="h-5 w-5" />} title="AI Storefront Designer" desc="Customize your live site" tone="violet" />
               <ActionCard to="/dashboard/calendar" icon={<Plus className="h-5 w-5" />} title="Book appointment" desc="Manually create a booking" tone="indigo" />
               <ActionCard to="/dashboard/services" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
               <ActionCard to="/dashboard/availability" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />
@@ -343,6 +360,7 @@ const TONES: Record<string, string> = {
   emerald: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
   amber: "bg-amber-50 text-amber-600 group-hover:bg-amber-100",
   rose: "bg-rose-50 text-rose-600 group-hover:bg-rose-100",
+  violet: "bg-violet-50 text-violet-600 group-hover:bg-violet-100",
 };
 
 function ActionCard({
