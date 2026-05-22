@@ -20,6 +20,13 @@ const bodySchema = z.object({
   prompt: z.string().trim().min(8).max(2000),
 });
 
+const layoutConfigSchema = z.object({
+  hero_style: z.enum(["split_screen", "minimalist_centered", "ambient_glow"]),
+  card_corners: z.enum(["sharp", "rounded", "hyper_rounded"]),
+  enable_sticky_booking_bar: z.boolean(),
+  enable_portfolio_gallery: z.boolean(),
+});
+
 const brandingSchema = z.object({
   primary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   secondary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
@@ -27,7 +34,7 @@ const brandingSchema = z.object({
   font_family: z.string().min(1).max(60),
   hero_headline: z.string().min(2).max(120),
   hero_subheading: z.string().min(2).max(240),
-  card_style: z.enum(["sharp", "rounded", "hyper-rounded"]),
+  layout_config: layoutConfigSchema,
 });
 
 type Branding = z.infer<typeof brandingSchema>;
@@ -55,8 +62,8 @@ function extractJsonObject(raw: string): unknown {
   }
 }
 
-const SYSTEM_PROMPT = `You are a senior brand designer for service businesses (salons, studios, spas, clinics).
-Translate a one-line brief into a complete visual identity for a public booking storefront.
+const SYSTEM_PROMPT = `You are a senior brand designer for premium service businesses (salons, studios, spas, clinics).
+Translate a one-line brief into an ultra-premium, conversion-optimized visual identity for a public booking storefront.
 
 Return ONLY a valid JSON object — no prose, no markdown, no code fences — matching exactly this shape:
 {
@@ -66,13 +73,20 @@ Return ONLY a valid JSON object — no prose, no markdown, no code fences — ma
   "font_family": "<one of: ${FONT_CHOICES.join(", ")}>",
   "hero_headline": "3-8 punchy brand-forward words",
   "hero_subheading": "1 warm sentence specific to the brief",
-  "card_style": "sharp" | "rounded" | "hyper-rounded"
+  "layout_config": {
+    "hero_style": "split_screen" | "minimalist_centered" | "ambient_glow",
+    "card_corners": "sharp" | "rounded" | "hyper_rounded",
+    "enable_sticky_booking_bar": true | false,
+    "enable_portfolio_gallery": true | false
+  }
 }
 
 Rules:
 - Colors must contrast: background must read against primary text; primary is for CTAs.
 - font_family must be exactly one of the allow-list values (case-sensitive).
-- Match the vibe of the brief (moody/dark → near-black bg + saturated accent; soft luxury → cream/pink; earthy → warm naturals).
+- Match the vibe (moody/dark → near-black bg + saturated accent + ambient_glow; soft luxury → cream/pink + minimalist_centered + hyper_rounded; editorial → split_screen + sharp).
+- enable_portfolio_gallery: true for visual businesses (hair, nails, tattoo, makeup, photography, interiors); false for clinical/professional (legal, dental, accounting).
+- enable_sticky_booking_bar: true by default; false only for ultra-minimalist brands that prefer restraint.
 `;
 
 export const Route = createFileRoute("/api/public/generate-branding")({
