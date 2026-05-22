@@ -24,7 +24,7 @@ import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.custo
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
-import { Route as ApiGenerateBrandingRouteImport } from './routes/api/generate-branding'
+import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 
 const SignupRoute = SignupRouteImport.update({
@@ -102,11 +102,12 @@ const BookingSlugRoute = BookingSlugRouteImport.update({
   path: '/booking/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGenerateBrandingRoute = ApiGenerateBrandingRouteImport.update({
-  id: '/api/generate-branding',
-  path: '/api/generate-branding',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ApiPublicGenerateBrandingRoute =
+  ApiPublicGenerateBrandingRouteImport.update({
+    id: '/api/public/generate-branding',
+    path: '/api/public/generate-branding',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAppointmentConfirmationRoute =
   ApiPublicAppointmentConfirmationRouteImport.update({
     id: '/api/public/appointment-confirmation',
@@ -123,7 +124,6 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
-  '/api/generate-branding': typeof ApiGenerateBrandingRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -132,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
+  '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,7 +143,6 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
-  '/api/generate-branding': typeof ApiGenerateBrandingRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -151,6 +151,7 @@ export interface FileRoutesByTo {
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
+  '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -162,7 +163,6 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
-  '/api/generate-branding': typeof ApiGenerateBrandingRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -171,6 +171,7 @@ export interface FileRoutesById {
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
+  '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -183,7 +184,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/signup'
-    | '/api/generate-branding'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -192,6 +192,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications'
     | '/dashboard/services'
     | '/api/public/appointment-confirmation'
+    | '/api/public/generate-branding'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -202,7 +203,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/signup'
-    | '/api/generate-branding'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -211,6 +211,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications'
     | '/dashboard/services'
     | '/api/public/appointment-confirmation'
+    | '/api/public/generate-branding'
   id:
     | '__root__'
     | '/'
@@ -221,7 +222,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/signup'
-    | '/api/generate-branding'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -230,6 +230,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications'
     | '/dashboard/services'
     | '/api/public/appointment-confirmation'
+    | '/api/public/generate-branding'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -241,9 +242,9 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
-  ApiGenerateBrandingRoute: typeof ApiGenerateBrandingRoute
   BookingSlugRoute: typeof BookingSlugRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
+  ApiPublicGenerateBrandingRoute: typeof ApiPublicGenerateBrandingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -353,11 +354,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/generate-branding': {
-      id: '/api/generate-branding'
-      path: '/api/generate-branding'
-      fullPath: '/api/generate-branding'
-      preLoaderRoute: typeof ApiGenerateBrandingRouteImport
+    '/api/public/generate-branding': {
+      id: '/api/public/generate-branding'
+      path: '/api/public/generate-branding'
+      fullPath: '/api/public/generate-branding'
+      preLoaderRoute: typeof ApiPublicGenerateBrandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/appointment-confirmation': {
@@ -401,10 +402,20 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
-  ApiGenerateBrandingRoute: ApiGenerateBrandingRoute,
   BookingSlugRoute: BookingSlugRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
+  ApiPublicGenerateBrandingRoute: ApiPublicGenerateBrandingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
