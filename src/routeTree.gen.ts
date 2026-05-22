@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
@@ -23,6 +24,11 @@ import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.av
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/onboarding'
+    | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/onboarding'
+    | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/onboarding'
+    | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/calendar'
@@ -190,12 +202,20 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  SignupRoute: typeof SignupRoute
   BookingSlugRoute: typeof BookingSlugRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -318,9 +338,20 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  SignupRoute: SignupRoute,
   BookingSlugRoute: BookingSlugRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
