@@ -121,13 +121,13 @@ function SetupWizard() {
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 text-xs font-mono tracking-widest uppercase text-muted-foreground mb-3">
               <Sparkles className="w-3.5 h-3.5" />
-              AI Setup Wizard · Step 2
+              AI Design Engine · Step 2
             </div>
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-3">
-              Describe your brand.
+              Design Your Storefront with AI
             </h1>
             <p className="text-muted-foreground text-lg">
-              One sentence is enough. We'll design colors, type, and copy for your storefront.
+              Describe the vibe in plain English. We'll generate colors, type, and copy you can publish in one click.
             </p>
           </div>
 
@@ -135,21 +135,24 @@ function SetupWizard() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="e.g. A sleek, high-end luxury hair studio with monochrome dark themes, gold metallic accents, and editorial serif headers."
+            placeholder="Describe your studio's look and feel (e.g., A high-end, minimalist luxury nail salon with soft baby pink accents, clean white backgrounds, and elegant serif typography)..."
             rows={6}
             className="w-full rounded-xl border border-input bg-card/50 backdrop-blur px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
             disabled={generating || publishing}
           />
 
           <div className="mt-3 flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s, i) => (
+            <span className="text-xs uppercase tracking-widest text-muted-foreground self-center mr-1">
+              Try
+            </span>
+            {SUGGESTIONS.map((s) => (
               <button
-                key={i}
-                onClick={() => setPrompt(s)}
-                className="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent hover:text-accent-foreground transition truncate max-w-[280px]"
-                title={s}
+                key={s.label}
+                onClick={() => setPrompt(s.prompt)}
+                className="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent hover:text-accent-foreground transition"
+                title={s.prompt}
               >
-                {s.slice(0, 48)}…
+                {s.label}
               </button>
             ))}
           </div>
