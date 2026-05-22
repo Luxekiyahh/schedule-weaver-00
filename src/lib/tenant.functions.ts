@@ -381,3 +381,20 @@ export const publishBranding = createServerFn({ method: "POST" })
 
     return { ok: true, slug: ws.slug };
   });
+
+/**
+ * Read the authenticated user's AI credit balance for their owned workspace.
+ */
+export const getCreditBalance = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ userId: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const { data: ws } = await supabaseAdmin
+      .from("workspaces")
+      .select("id, ai_credits")
+      .eq("owner_id", data.userId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!ws) return { credits: 0 };
+    return { credits: ws.ai_credits ?? 0 };
+  });

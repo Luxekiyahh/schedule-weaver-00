@@ -2,13 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2, Rocket, Wand2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, Rocket, Wand2, CheckCircle2, Lock, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  generateBrandingFromPrompt,
-  publishBranding,
-  type GeneratedBranding,
-} from "@/lib/tenant.functions";
+import { publishBranding, getCreditBalance, type GeneratedBranding } from "@/lib/tenant.functions";
 
 export const Route = createFileRoute("/setup")({
   component: SetupWizard,
@@ -51,12 +47,13 @@ const DEFAULTS: GeneratedBranding = {
 
 function SetupWizard() {
   const navigate = useNavigate();
-  const generate = useServerFn(generateBrandingFromPrompt);
   const publish = useServerFn(publishBranding);
+  const fetchCredits = useServerFn(getCreditBalance);
 
   const [userId, setUserId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [branding, setBranding] = useState<GeneratedBranding>(DEFAULTS);
+  const [credits, setCredits] = useState<number | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -65,12 +62,17 @@ function SetupWizard() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) navigate({ to: "/login" });
-      else setUserId(data.user.id);
+      if (!data.user) {
+        navigate({ to: "/login" });
+        return;
+      }
+      setUserId(data.user.id);
+      fetchCredits({ data: { userId: data.user.id } })
+        .then((r) => setCredits(r.credits))
+        .catch(() => setCredits(0));
     });
-  }, [navigate]);
+  }, [navigate, fetchCredits]);
 
-  // Dynamically load Google Fonts as branding morphs
   const fontHref = useMemo(() => {
     const fonts = [branding.heading_font, branding.body_font]
       .filter(Boolean)
@@ -78,6 +80,8 @@ function SetupWizard() {
       .join("&");
     return `https://fonts.googleapis.com/css2?${fonts}&display=swap`;
   }, [branding.heading_font, branding.body_font]);
+
+  const outOfCredits = credits !== null && credits <= 0;
 
   const handleGenerate = async () => {
     if (!prompt.trim() || prompt.trim().length < 8) {
@@ -87,8 +91,53 @@ function SetupWizard() {
     setError(null);
     setGenerating(true);
     try {
-      const result = await generate({ data: { prompt: prompt.trim() } });
-      setBranding(result);
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error("Please sign in again.");
+
+      const resp = await fetch("/api/generate-branding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ prompt: prompt.trim() }),
+      });
+
+      if (resp.status === 402) {
+        setCredits(0);
+        setError(null);
+        return;
+      }
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(body?.error || "Generation failed.");
+      }
+
+      const json = (await resp.json()) as {
+        branding: {
+          primary_color: string;
+          secondary_color: string;
+          background_color: string;
+          font_family: string;
+          hero_headline: string;
+          hero_subheading: string;
+          card_style: string;
+        };
+        credits: number;
+      };
+
+      setBranding({
+        primary_color: json.branding.primary_color,
+        secondary_color: json.branding.secondary_color,
+        background_color: json.branding.background_color,
+        heading_font: json.branding.font_family,
+        body_font: json.branding.font_family,
+        hero_headline: json.branding.hero_headline,
+        hero_subheading: json.branding.hero_subheading,
+        cta_label: "Book now",
+      });
+      setCredits(json.credits);
       setHasGenerated(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Generation failed");
@@ -123,95 +172,124 @@ function SetupWizard() {
               <Sparkles className="w-3.5 h-3.5" />
               AI Design Engine · Step 2
             </div>
-            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-3">
-              Design Your Storefront with AI
-            </h1>
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight">
+                Design Your Storefront with AI
+              </h1>
+              {credits !== null && (
+                <div className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold">
+                  <Zap className="w-3.5 h-3.5 text-primary" />
+                  {credits} {credits === 1 ? "credit" : "credits"}
+                </div>
+              )}
+            </div>
             <p className="text-muted-foreground text-lg">
               Describe the vibe in plain English. We'll generate colors, type, and copy you can publish in one click.
             </p>
           </div>
 
-          <label className="text-sm font-medium mb-2">Brand brief</label>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe your studio's look and feel (e.g., A high-end, minimalist luxury nail salon with soft baby pink accents, clean white backgrounds, and elegant serif typography)..."
-            rows={6}
-            className="w-full rounded-xl border border-input bg-card/50 backdrop-blur px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
-            disabled={generating || publishing}
-          />
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            <span className="text-xs uppercase tracking-widest text-muted-foreground self-center mr-1">
-              Try
-            </span>
-            {SUGGESTIONS.map((s) => (
+          {outOfCredits ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-8 shadow-xl"
+            >
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 mb-5">
+                <Lock className="w-7 h-7 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">You've used all your free design credits</h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Upgrade to <span className="font-semibold text-foreground">Proc Schedule Pro</span> to unlock unlimited AI generations, custom domains, and text reminders.
+              </p>
               <button
-                key={s.label}
-                onClick={() => setPrompt(s.prompt)}
-                className="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent hover:text-accent-foreground transition"
-                title={s.prompt}
+                onClick={() => navigate({ to: "/dashboard/home" })}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-6 py-3.5 font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition"
               >
-                {s.label}
+                <Sparkles className="w-5 h-5" />
+                Buy Credits / Upgrade
               </button>
-            ))}
-          </div>
+            </motion.div>
+          ) : (
+            <>
+              <label className="text-sm font-medium mb-2">Brand brief</label>
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Describe your studio's look and feel (e.g., A high-end, minimalist luxury nail salon with soft baby pink accents, clean white backgrounds, and elegant serif typography)..."
+                rows={6}
+                className="w-full rounded-xl border border-input bg-card/50 backdrop-blur px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition disabled:opacity-50"
+                disabled={generating || publishing}
+              />
 
-          {error && (
-            <div className="mt-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm px-4 py-3">
-              {error}
-            </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="text-xs uppercase tracking-widest text-muted-foreground self-center mr-1">
+                  Try
+                </span>
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s.label}
+                    onClick={() => setPrompt(s.prompt)}
+                    className="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent hover:text-accent-foreground transition"
+                    title={s.prompt}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              {error && (
+                <div className="mt-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm px-4 py-3">
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handleGenerate}
+                disabled={generating || publishing || credits === null}
+                className="mt-6 group relative inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-6 py-3.5 font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generating brand vibe…
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ repeat: Infinity, duration: 1.4, ease: "linear" }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-5 h-5" />
+                    <span>
+                      ✨ Generate (Costs 1 Credit)
+                      {credits !== null && ` — ${credits} Credits Remaining`}
+                    </span>
+                  </>
+                )}
+              </button>
+
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={handlePublish}
+                disabled={!hasGenerated || publishing || generating}
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary/30 bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition px-6 py-3.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:text-foreground disabled:hover:border-primary/30"
+              >
+                {publishing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" /> Publishing…
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="w-5 h-5" /> Publish & Launch Storefront
+                  </>
+                )}
+              </motion.button>
+            </>
           )}
 
-          <button
-            onClick={handleGenerate}
-            disabled={generating || publishing}
-            className="mt-6 group relative inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-6 py-3.5 font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden"
-          >
-            {generating ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Generating brand vibe…
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{ repeat: Infinity, duration: 1.4, ease: "linear" }}
-                />
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-5 h-5" />
-                Generate Brand Vibe
-                <motion.span
-                  className="absolute -top-1 -right-1 text-yellow-300"
-                  animate={{ scale: [1, 1.3, 1], rotate: [0, 15, 0] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                >
-                  <Sparkles className="w-4 h-4" />
-                </motion.span>
-              </>
-            )}
-          </button>
-
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={handlePublish}
-            disabled={!hasGenerated || publishing || generating}
-            className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary/30 bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition px-6 py-3.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:text-foreground disabled:hover:border-primary/30"
-          >
-            {publishing ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Publishing…
-              </>
-            ) : (
-              <>
-                <Rocket className="w-5 h-5" /> Publish & Launch Storefront
-              </>
-            )}
-          </motion.button>
-
-          {hasGenerated && (
+          {hasGenerated && !outOfCredits && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -252,7 +330,6 @@ function SetupWizard() {
               fontFamily: `${branding.body_font}, system-ui, sans-serif`,
             }}
           >
-            {/* Browser chrome */}
             <div className="flex items-center gap-1.5 px-4 py-2.5 bg-black/5 border-b border-black/5">
               <div className="w-2.5 h-2.5 rounded-full bg-red-400/70" />
               <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
@@ -264,9 +341,7 @@ function SetupWizard() {
 
             <div
               className="px-8 py-14 text-center"
-              style={{
-                color: contrastText(branding.background_color),
-              }}
+              style={{ color: contrastText(branding.background_color) }}
             >
               <h2
                 className="text-4xl font-bold mb-4 leading-tight"
@@ -315,7 +390,6 @@ function SetupWizard() {
         </div>
       </div>
 
-      {/* Success splash */}
       <AnimatePresence>
         {success && (
           <motion.div
@@ -348,7 +422,6 @@ function SetupWizard() {
   );
 }
 
-/** Pick black or white text for best contrast on a hex background. */
 function contrastText(hex: string): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
   if (!m) return "#111";
@@ -356,7 +429,6 @@ function contrastText(hex: string): string {
   const r = (n >> 16) & 255;
   const g = (n >> 8) & 255;
   const b = n & 255;
-  // Perceived luminance
   const yiq = (r * 299 + g * 587 + b * 114) / 1000;
   return yiq >= 140 ? "#111111" : "#ffffff";
 }
