@@ -20,20 +20,56 @@ const bodySchema = z.object({
   prompt: z.string().trim().min(8).max(2000),
 });
 
+const heroSectionSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal("hero"),
+  layout_style: z.enum(["split", "centered", "editorial"]),
+  headline: z.string().min(2).max(160),
+  subhead: z.string().min(2).max(280),
+  primary_cta_text: z.string().min(1).max(40),
+  secondary_cta_text: z.string().min(1).max(40).optional().nullable(),
+});
+
+const portfolioSectionSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal("portfolio"),
+  layout_style: z.enum(["masonry", "grid"]),
+  section_title: z.string().min(1).max(120),
+  image_placeholders: z.array(z.string().min(1).max(80)).min(1).max(12),
+});
+
+const planTierSchema = z.object({
+  name: z.string().min(1).max(60),
+  price: z.string().min(1).max(40),
+  features: z.array(z.string().min(1).max(120)).min(1).max(8),
+});
+
+const plansSectionSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal("plans"),
+  section_title: z.string().min(1).max(120),
+  tiers: z.array(planTierSchema).min(1).max(4),
+});
+
+const sectionSchema = z.discriminatedUnion("type", [
+  heroSectionSchema,
+  portfolioSectionSchema,
+  plansSectionSchema,
+]);
+
 const layoutConfigSchema = z.object({
-  hero_style: z.enum(["split_screen", "minimalist_centered", "ambient_glow"]),
-  card_corners: z.enum(["sharp", "rounded", "hyper_rounded"]),
-  enable_sticky_booking_bar: z.boolean(),
-  enable_portfolio_gallery: z.boolean(),
+  card_style: z
+    .enum(["sharp", "rounded", "hyper-rounded", "hyper_rounded"])
+    .transform((v) => (v === "hyper_rounded" ? "hyper-rounded" : v)),
+  sections: z.array(sectionSchema).min(1).max(6),
 });
 
 const brandingSchema = z.object({
-  primary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  secondary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  background_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  font_family: z.string().min(1).max(60),
-  hero_headline: z.string().min(2).max(120),
-  hero_subheading: z.string().min(2).max(240),
+  primary_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  accent_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  background_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  heading_font: z.string().min(1).max(60),
+  body_font: z.string().min(1).max(60),
   layout_config: layoutConfigSchema,
 });
 
@@ -62,31 +98,57 @@ function extractJsonObject(raw: string): unknown {
   }
 }
 
-const SYSTEM_PROMPT = `You are a senior brand designer for premium service businesses (salons, studios, spas, clinics).
-Translate a one-line brief into an ultra-premium, conversion-optimized visual identity for a public booking storefront.
+const SYSTEM_PROMPT = `You are a principal product designer for premium service businesses (salons, studios, spas, clinics).
+Translate a one-line brief into an ultra-premium, conversion-optimized, SECTION-DRIVEN storefront layout.
 
 Return ONLY a valid JSON object — no prose, no markdown, no code fences — matching exactly this shape:
 {
-  "primary_color": "#RRGGBB",
-  "secondary_color": "#RRGGBB",
-  "background_color": "#RRGGBB",
-  "font_family": "<one of: ${FONT_CHOICES.join(", ")}>",
-  "hero_headline": "3-8 punchy brand-forward words",
-  "hero_subheading": "1 warm sentence specific to the brief",
+  "primary_hex": "#RRGGBB",
+  "accent_hex": "#RRGGBB",
+  "background_hex": "#RRGGBB",
+  "heading_font": "<one of: ${FONT_CHOICES.join(", ")}>",
+  "body_font": "<one of: ${FONT_CHOICES.join(", ")}>",
   "layout_config": {
-    "hero_style": "split_screen" | "minimalist_centered" | "ambient_glow",
-    "card_corners": "sharp" | "rounded" | "hyper_rounded",
-    "enable_sticky_booking_bar": true | false,
-    "enable_portfolio_gallery": true | false
+    "card_style": "sharp" | "rounded" | "hyper-rounded",
+    "sections": [
+      {
+        "id": "hero_section",
+        "type": "hero",
+        "layout_style": "split" | "centered" | "editorial",
+        "headline": "3-8 punchy brand-forward words",
+        "subhead": "1 warm marketing sentence specific to the brief",
+        "primary_cta_text": "Book Appointment",
+        "secondary_cta_text": "Explore Gallery"
+      },
+      {
+        "id": "portfolio_section",
+        "type": "portfolio",
+        "layout_style": "masonry" | "grid",
+        "section_title": "Our Masterpieces",
+        "image_placeholders": ["short-descriptive-slug-1", "short-descriptive-slug-2", "short-descriptive-slug-3", "short-descriptive-slug-4"]
+      },
+      {
+        "id": "packages_section",
+        "type": "plans",
+        "section_title": "Exclusive Packages & VIP Tiers",
+        "tiers": [
+          { "name": "Essential Care", "price": "$120", "features": ["Feature one", "Feature two"] },
+          { "name": "Signature", "price": "$260", "features": ["Feature one", "Feature two", "Feature three"] },
+          { "name": "The Luxury Install", "price": "$450+", "features": ["Premium feature", "Premium feature", "Priority access"] }
+        ]
+      }
+    ]
   }
 }
 
 Rules:
-- Colors must contrast: background must read against primary text; primary is for CTAs.
-- font_family must be exactly one of the allow-list values (case-sensitive).
-- Match the vibe (moody/dark → near-black bg + saturated accent + ambient_glow; soft luxury → cream/pink + minimalist_centered + hyper_rounded; editorial → split_screen + sharp).
-- enable_portfolio_gallery: true for visual businesses (hair, nails, tattoo, makeup, photography, interiors); false for clinical/professional (legal, dental, accounting).
-- enable_sticky_booking_bar: true by default; false only for ultra-minimalist brands that prefer restraint.
+- Output sections in this exact order: hero, portfolio, plans. Always include all three.
+- Fonts must be exactly from the allow-list (case-sensitive). Pair an expressive heading font with a refined body font.
+- Colors must contrast: background must read against text; primary is for CTAs and headings.
+- Match the vibe: moody/dark → near-black bg + saturated accent + "editorial" hero + "sharp" cards; soft luxury → cream/pink + "centered" hero + "hyper-rounded" cards; clean modern → white/neutral + "split" hero + "rounded".
+- Portfolio: use "masonry" for visual/lifestyle brands (hair, nails, tattoo, photography), "grid" for clinical/professional. image_placeholders: 4-6 short kebab-case descriptive slugs that imply the brand.
+- Plans: always return exactly 3 tiers, ascending price, concise feature bullets (max ~6 words each).
+- All copy must feel brand-specific to the brief — never generic.
 `;
 
 export const Route = createFileRoute("/api/public/generate-branding")({
