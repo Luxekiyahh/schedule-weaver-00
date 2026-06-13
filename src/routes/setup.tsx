@@ -64,7 +64,6 @@ function SetupWizard() {
   const [success, setSuccess] = useState(false);
   const [showIndustry, setShowIndustry] = useState(false);
   const [seeding, setSeeding] = useState<Industry | null>(null);
-  const publishFn = publish;
   const seedFn = useServerFn(seedIndustryCatalog);
 
   useEffect(() => {
