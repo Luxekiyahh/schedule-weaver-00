@@ -622,6 +622,53 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          paddle_customer_id: string | null
+          paddle_subscription_id: string | null
+          plan_tier: Database["public"]["Enums"]["plan_tier"]
+          setup_fee_paid: boolean
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          setup_fee_paid?: boolean
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          setup_fee_paid?: boolean
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_branding: {
         Row: {
           accent_hex: string
@@ -774,6 +821,10 @@ export type Database = {
       }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
       refund_ai_credit: { Args: { _workspace_id: string }; Returns: number }
+      workspace_has_feature: {
+        Args: { _feature: string; _workspace_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       appointment_status:
@@ -782,6 +833,13 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "no_show"
+      plan_tier: "basic" | "pro" | "enterprise"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "incomplete"
       workspace_role: "client" | "staff" | "admin" | "owner"
     }
     CompositeTypes: {
@@ -916,6 +974,14 @@ export const Constants = {
         "completed",
         "cancelled",
         "no_show",
+      ],
+      plan_tier: ["basic", "pro", "enterprise"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "incomplete",
       ],
       workspace_role: ["client", "staff", "admin", "owner"],
     },
