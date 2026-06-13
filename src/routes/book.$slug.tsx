@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -59,7 +60,7 @@ function BookCatalogPage() {
     "--brand": primary,
     "--brand-2": secondary,
     fontFamily: fontStack,
-  } as Record<string, string | undefined>;
+  } as CSSProperties;
 
   return (
     <div className="min-h-screen bg-background text-foreground" style={themeVars}>
