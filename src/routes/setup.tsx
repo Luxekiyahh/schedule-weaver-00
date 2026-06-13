@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2, Rocket, Wand2, CheckCircle2, Lock, Zap } from "lucide-react";
+import { Sparkles, Loader2, Rocket, Wand2, CheckCircle2, Lock, Zap, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { publishBranding, getCreditBalance, type GeneratedBranding } from "@/lib/tenant.functions";
+import { seedIndustryCatalog, INDUSTRIES, type Industry } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/setup")({
   component: SetupWizard,
@@ -51,6 +53,7 @@ function SetupWizard() {
   const fetchCredits = useServerFn(getCreditBalance);
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [branding, setBranding] = useState<GeneratedBranding>(DEFAULTS);
   const [credits, setCredits] = useState<number | null>(null);
@@ -59,14 +62,25 @@ function SetupWizard() {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showIndustry, setShowIndustry] = useState(false);
+  const [seeding, setSeeding] = useState<Industry | null>(null);
+  const seedFn = useServerFn(seedIndustryCatalog);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
         navigate({ to: "/login" });
         return;
       }
       setUserId(data.user.id);
+      const { data: mem } = await supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", data.user.id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (mem) setWorkspaceId(mem.workspace_id);
       fetchCredits({ data: { userId: data.user.id } })
         .then((r) => setCredits(r.credits))
         .catch(() => setCredits(0));
@@ -152,11 +166,30 @@ function SetupWizard() {
     setError(null);
     try {
       await publish({ data: { userId, branding } });
-      setSuccess(true);
-      setTimeout(() => navigate({ to: "/dashboard/home" }), 1800);
+      setPublishing(false);
+      setShowIndustry(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Publish failed");
       setPublishing(false);
+    }
+  };
+
+  const handleSeed = async (industry: Industry) => {
+    if (!workspaceId || seeding) return;
+    setSeeding(industry);
+    try {
+      const res = await seedFn({ data: { workspaceId, industry } });
+      if (res.seeded) {
+        toast.success("Your starter catalog is live! 🎉");
+      } else {
+        toast.info("You already have a catalog — taking you to it.");
+      }
+      setShowIndustry(false);
+      setSuccess(true);
+      setTimeout(() => navigate({ to: "/admin/services" }), 1400);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Seeding failed");
+      setSeeding(null);
     }
   };
 
@@ -391,6 +424,57 @@ function SetupWizard() {
       </div>
 
       <AnimatePresence>
+        {showIndustry && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-6 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 24 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-2xl rounded-3xl border border-border bg-card p-8 shadow-2xl"
+            >
+              <div className="mb-6 text-center">
+                <div className="mb-3 inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  <Sparkles className="h-3.5 w-3.5" /> Final step · Step 3
+                </div>
+                <h2 className="text-3xl font-bold">What's your business type?</h2>
+                <p className="mt-2 text-muted-foreground">
+                  We'll instantly seed a tailored starter catalog so you're ready to take bookings.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {INDUSTRIES.map((ind) => {
+                  const busy = seeding === ind.id;
+                  return (
+                    <button
+                      key={ind.id}
+                      onClick={() => handleSeed(ind.id)}
+                      disabled={seeding !== null}
+                      className="group relative flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-background p-6 text-center transition hover:border-primary hover:shadow-lg disabled:opacity-60"
+                    >
+                      <span className="text-4xl">{ind.emoji}</span>
+                      <span className="font-semibold">{ind.label}</span>
+                      <span className="text-xs text-muted-foreground">{ind.description}</span>
+                      {busy ? (
+                        <Loader2 className="mt-2 h-5 w-5 animate-spin text-primary" />
+                      ) : (
+                        <ArrowRight className="mt-2 h-5 w-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+
+      <AnimatePresence>
         {success && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -412,7 +496,7 @@ function SetupWizard() {
               </motion.div>
               <h2 className="text-3xl font-bold mb-2">You're live!</h2>
               <p className="text-muted-foreground">
-                Your customized digital storefront is officially live. Taking you to your dashboard…
+                Your customized digital storefront is officially live. Taking you to your service catalog…
               </p>
             </motion.div>
           </motion.div>
