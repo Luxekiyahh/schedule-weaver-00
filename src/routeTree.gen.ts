@@ -22,6 +22,7 @@ import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.n
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
 import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
 import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
@@ -93,6 +94,11 @@ const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAvailabilityRoute = DashboardAvailabilityRouteImport.update({
   id: '/availability',
   path: '/availability',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
+    | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
+    | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
+    | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
@@ -354,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCalendarRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/availability': {
       id: '/dashboard/availability'
       path: '/availability'
@@ -394,6 +413,7 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardAvailabilityRoute: typeof DashboardAvailabilityRoute
+  DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardCustomizeRoute: typeof DashboardCustomizeRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
@@ -403,6 +423,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAvailabilityRoute: DashboardAvailabilityRoute,
+  DashboardBillingRoute: DashboardBillingRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardCustomizeRoute: DashboardCustomizeRoute,
   DashboardHomeRoute: DashboardHomeRoute,
@@ -431,3 +452,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
