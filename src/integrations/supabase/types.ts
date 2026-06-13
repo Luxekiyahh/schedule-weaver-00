@@ -626,10 +626,12 @@ export type Database = {
         Row: {
           created_at: string
           current_period_end: string | null
+          environment: string
           id: string
           paddle_customer_id: string | null
           paddle_subscription_id: string | null
           plan_tier: Database["public"]["Enums"]["plan_tier"]
+          price_id: string | null
           setup_fee_paid: boolean
           status: Database["public"]["Enums"]["subscription_status"]
           updated_at: string
@@ -638,10 +640,12 @@ export type Database = {
         Insert: {
           created_at?: string
           current_period_end?: string | null
+          environment?: string
           id?: string
           paddle_customer_id?: string | null
           paddle_subscription_id?: string | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          price_id?: string | null
           setup_fee_paid?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
@@ -650,10 +654,12 @@ export type Database = {
         Update: {
           created_at?: string
           current_period_end?: string | null
+          environment?: string
           id?: string
           paddle_customer_id?: string | null
           paddle_subscription_id?: string | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          price_id?: string | null
           setup_fee_paid?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
@@ -663,7 +669,7 @@ export type Database = {
           {
             foreignKeyName: "subscriptions_workspace_id_fkey"
             columns: ["workspace_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -821,10 +827,15 @@ export type Database = {
       }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
       refund_ai_credit: { Args: { _workspace_id: string }; Returns: number }
-      workspace_has_feature: {
-        Args: { _feature: string; _workspace_id: string }
-        Returns: boolean
-      }
+      workspace_has_feature:
+        | {
+            Args: { _feature: string; _workspace_id: string }
+            Returns: boolean
+          }
+        | {
+            Args: { _env?: string; _feature: string; _workspace_id: string }
+            Returns: boolean
+          }
     }
     Enums: {
       appointment_status:

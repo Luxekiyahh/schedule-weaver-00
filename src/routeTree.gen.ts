@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
@@ -22,10 +23,12 @@ import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.n
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
 import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
 import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -35,6 +38,11 @@ const SignupRoute = SignupRouteImport.update({
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -92,6 +100,11 @@ const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAvailabilityRoute = DashboardAvailabilityRouteImport.update({
   id: '/availability',
   path: '/availability',
@@ -114,6 +127,12 @@ const ApiPublicAppointmentConfirmationRoute =
     path: '/api/public/appointment-confirmation',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -122,10 +141,12 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
@@ -133,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/services': typeof DashboardServicesRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,10 +163,12 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
@@ -152,6 +176,7 @@ export interface FileRoutesByTo {
   '/dashboard/services': typeof DashboardServicesRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,10 +186,12 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
@@ -172,6 +199,7 @@ export interface FileRoutesById {
   '/dashboard/services': typeof DashboardServicesRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -182,10 +210,12 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/onboarding'
+    | '/pricing'
     | '/setup'
     | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
+    | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
@@ -193,6 +223,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -201,10 +232,12 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/onboarding'
+    | '/pricing'
     | '/setup'
     | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
+    | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
@@ -212,6 +245,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -220,10 +254,12 @@ export interface FileRouteTypes {
     | '/home'
     | '/login'
     | '/onboarding'
+    | '/pricing'
     | '/setup'
     | '/signup'
     | '/booking/$slug'
     | '/dashboard/availability'
+    | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/customize'
     | '/dashboard/home'
@@ -231,6 +267,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,11 +277,13 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  PricingRoute: typeof PricingRoute
   SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
   BookingSlugRoute: typeof BookingSlugRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
   ApiPublicGenerateBrandingRoute: typeof ApiPublicGenerateBrandingRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -261,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/setup'
       preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -340,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCalendarRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/availability': {
       id: '/dashboard/availability'
       path: '/availability'
@@ -368,11 +421,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAppointmentConfirmationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface DashboardRouteChildren {
   DashboardAvailabilityRoute: typeof DashboardAvailabilityRoute
+  DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardCustomizeRoute: typeof DashboardCustomizeRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
@@ -382,6 +443,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAvailabilityRoute: DashboardAvailabilityRoute,
+  DashboardBillingRoute: DashboardBillingRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardCustomizeRoute: DashboardCustomizeRoute,
   DashboardHomeRoute: DashboardHomeRoute,
@@ -400,11 +462,13 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  PricingRoute: PricingRoute,
   SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
   BookingSlugRoute: BookingSlugRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
   ApiPublicGenerateBrandingRoute: ApiPublicGenerateBrandingRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
