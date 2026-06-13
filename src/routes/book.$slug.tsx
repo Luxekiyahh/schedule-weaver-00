@@ -59,7 +59,7 @@ function BookCatalogPage() {
     "--brand": primary,
     "--brand-2": secondary,
     fontFamily: fontStack,
-  } as React.CSSProperties;
+  } as Record<string, string | undefined>;
 
   return (
     <div className="min-h-screen bg-background text-foreground" style={themeVars}>
