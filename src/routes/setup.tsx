@@ -53,6 +53,7 @@ function SetupWizard() {
   const fetchCredits = useServerFn(getCreditBalance);
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [branding, setBranding] = useState<GeneratedBranding>(DEFAULTS);
   const [credits, setCredits] = useState<number | null>(null);
@@ -61,6 +62,10 @@ function SetupWizard() {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showIndustry, setShowIndustry] = useState(false);
+  const [seeding, setSeeding] = useState<Industry | null>(null);
+  const publishFn = publish;
+  const seedFn = useServerFn(seedIndustryCatalog);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
