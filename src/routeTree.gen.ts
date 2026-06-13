@@ -26,6 +26,7 @@ import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calend
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
+import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -115,6 +116,11 @@ const BookingSlugRoute = BookingSlugRouteImport.update({
   path: '/booking/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookSlugRoute = BookSlugRouteImport.update({
+  id: '/book/$slug',
+  path: '/book/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGenerateBrandingRoute =
   ApiPublicGenerateBrandingRouteImport.update({
     id: '/api/public/generate-branding',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/billing'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/billing'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
     | '/dashboard/billing'
@@ -280,6 +292,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
+  BookSlugRoute: typeof BookSlugRoute
   BookingSlugRoute: typeof BookingSlugRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
   ApiPublicGenerateBrandingRoute: typeof ApiPublicGenerateBrandingRoute
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book/$slug': {
+      id: '/book/$slug'
+      path: '/book/$slug'
+      fullPath: '/book/$slug'
+      preLoaderRoute: typeof BookSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/generate-branding': {
       id: '/api/public/generate-branding'
       path: '/api/public/generate-branding'
@@ -465,6 +485,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
+  BookSlugRoute: BookSlugRoute,
   BookingSlugRoute: BookingSlugRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
   ApiPublicGenerateBrandingRoute: ApiPublicGenerateBrandingRoute,
@@ -473,3 +494,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
