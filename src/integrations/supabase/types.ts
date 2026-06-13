@@ -770,11 +770,15 @@ export type Database = {
         Row: {
           ai_credits: number
           created_at: string
+          font_family: string
           id: string
           is_solo: boolean
+          logo_url: string | null
           name: string
           notification_settings: Json
           owner_id: string
+          primary_color: string
+          secondary_color: string
           slug: string
           theme_config: Json
           timezone: string
@@ -783,11 +787,15 @@ export type Database = {
         Insert: {
           ai_credits?: number
           created_at?: string
+          font_family?: string
           id?: string
           is_solo?: boolean
+          logo_url?: string | null
           name: string
           notification_settings?: Json
           owner_id: string
+          primary_color?: string
+          secondary_color?: string
           slug: string
           theme_config?: Json
           timezone?: string
@@ -796,11 +804,15 @@ export type Database = {
         Update: {
           ai_credits?: number
           created_at?: string
+          font_family?: string
           id?: string
           is_solo?: boolean
+          logo_url?: string | null
           name?: string
           notification_settings?: Json
           owner_id?: string
+          primary_color?: string
+          secondary_color?: string
           slug?: string
           theme_config?: Json
           timezone?: string
