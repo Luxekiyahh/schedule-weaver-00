@@ -67,12 +67,20 @@ function SetupWizard() {
   const seedFn = useServerFn(seedIndustryCatalog);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
         navigate({ to: "/login" });
         return;
       }
       setUserId(data.user.id);
+      const { data: mem } = await supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", data.user.id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (mem) setWorkspaceId(mem.workspace_id);
       fetchCredits({ data: { userId: data.user.id } })
         .then((r) => setCredits(r.credits))
         .catch(() => setCredits(0));
