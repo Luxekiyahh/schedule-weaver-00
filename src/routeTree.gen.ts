@@ -27,6 +27,7 @@ import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AdminServicesRouteImport } from './routes/admin.services'
 import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -121,6 +122,11 @@ const BookSlugRoute = BookSlugRouteImport.update({
   path: '/book/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminServicesRoute = AdminServicesRouteImport.update({
+  id: '/admin/services',
+  path: '/admin/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGenerateBrandingRoute =
   ApiPublicGenerateBrandingRouteImport.update({
     id: '/api/public/generate-branding',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/admin/services'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/admin/services'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/admin/services'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -292,6 +304,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
+  AdminServicesRoute: typeof AdminServicesRoute
   BookSlugRoute: typeof BookSlugRoute
   BookingSlugRoute: typeof BookingSlugRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
@@ -427,6 +440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/services': {
+      id: '/admin/services'
+      path: '/admin/services'
+      fullPath: '/admin/services'
+      preLoaderRoute: typeof AdminServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/generate-branding': {
       id: '/api/public/generate-branding'
       path: '/api/public/generate-branding'
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
+  AdminServicesRoute: AdminServicesRoute,
   BookSlugRoute: BookSlugRoute,
   BookingSlugRoute: BookingSlugRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
@@ -494,3 +515,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
