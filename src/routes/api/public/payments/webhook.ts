@@ -10,10 +10,10 @@ const PRICE_TO_TIER: Record<string, "basic" | "pro" | "enterprise"> = {
 };
 const SETUP_FEE_PRICE_ID = "setup_fee_onetime";
 
-let _supabase: ReturnType<typeof createClient> | null = null;
+let _supabase: ReturnType<typeof createClient<any, any, any>> | null = null;
 function getSupabase() {
   if (!_supabase) {
-    _supabase = createClient(
+    _supabase = createClient<any, any, any>(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
