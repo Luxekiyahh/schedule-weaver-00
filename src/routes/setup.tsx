@@ -424,6 +424,57 @@ function SetupWizard() {
       </div>
 
       <AnimatePresence>
+        {showIndustry && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-6 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 24 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-2xl rounded-3xl border border-border bg-card p-8 shadow-2xl"
+            >
+              <div className="mb-6 text-center">
+                <div className="mb-3 inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  <Sparkles className="h-3.5 w-3.5" /> Final step · Step 3
+                </div>
+                <h2 className="text-3xl font-bold">What's your business type?</h2>
+                <p className="mt-2 text-muted-foreground">
+                  We'll instantly seed a tailored starter catalog so you're ready to take bookings.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {INDUSTRIES.map((ind) => {
+                  const busy = seeding === ind.id;
+                  return (
+                    <button
+                      key={ind.id}
+                      onClick={() => handleSeed(ind.id)}
+                      disabled={seeding !== null}
+                      className="group relative flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-background p-6 text-center transition hover:border-primary hover:shadow-lg disabled:opacity-60"
+                    >
+                      <span className="text-4xl">{ind.emoji}</span>
+                      <span className="font-semibold">{ind.label}</span>
+                      <span className="text-xs text-muted-foreground">{ind.description}</span>
+                      {busy ? (
+                        <Loader2 className="mt-2 h-5 w-5 animate-spin text-primary" />
+                      ) : (
+                        <ArrowRight className="mt-2 h-5 w-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+
+      <AnimatePresence>
         {success && (
           <motion.div
             initial={{ opacity: 0 }}
