@@ -496,7 +496,7 @@ function SetupWizard() {
               </motion.div>
               <h2 className="text-3xl font-bold mb-2">You're live!</h2>
               <p className="text-muted-foreground">
-                Your customized digital storefront is officially live. Taking you to your dashboard…
+                Your customized digital storefront is officially live. Taking you to your service catalog…
               </p>
             </motion.div>
           </motion.div>
