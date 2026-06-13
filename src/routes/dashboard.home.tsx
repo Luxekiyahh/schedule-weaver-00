@@ -304,6 +304,8 @@ function HomePage() {
               <ActionCard to="/dashboard/services" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
               <ActionCard to="/dashboard/availability" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />
               <ActionCard to="/dashboard/notifications" icon={<Bell className="h-5 w-5" />} title="Notifications" desc="Email & SMS alerts" tone="rose" />
+              <ActionCard to="/dashboard/billing" icon={<DollarSign className="h-5 w-5" />} title="Billing & Plan" desc="Manage your subscription" tone="indigo" />
+
             </div>
 
             <div className="mt-4 rounded-2xl border bg-white p-4 shadow-sm">
