@@ -37,7 +37,7 @@ export const PLANS: PlanMeta[] = [
     tagline: "Everything you need to take bookings.",
     features: [
       "Custom-branded booking website",
-      "Email & text appointment confirmations",
+      "Email appointment confirmations",
       "Calendar & availability management",
     ],
   },
