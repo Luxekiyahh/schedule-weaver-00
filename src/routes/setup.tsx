@@ -166,11 +166,30 @@ function SetupWizard() {
     setError(null);
     try {
       await publish({ data: { userId, branding } });
-      setSuccess(true);
-      setTimeout(() => navigate({ to: "/dashboard/home" }), 1800);
+      setPublishing(false);
+      setShowIndustry(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Publish failed");
       setPublishing(false);
+    }
+  };
+
+  const handleSeed = async (industry: Industry) => {
+    if (!workspaceId || seeding) return;
+    setSeeding(industry);
+    try {
+      const res = await seedFn({ data: { workspaceId, industry } });
+      if (res.seeded) {
+        toast.success("Your starter catalog is live! 🎉");
+      } else {
+        toast.info("You already have a catalog — taking you to it.");
+      }
+      setShowIndustry(false);
+      setSuccess(true);
+      setTimeout(() => navigate({ to: "/admin/services" }), 1400);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Seeding failed");
+      setSeeding(null);
     }
   };
 
