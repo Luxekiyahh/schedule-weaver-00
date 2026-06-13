@@ -109,10 +109,10 @@ export const seedIndustryCatalog = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // Authorize: caller must be a manager+ on this workspace.
+    // Authorize: caller must be an admin+ on this workspace.
     const { data: allowed, error: roleErr } = await supabase.rpc("has_workspace_role", {
       _workspace_id: data.workspaceId,
-      _min_role: "manager",
+      _min_role: "admin",
     });
     if (roleErr) throw new Error(roleErr.message);
     if (!allowed) throw new Error("You don't have permission to set up this workspace.");
