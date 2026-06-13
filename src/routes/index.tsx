@@ -105,7 +105,7 @@ function Nav() {
         <nav className="hidden md:flex items-center gap-8 text-sm text-white/70">
           <a href="#features" className="hover:text-white transition">Features</a>
           <a href="#dashboard" className="hover:text-white transition">Dashboard</a>
-          <a href="#features" className="hover:text-white transition">Pricing</a>
+          <Link to="/pricing" className="hover:text-white transition">Pricing</Link>
         </nav>
         <div className="flex items-center gap-2">
           <Link
