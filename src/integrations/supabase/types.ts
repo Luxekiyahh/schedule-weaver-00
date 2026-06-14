@@ -781,6 +781,7 @@ export type Database = {
           secondary_color: string
           slug: string
           theme_config: Json
+          theme_id: string | null
           timezone: string
           updated_at: string
         }
@@ -798,6 +799,7 @@ export type Database = {
           secondary_color?: string
           slug: string
           theme_config?: Json
+          theme_id?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -815,6 +817,7 @@ export type Database = {
           secondary_color?: string
           slug?: string
           theme_config?: Json
+          theme_id?: string | null
           timezone?: string
           updated_at?: string
         }
