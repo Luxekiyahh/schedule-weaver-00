@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Clock, ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { getStorefront } from "@/lib/tenant.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { getTenantUrl, TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
 
 const storefrontQuery = (slug: string) =>
   queryOptions({
