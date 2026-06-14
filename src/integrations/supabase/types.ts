@@ -881,6 +881,7 @@ export type Database = {
         Row: {
           ai_credits: number
           created_at: string
+          domain_status: string
           font_family: string
           id: string
           is_solo: boolean
@@ -899,6 +900,7 @@ export type Database = {
         Insert: {
           ai_credits?: number
           created_at?: string
+          domain_status?: string
           font_family?: string
           id?: string
           is_solo?: boolean
@@ -917,6 +919,7 @@ export type Database = {
         Update: {
           ai_credits?: number
           created_at?: string
+          domain_status?: string
           font_family?: string
           id?: string
           is_solo?: boolean
