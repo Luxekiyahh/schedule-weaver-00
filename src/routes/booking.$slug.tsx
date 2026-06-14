@@ -219,7 +219,7 @@ function BookingPage() {
             <h2 className="text-2xl font-semibold text-slate-900">You're booked!</h2>
             <p className="mt-2 text-sm text-slate-500">
               {new Date(done.start_at).toLocaleString([], {
-                weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit",
+                weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC",
               })}
             </p>
             <p className="mt-1 text-sm text-slate-500">A confirmation has been recorded for {form.email}.</p>
