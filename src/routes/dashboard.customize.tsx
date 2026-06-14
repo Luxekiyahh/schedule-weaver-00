@@ -111,7 +111,7 @@ function CustomizePage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Customize your booking page</h1>
           <p className="text-sm text-slate-500">
-            {workspaceName} · <span className="font-mono">/booking/{workspaceSlug}</span>
+            {workspaceName} · <span className="font-mono">{workspaceSlug}.{TENANT_ROOT_DOMAIN}</span>
           </p>
         </div>
         <Button onClick={save} disabled={saving} className="bg-slate-900 hover:bg-slate-800 text-white">
