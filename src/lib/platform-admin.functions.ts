@@ -14,14 +14,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * All functions verify the caller is a platform admin via is_platform_admin().
  */
 
-async function assertPlatformAdmin(
-  supabase: { rpc: (fn: "is_platform_admin") => Promise<{ data: unknown; error: unknown }> },
-) {
-  const { data, error } = await supabase.rpc("is_platform_admin");
-  if (error) throw new Error("Authorization check failed.");
-  if (data !== true) throw new Error("Forbidden: platform admin access required.");
-}
-
 export const isPlatformAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -32,7 +24,9 @@ export const isPlatformAdmin = createServerFn({ method: "GET" })
 export const listTenantDomains = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertPlatformAdmin(context.supabase);
+    const { data: ok, error: rpcErr } = await context.supabase.rpc("is_platform_admin");
+    if (rpcErr) throw new Error("Authorization check failed.");
+    if (ok !== true) throw new Error("Forbidden: platform admin access required.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
@@ -55,7 +49,9 @@ export const setTenantDomainStatus = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertPlatformAdmin(context.supabase);
+    const { data: ok, error: rpcErr } = await context.supabase.rpc("is_platform_admin");
+    if (rpcErr) throw new Error("Authorization check failed.");
+    if (ok !== true) throw new Error("Forbidden: platform admin access required.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
