@@ -16,7 +16,7 @@ export const getBookCatalog = createServerFn({ method: "GET" })
 
     const { data: workspace, error: wsErr } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug, primary_color, secondary_color, font_family, logo_url")
+      .select("id, name, slug, theme_id, primary_color, secondary_color, font_family, logo_url")
       .eq("slug", data.slug)
       .maybeSingle();
     if (wsErr) throw new Error(wsErr.message);
