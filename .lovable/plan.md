@@ -1,55 +1,40 @@
-# Make `company-name.procschedule.com` the Canonical Client URL
+## Goal
 
-## Current state
-Subdomain routing is already half-built. `src/lib/subdomain.ts` parses a tenant slug from the hostname, and `src/routes/index.tsx` already detects a tenant subdomain and renders that workspace's storefront at the apex path (`company.procschedule.com/` → storefront). So the subdomain *display* works the moment DNS resolves.
+You've confirmed wildcard DNS works (`*.procschedule.com` → `185.158.133.1`), but Lovable only issues **per-hostname SSL certificates**. So each tenant subdomain must be explicitly connected as a custom domain in Lovable before its HTTPS storefront works. This plan builds the supporting workflow so that registering each subdomain is clear, tracked, and degrades gracefully until the cert exists.
 
-What's still path-based:
-- The dashboard shows/copies `procschedule.com/<slug>` as "your public booking link" (`dashboard.home.tsx`).
-- "View Live Site" links to `/<slug>` (path form).
-- `dashboard.customize.tsx` shows `/booking/<slug>` as the address.
-- No redirect sends `procschedule.com/<slug>` → `<slug>.procschedule.com`.
-- DNS has no wildcard for `*.procschedule.com`.
+## What only you can do (manual, per tenant)
 
-## Prerequisite: DNS wildcard (user action, outside code)
-For `anything.procschedule.com` to load, a wildcard subdomain must point at Lovable. In **Project Settings → Domains**, the wildcard host `*.procschedule.com` needs an A record to `185.158.133.1` (same target as the apex). Wildcard subdomain support may require enabling via Lovable support if the Domains UI doesn't accept `*`. The apex `procschedule.com` / `www` stay as they are. I'll call this out; the code changes below assume the wildcard resolves.
+For every tenant subdomain (e.g. `acme.procschedule.com`):
+1. Open **Project Settings → Project → Domains** (or **Publish dialog → Add custom domain**).
+2. Click **Connect Domain**, enter the full subdomain `acme.procschedule.com`.
+3. DNS is already covered by the wildcard, so verification + SSL provisioning proceeds automatically (status: Verifying → Setting up → Active).
 
-## Code changes
+No code can automate this — Lovable exposes no domain-add API to the app. The code below exists to make this manual step trackable and to keep storefronts usable in the meantime.
 
-### 1. Central URL helper — `src/lib/subdomain.ts`
-Add a helper so every surface builds tenant URLs the same way:
+## Code changes (support workflow)
 
-```ts
-export const TENANT_ROOT_DOMAIN = "procschedule.com";
+### 1. Track per-tenant domain status
+- Add an optional `domain_status` field concept on the workspace (values: `pending`, `active`) so the platform knows whether a tenant's subdomain cert has been connected yet. Default `pending` on signup.
+- Note: this is a manual flag you flip (or an admin toggles) once you've connected the domain in Lovable settings — Lovable doesn't push cert status back to the app.
 
-// Subdomain storefront URL. On real procschedule hosts -> https://slug.procschedule.com
-// On preview/sandbox/localhost (no wildcard) -> fall back to path form so links still work.
-export function getTenantUrl(slug: string, host?: string): string { ... }
-```
+### 2. Admin "Domains to register" checklist
+- Add an admin-only view that lists every workspace with its `<slug>.procschedule.com` URL and current `domain_status`, with a copy button and a "Mark as connected" action.
+- This becomes your operational queue: new signup → appears in list as `pending` → you connect it in Lovable settings → mark active.
 
-Logic: if running on a `procschedule.com` host (or no host info, assume production), return `https://${slug}.procschedule.com`; otherwise (lovableproject.com / lovable.app / localhost previews where wildcard subdomains don't exist) return `${origin}/${slug}` so the preview keeps working.
+### 3. Graceful URL fallback until cert is live
+- Update `getTenantUrl()` so that when a workspace's `domain_status` is `pending`, shareable/"View live site" links use the path form `https://procschedule.com/<slug>` (which already has valid HTTPS via the apex cert) instead of the not-yet-certified subdomain.
+- Once marked `active`, links switch to `https://<slug>.procschedule.com`.
+- The existing apex `/<slug>` → subdomain redirect in `src/routes/$slug.tsx` only fires when the domain is `active`, so pending tenants don't get redirected to a broken-cert URL.
 
-### 2. Dashboard public link — `src/routes/dashboard.home.tsx`
-- Replace `bookingUrl = \`${origin}/${slug}\`` with `getTenantUrl(slug)`.
-- "View Live Site" `href` uses the same `getTenantUrl(slug)` value instead of `/<slug>`.
-- Copy-to-clipboard then copies the subdomain URL.
+### 4. Onboarding messaging
+- In `src/routes/onboarding.tsx`, set expectation that the custom subdomain activates shortly after signup (while it's pending, the path-based link works immediately).
 
-### 3. Customize preview text — `src/routes/dashboard.customize.tsx`
-- Update the displayed address (lines ~113, ~197) from `/booking/<slug>` / `/<slug>` to the subdomain form `<slug>.procschedule.com` via the helper, so owners see the real client URL.
+## Technical notes
 
-### 4. Redirect path form → subdomain — `src/routes/$slug.tsx`
-- In the `/$slug` storefront component, add a client-side effect: if the current host is the apex `procschedule.com` (not a subdomain, not a preview host), `window.location.replace(getTenantUrl(slug))`. This makes old `procschedule.com/<slug>` links resolve to the canonical subdomain. Previews and subdomain hosts skip the redirect (no loop).
+- Files touched: `src/lib/subdomain.ts` (status-aware `getTenantUrl`), `src/routes/$slug.tsx` (gate redirect on `active`), `src/routes/dashboard.home.tsx` & `dashboard.customize.tsx` (use status-aware URL), `src/routes/onboarding.tsx` (copy), plus a new admin route for the registration checklist.
+- DB: one migration adding `domain_status` (text, default `'pending'`) to `public.workspaces`, with appropriate GRANTs preserved. Server reads continue via `supabaseAdmin` per existing storefront pattern.
+- No change to scheduling/calendar logic or the theme-mapping engine.
 
-### 5. Onboarding "your site is live" messaging (if present)
-- Any place onboarding surfaces the finished storefront URL gets switched to the subdomain form via the helper.
+## Out of scope / alternative
 
-## What is NOT changing
-- The booking flow route stays `/booking/$slug` — on a subdomain it simply renders at `<slug>.procschedule.com/booking/<slug>`; internal `<Link>`s already pass `params`, so they keep working. No scheduling logic touched.
-- `src/lib/subdomain.ts` parsing rules, reserved subdomains, and preview-host guards stay intact.
-- Apex marketing site (`procschedule.com/`, `/pricing`, etc.) is unaffected.
-
-## Verification
-- Preview (lovable host): links fall back to path form and still load the storefront.
-- After DNS wildcard resolves: `company.procschedule.com` shows the storefront; dashboard copy link yields `https://company.procschedule.com`; visiting `procschedule.com/company` redirects to the subdomain.
-
-## Notes
-- One ambiguity: whether the shared link should be the storefront root (`company.procschedule.com`) or the booking step page. Plan uses the storefront root (current behavior), which already has a "book" CTA.
+If per-tenant manual registration becomes too much operational overhead later, the only way to get true wildcard HTTPS is a Cloudflare proxy in front of Lovable with a `*.procschedule.com` edge cert (proxy mode). Not part of this plan since you chose manual registration.
