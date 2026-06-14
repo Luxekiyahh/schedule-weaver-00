@@ -69,3 +69,34 @@ export function getTenantSlugFromHost(host?: string | null): string | null {
 
   return sub;
 }
+
+/**
+ * Build the canonical client-facing storefront URL for a tenant slug.
+ *
+ * On real procschedule.com hosts (or in SSR / when no host info is available,
+ * where we assume production) this returns the subdomain form:
+ *   https://<slug>.procschedule.com
+ *
+ * On Lovable preview/sandbox hosts and localhost — where a wildcard subdomain
+ * doesn't exist — it falls back to the path form (`<origin>/<slug>`) so links
+ * keep working while testing.
+ */
+export function getTenantUrl(slug: string, host?: string | null): string {
+  const hostname = (
+    host ?? (typeof window !== "undefined" ? window.location.hostname : "")
+  ).toLowerCase();
+
+  const onTenantRoot =
+    !!hostname &&
+    TENANT_ROOT_DOMAINS.some((d) => hostname === d || hostname.endsWith(`.${d}`));
+
+  // No host info (SSR) -> assume production subdomain form.
+  if (!hostname || onTenantRoot) {
+    return `https://${slug}.${TENANT_ROOT_DOMAIN}`;
+  }
+
+  // Preview / sandbox / localhost -> path form so it resolves without a wildcard.
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : `https://${hostname}`;
+  return `${origin}/${slug}`;
+}
