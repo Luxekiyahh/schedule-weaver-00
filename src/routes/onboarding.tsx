@@ -22,6 +22,7 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { checkSlugAvailable } from "@/lib/onboarding.functions";
+import { TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingWizard,
@@ -628,8 +629,6 @@ function StepWorkspace(props: {
   onBizName: (v: string) => void;
   onSlug: (v: string) => void;
 }) {
-  const host =
-    typeof window !== "undefined" ? window.location.host : "yourapp.com";
   return (
     <div>
       <h2 className="text-xl font-semibold text-slate-900">Name your business</h2>
@@ -648,11 +647,11 @@ function StepWorkspace(props: {
         </Field>
         <Field
           label="Booking URL"
-          hint={`Your public booking page lives at ${host}/book/<your-slug>`}
+          hint={`Your public booking page lives at <your-slug>.${TENANT_ROOT_DOMAIN}`}
         >
           <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
             <span className="flex items-center bg-slate-50 px-3 text-xs text-slate-500">
-              {host}/book/
+              https://
             </span>
             <input
               className="flex-1 bg-transparent px-3 py-2.5 text-sm text-slate-900 outline-none"
@@ -660,6 +659,9 @@ function StepWorkspace(props: {
               onChange={(e) => props.onSlug(e.target.value)}
               placeholder="acme-studio"
             />
+            <span className="flex items-center bg-slate-50 px-3 text-xs text-slate-500">
+              .{TENANT_ROOT_DOMAIN}
+            </span>
             <span className="flex w-10 items-center justify-center">
               <SlugIndicator status={props.slugStatus} />
             </span>

@@ -17,6 +17,7 @@ import {
   type ThemeConfig,
 } from "@/lib/theme";
 import { Sparkles, Loader2, Save, Clock, Check, Palette, Type, LayoutGrid } from "lucide-react";
+import { TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
 
 export const Route = createFileRoute("/dashboard/customize")({
   component: CustomizePage,
@@ -110,7 +111,7 @@ function CustomizePage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Customize your booking page</h1>
           <p className="text-sm text-slate-500">
-            {workspaceName} · <span className="font-mono">/booking/{workspaceSlug}</span>
+            {workspaceName} · <span className="font-mono">{workspaceSlug}.{TENANT_ROOT_DOMAIN}</span>
           </p>
         </div>
         <Button onClick={save} disabled={saving} className="bg-slate-900 hover:bg-slate-800 text-white">
@@ -194,7 +195,7 @@ function CustomizePage() {
           <div className="mb-3 flex items-center justify-between px-2">
             <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Live preview</span>
             <span className="rounded-full bg-white px-2 py-0.5 text-[11px] text-slate-500 ring-1 ring-slate-200">
-              /booking/{workspaceSlug || "your-slug"}
+              {workspaceSlug || "your-slug"}.{TENANT_ROOT_DOMAIN}
             </span>
           </div>
           <div className="overflow-hidden rounded-xl ring-1 ring-slate-200 bg-white">

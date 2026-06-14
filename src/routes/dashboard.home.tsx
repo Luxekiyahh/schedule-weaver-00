@@ -7,6 +7,7 @@ import {
   ExternalLink, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getTenantUrl } from "@/lib/subdomain";
 
 export const Route = createFileRoute("/dashboard/home")({
   component: HomePage,
@@ -138,9 +139,8 @@ function HomePage() {
     return { revenue, hoursToday, topService };
   }, [weekAppts, today]);
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const hasSlug = Boolean(ctx?.workspaceSlug);
-  const bookingUrl = ctx && hasSlug ? `${origin}/${ctx.workspaceSlug}` : "";
+  const bookingUrl = ctx && hasSlug ? getTenantUrl(ctx.workspaceSlug) : "";
 
   const copy = async () => {
     if (!bookingUrl) return;
@@ -206,7 +206,7 @@ function HomePage() {
               </button>
               {hasSlug && (
                 <a
-                  href={`/${ctx.workspaceSlug}`}
+                  href={bookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"

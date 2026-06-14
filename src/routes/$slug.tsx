@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Clock, ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { getStorefront } from "@/lib/tenant.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { getTenantUrl, TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
 
 const storefrontQuery = (slug: string) =>
   queryOptions({
@@ -65,9 +66,21 @@ function formatPrice(cents: number) {
 function StorefrontPage() {
   const params = Route.useParams();
   const { data } = useSuspenseQuery(storefrontQuery(params.slug));
+
+  // Canonicalize path-form links: procschedule.com/<slug> -> <slug>.procschedule.com.
+  // Only on the apex tenant host; subdomain and preview hosts are left alone.
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname.toLowerCase();
+    if (host === TENANT_ROOT_DOMAIN || host === `www.${TENANT_ROOT_DOMAIN}`) {
+      window.location.replace(getTenantUrl(params.slug, host));
+    }
+  }, [params.slug]);
+
   if (!data.workspace) return null;
   return <StorefrontView data={data} />;
 }
+
 
 /**
  * Reusable storefront renderer — used by /$slug route AND by the index route
