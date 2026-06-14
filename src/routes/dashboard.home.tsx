@@ -26,6 +26,7 @@ type Ctx = {
   workspaceId: string;
   workspaceName: string;
   workspaceSlug: string;
+  domainStatus: string;
   role: Role;
   memberId: string;
 };
