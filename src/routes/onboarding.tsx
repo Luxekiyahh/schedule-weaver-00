@@ -629,8 +629,6 @@ function StepWorkspace(props: {
   onBizName: (v: string) => void;
   onSlug: (v: string) => void;
 }) {
-  const host =
-    typeof window !== "undefined" ? window.location.host : "yourapp.com";
   return (
     <div>
       <h2 className="text-xl font-semibold text-slate-900">Name your business</h2>
