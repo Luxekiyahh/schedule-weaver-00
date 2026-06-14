@@ -67,7 +67,7 @@ function HomePage() {
       if (!u.user) return;
       const { data: mem } = await supabase
         .from("workspace_members")
-        .select("id, role, workspace_id, workspaces(name, slug)")
+        .select("id, role, workspace_id, workspaces(name, slug, domain_status)")
         .eq("user_id", u.user.id)
         .eq("is_active", true)
         .limit(1)
@@ -75,13 +75,14 @@ function HomePage() {
       if (!mem) { setLoading(false); return; }
       const { data: prof } = await supabase
         .from("profiles").select("full_name, email").eq("id", u.user.id).maybeSingle();
-      const ws = (mem as unknown as { workspaces?: { name?: string; slug?: string } | null }).workspaces;
+      const ws = (mem as unknown as { workspaces?: { name?: string; slug?: string; domain_status?: string } | null }).workspaces;
       const first = (prof?.full_name ?? prof?.email ?? "there").split(" ")[0].split("@")[0];
       setCtx({
         firstName: first,
         workspaceId: mem.workspace_id,
         workspaceName: ws?.name ?? "Your workspace",
         workspaceSlug: ws?.slug ?? "",
+        domainStatus: ws?.domain_status ?? "pending",
         role: mem.role as Role,
         memberId: mem.id,
       });
