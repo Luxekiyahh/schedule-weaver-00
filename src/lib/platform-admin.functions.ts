@@ -15,7 +15,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  */
 
 async function assertPlatformAdmin(
-  supabase: { rpc: (fn: string) => Promise<{ data: unknown; error: unknown }> },
+  supabase: { rpc: (fn: "is_platform_admin") => Promise<{ data: unknown; error: unknown }> },
 ) {
   const { data, error } = await supabase.rpc("is_platform_admin");
   if (error) throw new Error("Authorization check failed.");
