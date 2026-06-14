@@ -17,6 +17,7 @@ import {
   type ThemeConfig,
 } from "@/lib/theme";
 import { Sparkles, Loader2, Save, Clock, Check, Palette, Type, LayoutGrid } from "lucide-react";
+import { TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
 
 export const Route = createFileRoute("/dashboard/customize")({
   component: CustomizePage,
