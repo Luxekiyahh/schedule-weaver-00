@@ -7,6 +7,7 @@ import {
   ExternalLink, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getTenantUrl } from "@/lib/subdomain";
 
 export const Route = createFileRoute("/dashboard/home")({
   component: HomePage,
