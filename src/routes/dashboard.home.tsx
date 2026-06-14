@@ -142,7 +142,7 @@ function HomePage() {
   }, [weekAppts, today]);
 
   const hasSlug = Boolean(ctx?.workspaceSlug);
-  const bookingUrl = ctx && hasSlug ? getTenantUrl(ctx.workspaceSlug) : "";
+  const bookingUrl = ctx && hasSlug ? getTenantUrl(ctx.workspaceSlug, undefined, ctx.domainStatus) : "";
 
   const copy = async () => {
     if (!bookingUrl) return;
