@@ -1,63 +1,55 @@
-# Dynamic Theme Mapping Engine — Public Booking Storefront
+# Make `company-name.procschedule.com` the Canonical Client URL
 
-## Goal
-Drive custom-branded storefront skins from database variables. A single core data pipeline (categories, variants, length options) feeds interchangeable layout components selected by `workspace.theme_id`, with `primary_color`, `font_family`, and `logo_url` injected dynamically. No scheduling/calendar logic is touched.
+## Current state
+Subdomain routing is already half-built. `src/lib/subdomain.ts` parses a tenant slug from the hostname, and `src/routes/index.tsx` already detects a tenant subdomain and renders that workspace's storefront at the apex path (`company.procschedule.com/` → storefront). So the subdomain *display* works the moment DNS resolves.
 
-## Where this lives
-The public **catalog** page is `src/routes/book.$slug.tsx`. It already fetches the workspace plus `categories`, `variants`, and `lengthOptions` via `getBookCatalog` (`src/lib/book.functions.ts`) and already reads `primary_color` / `secondary_color` / `font_family` / `logo_url`. This is the correct home for the theme engine.
+What's still path-based:
+- The dashboard shows/copies `procschedule.com/<slug>` as "your public booking link" (`dashboard.home.tsx`).
+- "View Live Site" links to `/<slug>` (path form).
+- `dashboard.customize.tsx` shows `/booking/<slug>` as the address.
+- No redirect sends `procschedule.com/<slug>` → `<slug>.procschedule.com`.
+- DNS has no wildcard for `*.procschedule.com`.
 
-The scheduling flow at `src/routes/booking.$slug.tsx` (services → provider → calendar matrix → details, server fns `getBookingWorkspace` / `getBookingSlots` / `createBooking`) is **left untouched** — only verified not to break.
+## Prerequisite: DNS wildcard (user action, outside code)
+For `anything.procschedule.com` to load, a wildcard subdomain must point at Lovable. In **Project Settings → Domains**, the wildcard host `*.procschedule.com` needs an A record to `185.158.133.1` (same target as the apex). Wildcard subdomain support may require enabling via Lovable support if the Domains UI doesn't accept `*`. The apex `procschedule.com` / `www` stay as they are. I'll call this out; the code changes below assume the wildcard resolves.
 
-## Database
-The `workspaces` table already has `primary_color`, `font_family`, `logo_url`. It is missing `theme_id`.
+## Code changes
 
-- Migration: add `theme_id text` to `public.workspaces` (nullable, no default). No new table, no RLS/grant changes (column add only).
+### 1. Central URL helper — `src/lib/subdomain.ts`
+Add a helper so every surface builds tenant URLs the same way:
 
-## Data layer
-- `src/lib/book.functions.ts` → add `theme_id` to the `workspaces` select projection in `getBookCatalog` (currently selects `id, name, slug, primary_color, secondary_color, font_family, logo_url`). The catalog data shape (`categories`, `variants`, `lengthOptions`) stays exactly as-is so it can be passed cleanly as props.
+```ts
+export const TENANT_ROOT_DOMAIN = "procschedule.com";
 
-## Theme layout components
-Create `src/components/booking-themes/` with a shared prop contract so every skin consumes the same unified data:
-
-```text
-type StorefrontTheme = {
-  workspace: { name; primary_color; secondary_color; font_family; logo_url; theme_id }
-  categories: Category[]
-  variants: Variant[]
-  lengthOptions: LengthOption[]
-  slug: string
-}
+// Subdomain storefront URL. On real procschedule hosts -> https://slug.procschedule.com
+// On preview/sandbox/localhost (no wildcard) -> fall back to path form so links still work.
+export function getTenantUrl(slug: string, host?: string): string { ... }
 ```
 
-Files:
-- `types.ts` — shared `StorefrontThemeProps` (catalog/variants/length-option types reused from the catalog shape).
-- `LuxuryBlushLayout.tsx` — blush/elegant skin; uses `primary_color` for buttons, selection rings, active text toggles, and state cards via inline `style` blocks; applies `font_family` to headers/display text; renders `logo_url`.
-- `IndustrialDarkLayout.tsx` — dark/industrial skin; same prop contract, same dynamic color/font injection.
-- `DefaultStorefrontLayout.tsx` — the current markup of `book.$slug.tsx` extracted verbatim into a component (fallback for workspaces with no/unknown `theme_id`), preserving today's behavior.
+Logic: if running on a `procschedule.com` host (or no host info, assume production), return `https://${slug}.procschedule.com`; otherwise (lovableproject.com / lovable.app / localhost previews where wildcard subdomains don't exist) return `${origin}/${slug}` so the preview keeps working.
 
-All three keep the existing `Link to="/booking/$slug"` CTAs so they hand off into the untouched scheduler.
+### 2. Dashboard public link — `src/routes/dashboard.home.tsx`
+- Replace `bookingUrl = \`${origin}/${slug}\`` with `getTenantUrl(slug)`.
+- "View Live Site" `href` uses the same `getTenantUrl(slug)` value instead of `/<slug>`.
+- Copy-to-clipboard then copies the subdomain URL.
 
-## Booking catalog route
-Refactor `src/routes/book.$slug.tsx` to:
-- Keep the existing loading / not-found states and the `getBookCatalog` query.
-- Compute `primary`, `secondary`, `fontStack` once and pass them (with catalog data) into the chosen layout.
-- Add the conditional renderer:
+### 3. Customize preview text — `src/routes/dashboard.customize.tsx`
+- Update the displayed address (lines ~113, ~197) from `/booking/<slug>` / `/<slug>` to the subdomain form `<slug>.procschedule.com` via the helper, so owners see the real client URL.
 
-```tsx
-{workspace.theme_id === 'luxury-blush'   && <LuxuryBlushLayout {...props} />}
-{workspace.theme_id === 'industrial-dark' && <IndustrialDarkLayout {...props} />}
-{(!workspace.theme_id ||
-  !['luxury-blush','industrial-dark'].includes(workspace.theme_id)) &&
-  <DefaultStorefrontLayout {...props} />}
-```
+### 4. Redirect path form → subdomain — `src/routes/$slug.tsx`
+- In the `/$slug` storefront component, add a client-side effect: if the current host is the apex `procschedule.com` (not a subdomain, not a preview host), `window.location.replace(getTenantUrl(slug))`. This makes old `procschedule.com/<slug>` links resolve to the canonical subdomain. Previews and subdomain hosts skip the redirect (no loop).
+
+### 5. Onboarding "your site is live" messaging (if present)
+- Any place onboarding surfaces the finished storefront URL gets switched to the subdomain form via the helper.
+
+## What is NOT changing
+- The booking flow route stays `/booking/$slug` — on a subdomain it simply renders at `<slug>.procschedule.com/booking/<slug>`; internal `<Link>`s already pass `params`, so they keep working. No scheduling logic touched.
+- `src/lib/subdomain.ts` parsing rules, reserved subdomains, and preview-host guards stay intact.
+- Apex marketing site (`procschedule.com/`, `/pricing`, etc.) is unaffected.
 
 ## Verification
-- Build passes (route + components typecheck against the catalog shape).
-- `/book/<slug>` renders the default skin when `theme_id` is null.
-- Setting `theme_id` to `luxury-blush` / `industrial-dark` (test workspace) swaps the skin while colors/fonts/logo come from the DB.
-- `/booking/<slug>` scheduling flow still works end to end (no code changes there).
+- Preview (lovable host): links fall back to path form and still load the storefront.
+- After DNS wildcard resolves: `company.procschedule.com` shows the storefront; dashboard copy link yields `https://company.procschedule.com`; visiting `procschedule.com/company` redirects to the subdomain.
 
-## Technical notes
-- `theme_id` values are plain strings matched in the conditional; adding a new skin later = new component + one conditional line.
-- Colors injected via inline `style={{ backgroundColor: workspace.primary_color }}` / CSS custom-property tokens, not hardcoded hex.
-- `font_family` rendered as a font stack on headers/display text.
+## Notes
+- One ambiguity: whether the shared link should be the storefront root (`company.procschedule.com`) or the booking step page. Plan uses the storefront root (current behavior), which already has a "book" CTA.
