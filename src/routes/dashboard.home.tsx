@@ -139,9 +139,8 @@ function HomePage() {
     return { revenue, hoursToday, topService };
   }, [weekAppts, today]);
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const hasSlug = Boolean(ctx?.workspaceSlug);
-  const bookingUrl = ctx && hasSlug ? `${origin}/${ctx.workspaceSlug}` : "";
+  const bookingUrl = ctx && hasSlug ? getTenantUrl(ctx.workspaceSlug) : "";
 
   const copy = async () => {
     if (!bookingUrl) return;
