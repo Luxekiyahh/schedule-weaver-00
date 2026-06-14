@@ -22,6 +22,7 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { checkSlugAvailable } from "@/lib/onboarding.functions";
+import { TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingWizard,
