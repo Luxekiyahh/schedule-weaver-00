@@ -15,6 +15,9 @@
 // Root domains under which a first-label subdomain represents a tenant.
 const TENANT_ROOT_DOMAINS = ["procschedule.com"];
 
+// Canonical tenant root domain used when building shareable storefront URLs.
+export const TENANT_ROOT_DOMAIN = "procschedule.com";
+
 // Reserved first-labels and reserved top-level paths that can never be a tenant.
 const RESERVED_SUBDOMAINS = new Set([
   "www",
