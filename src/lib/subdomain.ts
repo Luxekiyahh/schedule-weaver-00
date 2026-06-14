@@ -73,15 +73,25 @@ export function getTenantSlugFromHost(host?: string | null): string | null {
 /**
  * Build the canonical client-facing storefront URL for a tenant slug.
  *
- * On real procschedule.com hosts (or in SSR / when no host info is available,
- * where we assume production) this returns the subdomain form:
- *   https://<slug>.procschedule.com
+ * IMPORTANT — per-hostname SSL: Lovable only issues a TLS certificate for a
+ * subdomain once it has been explicitly connected as a custom domain in the
+ * project. A tenant whose subdomain hasn't been connected yet (domain_status
+ * !== "active") would get a certificate error on `<slug>.procschedule.com`.
+ * For those tenants we use the apex path form `https://procschedule.com/<slug>`,
+ * which is always covered by the apex certificate and resolves correctly.
  *
- * On Lovable preview/sandbox hosts and localhost — where a wildcard subdomain
- * doesn't exist — it falls back to the path form (`<origin>/<slug>`) so links
- * keep working while testing.
+ * Behaviour:
+ *   - On real procschedule.com hosts (or SSR / no host info, assumed prod):
+ *       domain_status "active"  -> https://<slug>.procschedule.com
+ *       otherwise               -> https://procschedule.com/<slug>
+ *   - On Lovable preview/sandbox hosts and localhost — where no wildcard
+ *     subdomain exists — always the path form (`<origin>/<slug>`).
  */
-export function getTenantUrl(slug: string, host?: string | null): string {
+export function getTenantUrl(
+  slug: string,
+  host?: string | null,
+  domainStatus?: string | null,
+): string {
   const hostname = (
     host ?? (typeof window !== "undefined" ? window.location.hostname : "")
   ).toLowerCase();
@@ -90,9 +100,13 @@ export function getTenantUrl(slug: string, host?: string | null): string {
     !!hostname &&
     TENANT_ROOT_DOMAINS.some((d) => hostname === d || hostname.endsWith(`.${d}`));
 
-  // No host info (SSR) -> assume production subdomain form.
+  const isActive = domainStatus === "active";
+
+  // Production / SSR (no host info -> assume production).
   if (!hostname || onTenantRoot) {
-    return `https://${slug}.${TENANT_ROOT_DOMAIN}`;
+    if (isActive) return `https://${slug}.${TENANT_ROOT_DOMAIN}`;
+    // Subdomain not connected yet -> apex path form (valid HTTPS via apex cert).
+    return `https://${TENANT_ROOT_DOMAIN}/${slug}`;
   }
 
   // Preview / sandbox / localhost -> path form so it resolves without a wildcard.
