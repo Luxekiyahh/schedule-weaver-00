@@ -125,7 +125,7 @@ function SignupPage() {
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Create your storefront</h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            Your branded booking page, live at <span className="font-mono">procschedule.com/your-name</span>
+            Your branded booking page, live at <span className="font-mono">your-name.procschedule.com</span>
           </p>
         </div>
 
