@@ -113,14 +113,34 @@ function CustomizePage() {
     );
   }
 
+  const liveUrl = workspaceSlug
+    ? getTenantUrl(workspaceSlug, undefined, domainStatus)
+    : "";
+  const liveLabel = liveUrl.replace(/^https?:\/\//, "");
+  const subdomainPending = domainStatus !== "active";
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Customize your booking page</h1>
           <p className="text-sm text-slate-500">
-            {workspaceName} · <span className="font-mono">{workspaceSlug}.{TENANT_ROOT_DOMAIN}</span>
+            {workspaceName} ·{" "}
+            <a
+              href={liveUrl || undefined}
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono text-indigo-600 hover:underline"
+            >
+              {liveLabel || `${workspaceSlug}.${TENANT_ROOT_DOMAIN}`}
+            </a>
           </p>
+          {subdomainPending && workspaceSlug && (
+            <p className="mt-1 text-xs text-amber-600">
+              Your custom subdomain {workspaceSlug}.{TENANT_ROOT_DOMAIN} is being
+              activated. In the meantime your page is live at the address above.
+            </p>
+          )}
         </div>
         <Button onClick={save} disabled={saving} className="bg-slate-900 hover:bg-slate-800 text-white">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
