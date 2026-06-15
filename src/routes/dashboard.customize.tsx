@@ -17,7 +17,7 @@ import {
   type ThemeConfig,
 } from "@/lib/theme";
 import { Sparkles, Loader2, Save, Clock, Check, Palette, Type, LayoutGrid } from "lucide-react";
-import { TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
+import { TENANT_ROOT_DOMAIN, getTenantUrl } from "@/lib/subdomain";
 
 export const Route = createFileRoute("/dashboard/customize")({
   component: CustomizePage,
@@ -39,6 +39,7 @@ function CustomizePage() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [workspaceSlug, setWorkspaceSlug] = useState<string>("");
   const [workspaceName, setWorkspaceName] = useState<string>("");
+  const [domainStatus, setDomainStatus] = useState<string>("pending");
   const [prompt, setPrompt] = useState("");
   const [theme, setTheme] = useState<ThemeConfig>(DEFAULT_THEME);
 
@@ -48,18 +49,25 @@ function CustomizePage() {
       if (!u.user) return;
       const { data: mem } = await supabase
         .from("workspace_members")
-        .select("workspace_id, workspaces(id, name, slug, theme_config)")
+        .select("workspace_id, workspaces(id, name, slug, theme_config, domain_status)")
         .eq("user_id", u.user.id)
         .eq("is_active", true)
         .limit(1)
         .maybeSingle();
       const ws = (mem as unknown as {
-        workspaces?: { id: string; name: string; slug: string; theme_config?: unknown } | null;
+        workspaces?: {
+          id: string;
+          name: string;
+          slug: string;
+          theme_config?: unknown;
+          domain_status?: string | null;
+        } | null;
       })?.workspaces;
       if (ws) {
         setWorkspaceId(ws.id);
         setWorkspaceName(ws.name);
         setWorkspaceSlug(ws.slug);
+        setDomainStatus(ws.domain_status ?? "pending");
         setTheme(normalizeTheme(ws.theme_config));
       }
       setLoading(false);
@@ -105,14 +113,34 @@ function CustomizePage() {
     );
   }
 
+  const liveUrl = workspaceSlug
+    ? getTenantUrl(workspaceSlug, undefined, domainStatus)
+    : "";
+  const liveLabel = liveUrl.replace(/^https?:\/\//, "");
+  const subdomainPending = domainStatus !== "active";
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Customize your booking page</h1>
           <p className="text-sm text-slate-500">
-            {workspaceName} · <span className="font-mono">{workspaceSlug}.{TENANT_ROOT_DOMAIN}</span>
+            {workspaceName} ·{" "}
+            <a
+              href={liveUrl || undefined}
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono text-indigo-600 hover:underline"
+            >
+              {liveLabel || `${workspaceSlug}.${TENANT_ROOT_DOMAIN}`}
+            </a>
           </p>
+          {subdomainPending && workspaceSlug && (
+            <p className="mt-1 text-xs text-amber-600">
+              Your custom subdomain {workspaceSlug}.{TENANT_ROOT_DOMAIN} is being
+              activated. In the meantime your page is live at the address above.
+            </p>
+          )}
         </div>
         <Button onClick={save} disabled={saving} className="bg-slate-900 hover:bg-slate-800 text-white">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -195,7 +223,7 @@ function CustomizePage() {
           <div className="mb-3 flex items-center justify-between px-2">
             <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Live preview</span>
             <span className="rounded-full bg-white px-2 py-0.5 text-[11px] text-slate-500 ring-1 ring-slate-200">
-              {workspaceSlug || "your-slug"}.{TENANT_ROOT_DOMAIN}
+              {liveLabel || `${workspaceSlug || "your-slug"}.${TENANT_ROOT_DOMAIN}`}
             </span>
           </div>
           <div className="overflow-hidden rounded-xl ring-1 ring-slate-200 bg-white">

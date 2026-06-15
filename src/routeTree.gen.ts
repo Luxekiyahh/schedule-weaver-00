@@ -28,6 +28,7 @@ import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.av
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AdminServicesRouteImport } from './routes/admin.services'
+import { Route as AdminDomainsRouteImport } from './routes/admin.domains'
 import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -128,6 +129,11 @@ const AdminServicesRoute = AdminServicesRouteImport.update({
   path: '/admin/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDomainsRoute = AdminDomainsRouteImport.update({
+  id: '/admin/domains',
+  path: '/admin/domains',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGenerateBrandingRoute =
   ApiPublicGenerateBrandingRouteImport.update({
     id: '/api/public/generate-branding',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
+  '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/admin/domains'
     | '/admin/services'
     | '/book/$slug'
     | '/booking/$slug'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/admin/domains'
     | '/admin/services'
     | '/book/$slug'
     | '/booking/$slug'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/setup'
     | '/signup'
+    | '/admin/domains'
     | '/admin/services'
     | '/book/$slug'
     | '/booking/$slug'
@@ -317,6 +329,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
+  AdminDomainsRoute: typeof AdminDomainsRoute
   AdminServicesRoute: typeof AdminServicesRoute
   BookSlugRoute: typeof BookSlugRoute
   BookingSlugRoute: typeof BookingSlugRoute
@@ -461,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/domains': {
+      id: '/admin/domains'
+      path: '/admin/domains'
+      fullPath: '/admin/domains'
+      preLoaderRoute: typeof AdminDomainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/generate-branding': {
       id: '/api/public/generate-branding'
       path: '/api/public/generate-branding'
@@ -526,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
+  AdminDomainsRoute: AdminDomainsRoute,
   AdminServicesRoute: AdminServicesRoute,
   BookSlugRoute: BookSlugRoute,
   BookingSlugRoute: BookingSlugRoute,

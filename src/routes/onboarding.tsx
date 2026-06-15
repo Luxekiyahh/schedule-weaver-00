@@ -647,7 +647,7 @@ function StepWorkspace(props: {
         </Field>
         <Field
           label="Booking URL"
-          hint={`Your public booking page lives at <your-slug>.${TENANT_ROOT_DOMAIN}`}
+          hint={`Your custom subdomain <your-slug>.${TENANT_ROOT_DOMAIN} activates shortly after signup. Until then, your page is live right away at ${TENANT_ROOT_DOMAIN}/<your-slug>.`}
         >
           <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
             <span className="flex items-center bg-slate-50 px-3 text-xs text-slate-500">
