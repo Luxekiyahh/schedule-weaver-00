@@ -145,9 +145,6 @@ function SignupPage() {
           <div className="space-y-2">
             <Label htmlFor="slug">Your URL</Label>
             <div className="flex items-stretch rounded-md border focus-within:ring-1 focus-within:ring-ring overflow-hidden">
-              <span className="bg-muted px-3 py-2 text-sm text-muted-foreground flex items-center">
-                procschedule.com/
-              </span>
               <input
                 id="slug"
                 value={slug}
@@ -159,6 +156,9 @@ function SignupPage() {
                 className="flex-1 px-3 py-2 text-sm bg-transparent outline-none"
                 required
               />
+              <span className="bg-muted px-3 py-2 text-sm text-muted-foreground flex items-center">
+                .procschedule.com
+              </span>
               <div className="px-3 flex items-center">
                 {slugStatus === "checking" && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
                 {slugStatus === "ok" && <Check className="w-4 h-4 text-green-600" />}
