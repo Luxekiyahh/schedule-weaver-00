@@ -223,7 +223,7 @@ function CustomizePage() {
           <div className="mb-3 flex items-center justify-between px-2">
             <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Live preview</span>
             <span className="rounded-full bg-white px-2 py-0.5 text-[11px] text-slate-500 ring-1 ring-slate-200">
-              {workspaceSlug || "your-slug"}.{TENANT_ROOT_DOMAIN}
+              {liveLabel || `${workspaceSlug || "your-slug"}.${TENANT_ROOT_DOMAIN}`}
             </span>
           </div>
           <div className="overflow-hidden rounded-xl ring-1 ring-slate-200 bg-white">
