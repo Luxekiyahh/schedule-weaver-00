@@ -250,6 +250,7 @@ export type GeneratedBranding = z.infer<typeof brandingSchema>;
  * workspace_branding payload. Returns JSON only; does not write to DB.
  */
 export const generateBrandingFromPrompt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z.object({ prompt: z.string().trim().min(8).max(2000) }).parse(input),
   )
