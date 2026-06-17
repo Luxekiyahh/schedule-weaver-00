@@ -96,7 +96,7 @@ function SignupPage() {
 
       // The handle_new_user trigger creates a default workspace + membership.
       // Finalize: rename it, set branding, seed Dolliimarie if applicable.
-      await finalize({ data: { userId, businessName: businessName.trim(), slug } });
+      await finalize({ data: { businessName: businessName.trim(), slug } });
 
       // If email confirmation is required, the session won't exist yet.
       if (!auth.session) {
