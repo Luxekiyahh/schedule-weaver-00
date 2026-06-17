@@ -165,7 +165,7 @@ function SetupWizard() {
     setPublishing(true);
     setError(null);
     try {
-      await publish({ data: { userId, branding } });
+      await publish({ data: { branding } });
       setPublishing(false);
       setShowIndustry(true);
     } catch (e) {
