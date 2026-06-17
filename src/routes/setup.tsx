@@ -295,33 +295,44 @@ function SetupWizard() {
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 {INDUSTRIES.map((ind) => {
-                 {[
-  { id: "automotive", label: "Car Wash & Detailing", emoji: "🧼", description: "Generates custom tiers for Full Details, Interior Vacuums, and Ceramic Coatings." },
-  { id: "hvac", label: "HVAC & Contractors", emoji: "🛠️", description: "Generates framework blocks for AC Repair Diagnostic checks and Maintenance calls." },
-  { id: "real_estate", label: "Real Estate Agents", emoji: "🏡", description: "Generates booking sessions for Home Showings, Open Houses, and Consultations." },
-  { id: "braiding", label: "Hair & Braiding", emoji: "👑", description: "Generates custom pricing grids for Knotless and Box Braid size parameters." },
-  { id: "barbering", label: "Barbering & Grooming", emoji: "💈", description: "Generates standard slots for Precision Fades, Line-Ups, and Beard details." },
-  { id: "other", label: "Other Business / Service", emoji: "💼", description: "Generates a clean canvas schedule so you can define your own custom service menu." }
-].map((ind) => {
-  const busy = seeding === ind.id;
-  return (
-    <button 
-      key={ind.id} 
-      onClick={() => {
-        const targetTrack = ["braiding", "barbering", "esthetics"].includes(ind.id) ? ind.id : "barbering";
-        handleSeed(targetTrack as any);
-      }} 
-      disabled={seeding !== null} 
-      className="group relative flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-background p-5 text-center transition hover:border-primary disabled:opacity-60"
-    >
-      <span className="text-3xl">{ind.emoji}</span>
-      <span className="text-sm font-semibold">{ind.label}</span>
-      <span className="text-[11px] text-muted-foreground leading-snug">{ind.description}</span>
-      {busy ? (
-        <Loader2 className="mt-2 h-4 w-4 animate-spin text-primary" />
-      ) : (
-        <ArrowRight className="mt-2 h-4 w-4 text-muted-foreground transition group-hover:translate-x-1" />
-      )}
-    </button>
+                  const busy = seeding === ind.id;
+
+                  return (
+                    <button
+                      type="button"
+                      key={ind.id}
+                      onClick={() => handleSeed(ind.id)}
+                      disabled={seeding !== null}
+                      className="group relative flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-background p-5 text-center transition hover:border-primary disabled:opacity-60"
+                    >
+                      <span className="text-3xl">{ind.emoji}</span>
+                      <span className="text-sm font-semibold">{ind.label}</span>
+                      <span className="text-[11px] text-muted-foreground leading-snug">{ind.description}</span>
+                      {busy ? (
+                        <Loader2 className="mt-2 h-4 w-4 animate-spin text-primary" />
+                      ) : (
+                        <ArrowRight className="mt-2 h-4 w-4 text-muted-foreground transition group-hover:translate-x-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
-})}
+}
+
+function contrastText(hexColor: string) {
+  const normalized = hexColor.replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(normalized)) return "#111111";
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+  return brightness > 145 ? "#111111" : "#ffffff";
+}
