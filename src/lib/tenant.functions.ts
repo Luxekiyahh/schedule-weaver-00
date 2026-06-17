@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const slugSchema = z
   .string()
@@ -13,23 +14,24 @@ const slugSchema = z
  * insert default branding, and (for the Dolliimarie slug) seed the starter catalog.
  */
 export const finalizeTenantSignup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
-        userId: z.string().uuid(),
         businessName: z.string().trim().min(1).max(120),
         slug: slugSchema,
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     // 1. Make sure the chosen slug is free (excluding workspaces this user already owns)
     const { data: slugTaken } = await supabaseAdmin
       .from("workspaces")
       .select("id, owner_id")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (slugTaken && slugTaken.owner_id !== data.userId) {
+    if (slugTaken && slugTaken.owner_id !== userId) {
       throw new Error("That URL is already taken. Try another.");
     }
 
@@ -37,7 +39,7 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
       .select("id, slug")
-      .eq("owner_id", data.userId)
+      .eq("owner_id", userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -78,7 +80,7 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
 
     // 5. Seed Dolliimarie starter catalog + availability (once).
     if (isDolliimarie) {
-      await seedDolliimarie(ws.id, data.userId);
+      await seedDolliimarie(ws.id, userId);
     }
 
     return { workspaceId: ws.id, slug: data.slug };
@@ -248,6 +250,7 @@ export type GeneratedBranding = z.infer<typeof brandingSchema>;
  * workspace_branding payload. Returns JSON only; does not write to DB.
  */
 export const generateBrandingFromPrompt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z.object({ prompt: z.string().trim().min(8).max(2000) }).parse(input),
   )
@@ -343,19 +346,19 @@ Return ONLY valid JSON matching the schema. No prose, no markdown.`;
  * authenticated user's owned workspace.
  */
 export const publishBranding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
-        userId: z.string().uuid(),
         branding: brandingSchema,
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
       .select("id, slug")
-      .eq("owner_id", data.userId)
+      .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -386,12 +389,13 @@ export const publishBranding = createServerFn({ method: "POST" })
  * Read the authenticated user's AI credit balance for their owned workspace.
  */
 export const getCreditBalance = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ userId: z.string().uuid() }).parse(input))
-  .handler(async ({ data }) => {
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({}).optional().parse(input))
+  .handler(async ({ context }) => {
     const { data: ws } = await supabaseAdmin
       .from("workspaces")
       .select("id, ai_credits")
-      .eq("owner_id", data.userId)
+      .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
