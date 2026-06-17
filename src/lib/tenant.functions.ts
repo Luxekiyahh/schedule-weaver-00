@@ -14,16 +14,17 @@ const slugSchema = z
  * insert default branding, and (for the Dolliimarie slug) seed the starter catalog.
  */
 export const finalizeTenantSignup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
-        userId: z.string().uuid(),
         businessName: z.string().trim().min(1).max(120),
         slug: slugSchema,
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     // 1. Make sure the chosen slug is free (excluding workspaces this user already owns)
     const { data: slugTaken } = await supabaseAdmin
       .from("workspaces")
