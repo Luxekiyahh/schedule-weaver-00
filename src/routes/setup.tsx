@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2, Rocket, Wand2, CheckCircle2, Building2, CalendarDays, ClipboardList, ShieldCheck } from "lucide-react";
+import { Sparkles, Loader2, Rocket, Wand2, CheckCircle2, Building2, CalendarDays, ClipboardList, ShieldCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { publishBranding, getCreditBalance, type GeneratedBranding } from "@/lib/tenant.functions";
@@ -307,8 +307,9 @@ function SetupWizard() {
                 })}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
         {/* Success Splash */}
         <AnimatePresence>
