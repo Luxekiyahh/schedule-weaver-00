@@ -307,8 +307,9 @@ function SetupWizard() {
                 })}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
         {/* Success Splash */}
         <AnimatePresence>
