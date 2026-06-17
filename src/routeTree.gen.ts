@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SetupRouteImport } from './routes/setup'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
@@ -36,11 +35,6 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SetupRoute = SetupRouteImport.update({
-  id: '/setup',
-  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -161,7 +155,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
-  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
@@ -186,7 +179,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
-  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
@@ -212,7 +204,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
-  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
@@ -239,7 +230,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
-    | '/setup'
     | '/signup'
     | '/admin/domains'
     | '/admin/services'
@@ -264,7 +254,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
-    | '/setup'
     | '/signup'
     | '/admin/domains'
     | '/admin/services'
@@ -289,7 +278,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
-    | '/setup'
     | '/signup'
     | '/admin/domains'
     | '/admin/services'
@@ -315,7 +303,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
-  SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
   AdminDomainsRoute: typeof AdminDomainsRoute
   AdminServicesRoute: typeof AdminServicesRoute
@@ -334,13 +321,6 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/setup': {
-      id: '/setup'
-      path: '/setup'
-      fullPath: '/setup'
-      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -523,7 +503,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
-  SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
   AdminDomainsRoute: AdminDomainsRoute,
   AdminServicesRoute: AdminServicesRoute,
