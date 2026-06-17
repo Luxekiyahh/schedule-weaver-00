@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SetupRouteImport } from './routes/setup'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
@@ -20,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
+import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
@@ -35,6 +37,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -85,6 +92,11 @@ const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
 const DashboardHomeRoute = DashboardHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCustomizeRoute = DashboardCustomizeRouteImport.update({
+  id: '/customize',
+  path: '/customize',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
@@ -155,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
@@ -163,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
@@ -179,6 +193,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
@@ -187,6 +202,7 @@ export interface FileRoutesByTo {
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
@@ -204,6 +220,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
@@ -212,6 +229,7 @@ export interface FileRoutesById {
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
@@ -230,6 +248,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
+    | '/setup'
     | '/signup'
     | '/admin/domains'
     | '/admin/services'
@@ -238,6 +257,7 @@ export interface FileRouteTypes {
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/calendar'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/services'
@@ -254,6 +274,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
+    | '/setup'
     | '/signup'
     | '/admin/domains'
     | '/admin/services'
@@ -262,6 +283,7 @@ export interface FileRouteTypes {
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/calendar'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/services'
@@ -278,6 +300,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
+    | '/setup'
     | '/signup'
     | '/admin/domains'
     | '/admin/services'
@@ -286,6 +309,7 @@ export interface FileRouteTypes {
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/calendar'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/services'
@@ -303,6 +327,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
+  SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
   AdminDomainsRoute: typeof AdminDomainsRoute
   AdminServicesRoute: typeof AdminServicesRoute
@@ -321,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -391,6 +423,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/dashboard/home'
       preLoaderRoute: typeof DashboardHomeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/customize': {
+      id: '/dashboard/customize'
+      path: '/customize'
+      fullPath: '/dashboard/customize'
+      preLoaderRoute: typeof DashboardCustomizeRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/calendar': {
@@ -477,6 +516,7 @@ interface DashboardRouteChildren {
   DashboardAvailabilityRoute: typeof DashboardAvailabilityRoute
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
+  DashboardCustomizeRoute: typeof DashboardCustomizeRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardServicesRoute: typeof DashboardServicesRoute
@@ -486,6 +526,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAvailabilityRoute: DashboardAvailabilityRoute,
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
+  DashboardCustomizeRoute: DashboardCustomizeRoute,
   DashboardHomeRoute: DashboardHomeRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardServicesRoute: DashboardServicesRoute,
@@ -503,6 +544,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
+  SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
   AdminDomainsRoute: AdminDomainsRoute,
   AdminServicesRoute: AdminServicesRoute,
