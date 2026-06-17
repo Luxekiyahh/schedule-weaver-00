@@ -346,19 +346,19 @@ Return ONLY valid JSON matching the schema. No prose, no markdown.`;
  * authenticated user's owned workspace.
  */
 export const publishBranding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
-        userId: z.string().uuid(),
         branding: brandingSchema,
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
       .select("id, slug")
-      .eq("owner_id", data.userId)
+      .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
