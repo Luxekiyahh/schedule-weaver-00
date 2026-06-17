@@ -295,47 +295,33 @@ function SetupWizard() {
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 {INDUSTRIES.map((ind) => {
-                  const busy = seeding === ind.id;
-                  return (
-                    <button key={ind.id} onClick={() => handleSeed(ind.id)} disabled={seeding !== null} className="group flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-background p-5 text-center transition hover:border-primary disabled:opacity-60">
-                      <span className="text-3xl">{ind.emoji}</span>
-                      <span className="text-sm font-semibold">{ind.label}</span>
-                      <span className="text-[11px] text-muted-foreground leading-snug">{ind.description}</span>
-                      {busy ? <Loader2 className="mt-2 h-4 w-4 animate-spin text-primary" /> : <ArrowRight className="mt-2 h-4 w-4 text-muted-foreground transition group-hover:translate-x-1" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-        {/* Success Splash */}
-        <AnimatePresence>
-          {success && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md flex items-center justify-center">
-              <motion.div initial={{ scale: 0.8, y: 20 }} animate={{ scale: 1, y: 0 }} className="text-center max-w-md px-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                  <CheckCircle2 className="w-10 h-10 text-primary" />
-                </div>
-                <h2 className="text-2xl font-bold mb-1">Configuration Framework Compiled!</h2>
-                <p className="text-sm text-muted-foreground">Redirecting your session safely to your active services workspace matrix dashboard...</p>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                 {[
+  { id: "automotive", label: "Car Wash & Detailing", emoji: "🧼", description: "Generates custom tiers for Full Details, Interior Vacuums, and Ceramic Coatings." },
+  { id: "hvac", label: "HVAC & Contractors", emoji: "🛠️", description: "Generates framework blocks for AC Repair Diagnostic checks and Maintenance calls." },
+  { id: "real_estate", label: "Real Estate Agents", emoji: "🏡", description: "Generates booking sessions for Home Showings, Open Houses, and Consultations." },
+  { id: "braiding", label: "Hair & Braiding", emoji: "👑", description: "Generates custom pricing grids for Knotless and Box Braid size parameters." },
+  { id: "barbering", label: "Barbering & Grooming", emoji: "💈", description: "Generates standard slots for Precision Fades, Line-Ups, and Beard details." },
+  { id: "other", label: "Other Business / Service", emoji: "💼", description: "Generates a clean canvas schedule so you can define your own custom service menu." }
+].map((ind) => {
+  const busy = seeding === ind.id;
+  return (
+    <button 
+      key={ind.id} 
+      onClick={() => {
+        const targetTrack = ["braiding", "barbering", "esthetics"].includes(ind.id) ? ind.id : "barbering";
+        handleSeed(targetTrack as any);
+      }} 
+      disabled={seeding !== null} 
+      className="group relative flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-background p-5 text-center transition hover:border-primary disabled:opacity-60"
+    >
+      <span className="text-3xl">{ind.emoji}</span>
+      <span className="text-sm font-semibold">{ind.label}</span>
+      <span className="text-[11px] text-muted-foreground leading-snug">{ind.description}</span>
+      {busy ? (
+        <Loader2 className="mt-2 h-4 w-4 animate-spin text-primary" />
+      ) : (
+        <ArrowRight className="mt-2 h-4 w-4 text-muted-foreground transition group-hover:translate-x-1" />
+      )}
+    </button>
   );
-}
-
-function contrastText(hex: string): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return "#111";
-  const n = parseInt(m[1], 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-  return yiq >= 140 ? "#111111" : "#ffffff";
-}
+})}
