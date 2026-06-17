@@ -80,7 +80,7 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
 
     // 5. Seed Dolliimarie starter catalog + availability (once).
     if (isDolliimarie) {
-      await seedDolliimarie(ws.id, data.userId);
+      await seedDolliimarie(ws.id, userId);
     }
 
     return { workspaceId: ws.id, slug: data.slug };
