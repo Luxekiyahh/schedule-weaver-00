@@ -39,7 +39,7 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
       .select("id, slug")
-      .eq("owner_id", data.userId)
+      .eq("owner_id", userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
