@@ -31,7 +31,7 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
       .select("id, owner_id")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (slugTaken && slugTaken.owner_id !== data.userId) {
+    if (slugTaken && slugTaken.owner_id !== userId) {
       throw new Error("That URL is already taken. Try another.");
     }
 
