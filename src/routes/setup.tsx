@@ -81,7 +81,7 @@ function SetupWizard() {
         .limit(1)
         .maybeSingle();
       if (mem) setWorkspaceId(mem.workspace_id);
-      fetchCredits({ data: { userId: data.user.id } })
+      fetchCredits({ data: {} })
         .then((r) => setCredits(r.credits))
         .catch(() => setCredits(0));
     });
