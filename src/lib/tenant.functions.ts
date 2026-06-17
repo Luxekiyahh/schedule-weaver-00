@@ -389,12 +389,13 @@ export const publishBranding = createServerFn({ method: "POST" })
  * Read the authenticated user's AI credit balance for their owned workspace.
  */
 export const getCreditBalance = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ userId: z.string().uuid() }).parse(input))
-  .handler(async ({ data }) => {
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({}).optional().parse(input))
+  .handler(async ({ context }) => {
     const { data: ws } = await supabaseAdmin
       .from("workspaces")
       .select("id, ai_credits")
-      .eq("owner_id", data.userId)
+      .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
