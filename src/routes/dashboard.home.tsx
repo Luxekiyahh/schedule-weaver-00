@@ -62,6 +62,17 @@ function HomePage() {
   const [activeServices, setActiveServices] = useState(0);
   const [copied, setCopied] = useState(false);
 
+  // Landed here after a successful checkout from the pricing page.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") === "success") {
+      toast.success("Thanks! Your plan is being activated — this can take a few seconds.");
+      window.history.replaceState({}, "", "/dashboard/home");
+    }
+  }, []);
+
+
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
