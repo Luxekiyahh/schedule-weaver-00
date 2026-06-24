@@ -104,6 +104,27 @@ function PaymentsPage() {
         setDepositAmount((s.depositAmountCents / 100).toFixed(2));
         setDepositPercent(String(s.depositPercent));
         setCurrency(s.currency);
+
+        // Returning from a provider's hosted onboarding — re-check the account.
+        const params = new URLSearchParams(window.location.search);
+        const connect = params.get("connect");
+        if (connect === "return" || connect === "refresh") {
+          try {
+            const r = await refreshStatus({
+              data: { workspaceId: wsId, environment: getStripeEnvironment() },
+            });
+            setConnectionStatus(r.connectionStatus);
+            if (r.connectionStatus === "connected") {
+              toast.success("Your account is connected and ready to accept payments.");
+            } else {
+              toast.info("Onboarding in progress — finish the remaining steps to go live.");
+            }
+          } catch {
+            /* ignore — status stays as loaded */
+          }
+          // Clean the query param from the URL.
+          window.history.replaceState({}, "", "/dashboard/payments");
+        }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Couldn't load payment settings");
       }
