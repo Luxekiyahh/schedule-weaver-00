@@ -58,9 +58,12 @@ function PaymentsPage() {
   const navigate = useNavigate();
   const getSettings = useServerFn(getPaymentSettings);
   const saveSettings = useServerFn(savePaymentSettings);
+  const startConnect = useServerFn(startProviderConnect);
+  const refreshStatus = useServerFn(refreshConnectStatus);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [workspaceName, setWorkspaceName] = useState("Workspace");
 
