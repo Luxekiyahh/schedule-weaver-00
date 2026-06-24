@@ -456,7 +456,113 @@ function Dashboard() {
         onCreated={() => { loadAppointments(); setNewOpen(false); }}
         onCustomerAdded={(c) => setCustomers((p) => [c, ...p])}
       />
+
+      {/* Schedule Exceptions overlay modal */}
+      <AnimatePresence>
+        {exceptionsOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setExceptionsOpen(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-xl"
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: "spring", stiffness: 300, damping: 26 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-slate-900 text-white">
+                    <CalendarX className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">Schedule Exceptions</h3>
+                    <p className="text-xs text-slate-500">Block off dates like holidays.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setExceptionsOpen(false)}
+                  className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="block-date">Date</Label>
+                  <Input
+                    id="block-date"
+                    type="date"
+                    value={newBlockDate}
+                    onChange={(e) => setNewBlockDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="block-label">Label</Label>
+                  <Input
+                    id="block-label"
+                    placeholder="Holiday Close"
+                    value={newBlockLabel}
+                    onChange={(e) => setNewBlockLabel(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={addException}
+                  disabled={savingBlock}
+                  className="w-full bg-slate-900 hover:bg-slate-800"
+                >
+                  {savingBlock ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  Enforce Date Block
+                </Button>
+              </div>
+
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Active blocks
+                </p>
+                {exceptions.length === 0 ? (
+                  <p className="rounded-lg border border-dashed py-6 text-center text-sm text-slate-400">
+                    No date blocks yet.
+                  </p>
+                ) : (
+                  <ul className="max-h-56 space-y-2 overflow-auto">
+                    {exceptions.map((ex) => (
+                      <li
+                        key={ex.id}
+                        className="flex items-center gap-3 rounded-lg border bg-slate-50 px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">{ex.label}</p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(ex.block_date + "T00:00:00").toLocaleDateString([], {
+                              weekday: "short", month: "short", day: "numeric", year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeException(ex.id)}
+                          className="ml-auto rounded-md p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                          aria-label="Remove block"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+
   );
 }
 
