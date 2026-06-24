@@ -1,7 +1,10 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { useServerFn } from "@tanstack/react-start";
+import { changeSubscriptionPlan } from "@/utils/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLANS, planByTier, PLAN_RANK, SETUP_FEE_CENTS, SETUP_FEE_PRICE_ID, type PlanTier } from "@/lib/entitlements";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
