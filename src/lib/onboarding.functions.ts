@@ -88,18 +88,15 @@ export const uploadOnboardingImage = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { data: allowed } = await supabaseAdmin.rpc("has_workspace_role", {
-      _workspace_id: data.workspaceId,
-      _min_role: "owner",
-    });
-    // RPC runs as service role here; verify ownership directly instead.
+    // Verify the caller owns this workspace.
     const { data: ws } = await supabaseAdmin
       .from("workspaces")
       .select("id")
       .eq("id", data.workspaceId)
       .eq("owner_id", context.userId)
       .maybeSingle();
-    if (!ws && !allowed) throw new Error("You don't have access to this workspace.");
+    if (!ws) throw new Error("You don't have access to this workspace.");
+
 
     const ext = (data.fileName.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
     const safeName = `${data.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
