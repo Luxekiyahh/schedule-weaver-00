@@ -934,6 +934,59 @@ export type Database = {
           },
         ]
       }
+      workspace_payment_settings: {
+        Row: {
+          connection_status: string
+          created_at: string
+          currency: string
+          deposit_amount_cents: number
+          deposit_percent: number
+          deposit_type: string
+          id: string
+          platform_fee_percent: number
+          provider: string
+          provider_account_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          connection_status?: string
+          created_at?: string
+          currency?: string
+          deposit_amount_cents?: number
+          deposit_percent?: number
+          deposit_type?: string
+          id?: string
+          platform_fee_percent?: number
+          provider?: string
+          provider_account_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          connection_status?: string
+          created_at?: string
+          currency?: string
+          deposit_amount_cents?: number
+          deposit_percent?: number
+          deposit_type?: string
+          id?: string
+          platform_fee_percent?: number
+          provider?: string
+          provider_account_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_payment_settings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           ai_credits: number
