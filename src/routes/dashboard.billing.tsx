@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useServerFn } from "@tanstack/react-start";
-import { changeSubscriptionPlan } from "@/utils/payments.functions";
+import { changeSubscriptionPlan, syncWorkspaceSubscription } from "@/utils/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
@@ -44,6 +44,7 @@ function BillingPage() {
   const sub = useSubscription();
   const { openCheckout, openPortal, loading: checkoutLoading } = useStripeCheckout();
   const changePlan = useServerFn(changeSubscriptionPlan);
+  const syncSub = useServerFn(syncWorkspaceSubscription);
   const [email, setEmail] = useState<string | undefined>();
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const [pendingTier, setPendingTier] = useState<PlanTier | null>(null);
@@ -53,6 +54,18 @@ function BillingPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? undefined));
   }, []);
+
+  // Self-heal: reconcile directly from Stripe when the workspace is known, so a
+  // missed or mis-tagged webhook doesn't leave a paid plan looking inactive.
+  useEffect(() => {
+    if (!sub.workspaceId) return;
+    let cancelled = false;
+    syncSub({ data: { workspaceId: sub.workspaceId, environment: getStripeEnvironment() } })
+      .then(() => { if (!cancelled) sub.refresh(); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sub.workspaceId]);
 
   // Refetch after returning from a successful checkout.
   useEffect(() => {

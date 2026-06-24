@@ -71,18 +71,29 @@ export function getTenantSlugFromHost(host?: string | null): string | null {
 }
 
 /**
+ * Whether *.procschedule.com wildcard DNS + SSL is live and serving the app.
+ *
+ * Until the wildcard is confirmed, tenant links MUST use the path form
+ * (procschedule.com/<slug>) — the subdomain form 404s because only
+ * procschedule.com and www are wired up. Flip this to `true` once the wildcard
+ * record resolves and serves HTTPS, and the subdomain form turns back on
+ * everywhere with no other code changes.
+ */
+export const WILDCARD_SUBDOMAINS_LIVE = false;
+
+/**
  * Build the canonical client-facing storefront URL for a tenant slug.
  *
- * The wildcard *.procschedule.com certificate is live, so every tenant can be
- * served from its own subdomain immediately after signup — there is no longer
- * a per-tenant SSL gate. `domainStatus` is accepted for call-site compatibility
- * but does NOT change the result.
- *
  * Behaviour:
- *   - On real procschedule.com hosts (or SSR / no host info, assumed prod):
- *       always -> https://<slug>.procschedule.com
- *   - On Lovable preview/sandbox hosts and localhost — where no wildcard
- *     subdomain exists — the path form (`<origin>/<slug>`) so links resolve.
+ *   - When the wildcard is NOT live (current state): always the path form
+ *       https://procschedule.com/<slug>  (on prod/SSR) or <origin>/<slug>.
+ *   - When the wildcard IS live: the subdomain form
+ *       https://<slug>.procschedule.com  on real procschedule.com hosts / SSR.
+ *   - On Lovable preview/sandbox hosts and localhost (no wildcard ever),
+ *     always the path form so links resolve.
+ *
+ * `domainStatus` is accepted for call-site compatibility but does NOT change
+ * the result — the wildcard cert covers every tenant at once.
  */
 export function getTenantUrl(
   slug: string,
@@ -97,14 +108,13 @@ export function getTenantUrl(
     !!hostname &&
     TENANT_ROOT_DOMAINS.some((d) => hostname === d || hostname.endsWith(`.${d}`));
 
-  // The wildcard *.procschedule.com certificate is live, so every tenant can
-  // use its subdomain immediately. `domainStatus` is retained for the signature
-  // but no longer gates subdomain usage on production.
   void domainStatus;
 
   // Production / SSR (no host info -> assume production).
   if (!hostname || onTenantRoot) {
-    return `https://${slug}.${TENANT_ROOT_DOMAIN}`;
+    return WILDCARD_SUBDOMAINS_LIVE
+      ? `https://${slug}.${TENANT_ROOT_DOMAIN}`
+      : `https://${TENANT_ROOT_DOMAIN}/${slug}`;
   }
 
   // Preview / sandbox / localhost -> path form so it resolves without a wildcard.

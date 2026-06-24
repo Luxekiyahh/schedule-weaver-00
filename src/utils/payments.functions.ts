@@ -190,3 +190,98 @@ export const changeSubscriptionPlan = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+// Map Stripe price lookup keys to our plan tiers (mirrors the webhook handler).
+const LOOKUP_TO_TIER: Record<string, "basic" | "pro" | "enterprise"> = {
+  basic_monthly: "basic",
+  pro_monthly: "pro",
+  enterprise_monthly: "enterprise",
+  basic_yearly: "basic",
+  pro_yearly: "pro",
+  enterprise_yearly: "enterprise",
+};
+
+function toIso(unixSeconds: number | null | undefined): string | null {
+  return typeof unixSeconds === "number" ? new Date(unixSeconds * 1000).toISOString() : null;
+}
+
+/**
+ * Reconcile the workspace's subscription row directly from Stripe. This makes
+ * the billing page self-heal when a webhook was missed or landed in the wrong
+ * environment: it searches Stripe for subscriptions stamped with this
+ * workspace's metadata, then upserts the most relevant one into our table with
+ * the correct `environment`. Returns the resolved subscription summary (or null).
+ */
+export const syncWorkspaceSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        environment: envSchema,
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertWorkspaceMember(context.userId, data.workspaceId);
+    const env = data.environment as StripeEnv;
+
+    // Search Stripe for subscriptions tagged with this workspace.
+    let subs: any[] = [];
+    try {
+      const search = await stripeFetch<{ data: any[] }>(env, "/v1/subscriptions/search", {
+        params: {
+          query: `metadata['workspaceId']:'${data.workspaceId}'`,
+          limit: 10,
+          "expand[]": "data.items.data.price",
+        },
+      });
+      subs = search.data ?? [];
+    } catch {
+      subs = [];
+    }
+
+    if (subs.length === 0) {
+      return { synced: false, status: null as string | null, tier: null as string | null };
+    }
+
+    // Prefer an active/trialing subscription, else the most recently created.
+    const ACTIVE = ["trialing", "active", "past_due"];
+    subs.sort((a, b) => {
+      const aActive = ACTIVE.includes(a.status) ? 1 : 0;
+      const bActive = ACTIVE.includes(b.status) ? 1 : 0;
+      if (aActive !== bActive) return bActive - aActive;
+      return (b.created ?? 0) - (a.created ?? 0);
+    });
+    const sub = subs[0];
+
+    const item = (sub.items?.data ?? []).find(
+      (it: any) => LOOKUP_TO_TIER[it?.price?.lookup_key as string],
+    );
+    const lookupKey: string | undefined = item?.price?.lookup_key;
+    if (!lookupKey) {
+      return { synced: false, status: sub.status as string, tier: null as string | null };
+    }
+
+    const periodEnd = sub?.current_period_end ?? sub?.items?.data?.[0]?.current_period_end;
+    const periodStart = sub?.current_period_start ?? sub?.items?.data?.[0]?.current_period_start;
+
+    await supabaseAdmin.from("subscriptions").upsert(
+      {
+        workspace_id: data.workspaceId,
+        plan_tier: LOOKUP_TO_TIER[lookupKey],
+        price_id: lookupKey,
+        status: sub.status,
+        stripe_subscription_id: sub.id,
+        stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer?.id,
+        current_period_start: toIso(periodStart),
+        current_period_end: toIso(periodEnd),
+        cancel_at_period_end: Boolean(sub.cancel_at_period_end),
+        environment: env,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "workspace_id,environment" },
+    );
+
+    return { synced: true, status: sub.status as string, tier: LOOKUP_TO_TIER[lookupKey] };
+  });
