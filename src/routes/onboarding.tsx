@@ -287,6 +287,205 @@ type StepProps = {
   patch: (p: Partial<WizardState>) => void;
 };
 
+// ---------- Step: Account (create account) ----------
+function StepAccount({
+  onCreated,
+}: {
+  onCreated: (ctx: { workspaceId: string; businessName: string }) => void;
+}) {
+  const navigate = useNavigate();
+  const finalize = useServerFn(finalizeTenantSignup);
+  const getCtx = useServerFn(getOnboardingContext);
+  const checkSlug = useServerFn(checkSlugAvailable);
+
+  const [businessName, setBusinessName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<
+    "idle" | "checking" | "ok" | "taken" | "invalid"
+  >("idle");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!slugTouched) setSlug(slugify(businessName));
+  }, [businessName, slugTouched]);
+
+  useEffect(() => {
+    if (!slug) {
+      setSlugStatus("idle");
+      return;
+    }
+    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug) || slug.length < 2) {
+      setSlugStatus("invalid");
+      return;
+    }
+    setSlugStatus("checking");
+    const t = setTimeout(async () => {
+      try {
+        const r = await checkSlug({ data: { slug } });
+        setSlugStatus(r.available ? "ok" : "taken");
+      } catch {
+        setSlugStatus("idle");
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [slug, checkSlug]);
+
+  const canSubmit =
+    !loading &&
+    !!email &&
+    password.length >= 8 &&
+    !!businessName.trim() &&
+    slugStatus === "ok";
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!canSubmit) return;
+    setLoading(true);
+    try {
+      const { data: auth, error: authErr } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: businessName },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
+      if (authErr) throw authErr;
+      if (!auth.user?.id) throw new Error("Signup did not return a user.");
+
+      // handle_new_user trigger creates a default workspace + membership.
+      await finalize({ data: { businessName: businessName.trim(), slug } });
+
+      // Without an active session the rest of the wizard can't upload/save.
+      if (!auth.session) {
+        navigate({ to: "/login", search: { confirm: "1" } as never });
+        return;
+      }
+
+      const ctx = await getCtx();
+      onCreated({ workspaceId: ctx.workspaceId, businessName: businessName.trim() });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create account.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Your branded booking page will live at{" "}
+        <span className="font-mono">your-name.procschedule.com</span>
+      </p>
+
+      <div className="mt-6 space-y-5">
+        <div>
+          <Label htmlFor="acct-bn">Business name</Label>
+          <Input
+            id="acct-bn"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="e.g. Dolliimarie Hair Studio"
+            className="mt-1.5"
+            autoFocus
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="acct-slug">Your URL</Label>
+          <div className="mt-1.5 flex items-stretch overflow-hidden rounded-md border focus-within:ring-1 focus-within:ring-ring">
+            <input
+              id="acct-slug"
+              value={slug}
+              onChange={(e) => {
+                setSlugTouched(true);
+                setSlug(e.target.value.toLowerCase());
+              }}
+              placeholder="your-name"
+              className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
+              required
+            />
+            <span className="flex items-center bg-muted px-3 py-2 text-sm text-muted-foreground">
+              .procschedule.com
+            </span>
+            <div className="flex items-center px-3">
+              {slugStatus === "checking" && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+              {slugStatus === "ok" && <Check className="h-4 w-4 text-green-600" />}
+              {(slugStatus === "taken" || slugStatus === "invalid") && (
+                <X className="h-4 w-4 text-destructive" />
+              )}
+            </div>
+          </div>
+          {slugStatus === "taken" && (
+            <p className="mt-1 text-xs text-destructive">This URL is taken.</p>
+          )}
+          {slugStatus === "invalid" && (
+            <p className="mt-1 text-xs text-destructive">
+              Use lowercase letters, numbers, and hyphens (min 2).
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="acct-email">Email</Label>
+          <Input
+            id="acct-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@business.com"
+            className="mt-1.5"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="acct-pw">Password</Label>
+          <Input
+            id="acct-pw"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            minLength={8}
+            className="mt-1.5"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        <Button type="submit" disabled={!canSubmit} className="w-full">
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Create account & continue
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <a href="/login" className="text-primary hover:underline">
+            Sign in
+          </a>
+        </p>
+      </div>
+    </form>
+  );
+}
+
+
+
 // ---------- Step 1 ----------
 function StepIndustry({
   wizard,
