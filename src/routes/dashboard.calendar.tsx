@@ -52,6 +52,9 @@ type Service = {
 
 type Customer = { id: string; full_name: string; email: string | null };
 
+type ScheduleException = { id: string; block_date: string; label: string };
+
+
 type Appointment = {
   id: string;
   workspace_id: string;
