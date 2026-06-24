@@ -59,19 +59,47 @@ function BillingPage() {
     }
     setPendingTier(tier);
     const plan = planByTier(tier);
-    // First-time subscribers pay the one-time setup fee alongside their plan.
-    const priceIds = sub.setupFeePaid ? [plan.priceId] : [SETUP_FEE_PRICE_ID, plan.priceId];
     try {
+      // Existing subscribers switch plans immediately with proration.
+      if (sub.isActive) {
+        await changePlan({
+          data: {
+            workspaceId: sub.workspaceId,
+            environment: getStripeEnvironment(),
+            priceLookupKey: plan.priceId,
+          },
+        });
+        toast.success(`Switched to ${plan.name}. Your access updates immediately.`);
+        const interval = setInterval(() => sub.refresh(), 3000);
+        setTimeout(() => clearInterval(interval), 15000);
+        return;
+      }
+      // First-time subscribers pay the one-time setup fee alongside their plan.
+      const priceLookupKeys = sub.setupFeePaid ? [plan.priceId] : [SETUP_FEE_PRICE_ID, plan.priceId];
       await openCheckout({
-        priceIds,
+        workspaceId: sub.workspaceId,
+        priceLookupKeys,
+        includeSetupFee: !sub.setupFeePaid,
         customerEmail: email,
-        customData: { workspaceId: sub.workspaceId },
-        successUrl: `${window.location.origin}/dashboard/billing?checkout=success`,
+        successPath: "/dashboard/billing",
+        cancelPath: "/dashboard/billing",
       });
     } catch (e) {
-      toast.error("Could not open checkout", { description: String(e) });
+      toast.error("Could not update your plan", { description: String(e) });
     } finally {
       setPendingTier(null);
+    }
+  }
+
+  async function handleManage() {
+    if (!sub.workspaceId) return;
+    setPortalLoading(true);
+    try {
+      await openPortal({ workspaceId: sub.workspaceId, returnPath: "/dashboard/billing" });
+    } catch (e) {
+      toast.error("Could not open the billing portal", { description: String(e) });
+    } finally {
+      setPortalLoading(false);
     }
   }
 
