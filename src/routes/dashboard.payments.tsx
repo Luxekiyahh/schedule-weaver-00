@@ -157,41 +157,60 @@ function PaymentsPage() {
     setSaving(false);
   };
 
-  const handleConnect = async () => {
+  const openConnect = () => {
+    if (provider === "none") return;
+    // Default environment guess: preview → sandbox, custom domain → live.
+    setCredEnv(getStripeEnvironment());
+    setStripeSecretKey("");
+    setStripePublishableKey("");
+    setPaypalClientId("");
+    setPaypalSecret("");
+    setSquareAccessToken("");
+    setConnectOpen(true);
+  };
+
+  const handleSaveCredentials = async () => {
     if (!workspaceId || provider === "none") return;
     setConnecting(true);
     try {
-      // Persist current settings first so the provider row is in sync.
-      await saveSettings({
-        data: {
-          workspaceId,
-          provider,
-          depositType,
-          depositAmountCents: Math.round(parseFloat(depositAmount || "0") * 100),
-          depositPercent: parseFloat(depositPercent || "0"),
-          currency,
-        },
-      });
-
-      const res = await startConnect({
+      const res = await saveCredentials({
         data: {
           workspaceId,
           provider: provider as Exclude<PaymentProvider, "none">,
-          environment: getStripeEnvironment(),
-          origin: window.location.origin,
+          environment: credEnv,
+          stripeSecretKey: stripeSecretKey || undefined,
+          stripePublishableKey: stripePublishableKey || undefined,
+          paypalClientId: paypalClientId || undefined,
+          paypalSecret: paypalSecret || undefined,
+          squareAccessToken: squareAccessToken || undefined,
         },
       });
-
-      if ("url" in res) {
-        window.location.href = res.url;
-        return;
+      if ("error" in res) {
+        toast.error(res.error);
+      } else {
+        setConnectionStatus("connected");
+        setConnectOpen(false);
+        toast.success("Account connected — you can now collect payments from clients.");
       }
-      toast.error(res.error);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't start onboarding.");
+      toast.error(e instanceof Error ? e.message : "Couldn't verify those credentials.");
     }
     setConnecting(false);
   };
+
+  const handleDisconnect = async () => {
+    if (!workspaceId) return;
+    setConnecting(true);
+    try {
+      await disconnect({ data: { workspaceId } });
+      setConnectionStatus("disconnected");
+      toast.success("Account disconnected.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't disconnect.");
+    }
+    setConnecting(false);
+  };
+
 
   const statusPill = useMemo(() => {
     if (provider === "none") return null;
