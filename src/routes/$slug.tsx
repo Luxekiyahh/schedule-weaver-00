@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Clock, ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { getStorefront } from "@/lib/tenant.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { getTenantUrl, TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
+import { getTenantUrl, TENANT_ROOT_DOMAIN, WILDCARD_SUBDOMAINS_LIVE } from "@/lib/subdomain";
 import { DefaultStorefrontLayout } from "@/components/booking-themes/DefaultStorefrontLayout";
 import { LuxuryBlushLayout } from "@/components/booking-themes/LuxuryBlushLayout";
 import { IndustrialDarkLayout } from "@/components/booking-themes/IndustrialDarkLayout";
