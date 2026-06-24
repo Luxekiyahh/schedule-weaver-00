@@ -1,52 +1,39 @@
-# Unify Signup into Onboarding → Pricing → Dashboard
-
 ## Goal
-Collapse the funnel into a single path:
-`/onboarding` (create account + build site) → `/pricing` (pick a plan + pay) → `/dashboard/home` (after successful payment). Remove the now-redundant `/signup` and `/setup` pages.
 
-## Flow after change
-```
-Visitor → /onboarding
-  Step 1: Create account (business name, URL, email, password)  ← NEW
-  Steps 2–8: industry, identity, photos, services, hours, policies, intake, preview
-  Finish → redirect to /pricing
-/pricing → "Get started" (logged in) → Paddle checkout (setup fee + plan)
-         → payment success → /dashboard/home
+Each "Get started" button on `/pricing` opens Stripe Checkout for its specific plan (Basic / Pro / Enterprise), with the one-time $100 setup fee bundled in for first-time buyers. Logged-out visitors continue through `/onboarding` first.
+
+## Current state
+
+The pricing page already maps each button to its plan and calls `openCheckout` with that plan's price. The intended flow is mostly wired, but it needs to be verified end-to-end and hardened so every button reliably reaches the Stripe-hosted checkout for the correct product.
+
+## Flow per button
+
+```text
+Click "Get started" (plan X)
+  ├─ Not signed in        → navigate to /onboarding (create account + workspace)
+  ├─ Signed in, no workspace → toast error
+  └─ Signed in + workspace → Stripe Checkout
+         line items: [setup_fee_onetime (if not already paid)] + [X_monthly]
+         success → /dashboard/home   cancel → /pricing
 ```
 
 ## Changes
 
-### 1. `/onboarding` becomes the account-creation entry point
-File: `src/routes/onboarding.tsx`
-- Add a new **Step 1 "Account"** before the current Industry step (shifting the wizard from 8 to 9 steps; update `STEP_LABELS`, progress bar, and `next()/back()` bounds).
-- The Account step collects **business name, URL slug, email, password**, reusing the exact controls and live slug-availability check currently in `signup.tsx` (`checkSlugAvailable`, `slugify`, debounce, status icons).
-- On "Continue" from the Account step: call `supabase.auth.signUp(...)` then `finalizeTenantSignup({ businessName, slug })` (same calls signup.tsx makes today). Store the returned context so the rest of the wizard has a `workspaceId` for image uploads and `completeOnboarding`.
-- Replace the current `getOnboardingContext()`-on-mount logic: instead of redirecting unauthenticated visitors to `/login`, only load context if a session already exists; otherwise begin at the Account step. (Already-logged-in users skip straight to Industry.)
-- Pre-fill the wizard `businessName` from the Account step.
+1. **`src/routes/pricing.tsx`**
+   - Confirm `handleSelect(tier)` passes the correct `priceLookupKeys` for each tier (`basic_monthly` / `pro_monthly` / `enterprise_monthly`) and sets `includeSetupFee` from `sub.setupFeePaid`.
+   - Ensure the per-card button shows a loading spinner only for the clicked tier and surfaces a clear toast if checkout fails.
+   - Keep the logged-out → `/onboarding` redirect and setup-fee bundling.
 
-### 2. Onboarding completion → `/pricing`
-File: `src/routes/onboarding.tsx` (`StepPreview`)
-- Change both "Go to my dashboard" / "Go to dashboard anyway" destinations from `/dashboard/home` to `/pricing` (the next step is now choosing a plan). Copy updated to "Choose your plan".
+2. **`src/hooks/useStripeCheckout.ts` / `src/utils/payments.functions.ts`** (only if verification turns up a gap)
+   - Confirm `createCheckoutSession` resolves each plan's price via `resolvePrice`, builds the subscription session with the optional setup-fee line item, and returns the hosted Checkout URL the client redirects to.
 
-### 3. `/pricing` drives checkout
-File: `src/routes/pricing.tsx`
-- Convert the static "Get started" `<Link to="/signup">` buttons into plan-aware actions:
-  - **Logged in:** open Paddle checkout for that tier using the same logic as billing (`usePaddleCheckout`, `useSubscription`, setup fee via `SETUP_FEE_PRICE_ID` when unpaid, `customData: { workspaceId }`), with `successUrl = ${origin}/dashboard/home?checkout=success`.
-  - **Logged out:** navigate to `/onboarding`.
-- Add a small `?checkout=success` handler on `/dashboard/home` (toast + brief subscription refresh poll), mirroring what `/dashboard/billing` already does, so the post-payment landing on the dashboard reflects the active plan.
+## Verification
 
-### 4. Delete redundant routes
-- Remove `src/routes/signup.tsx` and `src/routes/setup.tsx` (the route tree regenerates automatically).
-- Update every reference to point at the new flow:
-  - `src/routes/index.tsx` (4× `to="/signup"`) → `/onboarding`.
-  - `src/routes/$slug.tsx` (links + absolute `procschedule.com/signup` URLs) → `/onboarding`.
-  - `src/routes/admin.services.tsx` `to="/setup"` → `/onboarding` (or `/dashboard/services`).
-  - `src/routes/dashboard.home.tsx` `ActionCard to="/setup"` → `/onboarding`.
+- Run a typecheck/build.
+- Drive the signed-in `/pricing` page with Playwright: click each plan's "Get started" and confirm it initiates a redirect to the Stripe Checkout URL (and that the resolved line items match plan + setup fee on first purchase).
+- Confirm logged-out clicks route to `/onboarding`.
 
-## Technical notes
-- **Session requirement:** uploads and `completeOnboarding` use `requireSupabaseAuth`, so the account must exist with an active session before the photo/save steps. This requires email auto-confirm to remain enabled (already on); if confirmation were required there'd be no session mid-wizard. I'll keep the signup's existing "no session → go to /login" fallback as a safety net.
-- No database or server-function signature changes are needed — `finalizeTenantSignup`, `checkSlugAvailable`, `completeOnboarding`, and the Paddle checkout/webhook all stay as-is.
-- `head()` meta on `/onboarding` updated to signup-oriented copy.
+## Notes
 
-## Out of scope
-- No changes to billing webhook, plan definitions, or the `/dashboard/billing` page (it remains for existing users to manage/switch plans).
+- Checkout still uses the existing Lovable Stripe gateway and resolved price IDs; no product/price changes needed.
+- Automatic tax falls back gracefully until the Stripe account address is configured, so checkout works in test mode now.
