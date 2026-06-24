@@ -202,6 +202,54 @@ function Dashboard() {
 
   useEffect(() => { loadAppointments(); }, [loadAppointments]);
 
+  // Schedule exceptions (workspace-wide date blocks)
+  const loadExceptions = useCallback(async () => {
+    if (!workspaceId) return;
+    const { data, error } = await supabase
+      .from("schedule_exceptions")
+      .select("id, block_date, label")
+      .eq("workspace_id", workspaceId)
+      .order("block_date", { ascending: true });
+    if (error) { toast.error(error.message); return; }
+    setExceptions((data ?? []) as ScheduleException[]);
+  }, [workspaceId]);
+
+  useEffect(() => { loadExceptions(); }, [loadExceptions]);
+
+  const addException = async () => {
+    if (!workspaceId) return;
+    if (!newBlockDate || !newBlockLabel.trim()) {
+      toast.error("Pick a date and enter a label");
+      return;
+    }
+    setSavingBlock(true);
+    const { data: u } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("schedule_exceptions")
+      .insert({
+        workspace_id: workspaceId,
+        block_date: newBlockDate,
+        label: newBlockLabel.trim(),
+        created_by: u.user?.id ?? null,
+      })
+      .select("id, block_date, label")
+      .single();
+    setSavingBlock(false);
+    if (error) { toast.error(error.message); return; }
+    setExceptions((prev) => [...prev, data as ScheduleException].sort((a, b) => a.block_date.localeCompare(b.block_date)));
+    setNewBlockDate("");
+    setNewBlockLabel("");
+    toast.success("Date block enforced");
+  };
+
+  const removeException = async (id: string) => {
+    const { error } = await supabase.from("schedule_exceptions").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setExceptions((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Block removed");
+  };
+
+
   // Metrics (admin only)
   const metrics = useMemo(() => {
     const today = startOfDay(new Date()).getTime();
