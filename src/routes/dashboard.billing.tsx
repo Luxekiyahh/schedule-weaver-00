@@ -44,6 +44,7 @@ function BillingPage() {
   const sub = useSubscription();
   const { openCheckout, openPortal, loading: checkoutLoading } = useStripeCheckout();
   const changePlan = useServerFn(changeSubscriptionPlan);
+  const syncSub = useServerFn(syncWorkspaceSubscription);
   const [email, setEmail] = useState<string | undefined>();
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const [pendingTier, setPendingTier] = useState<PlanTier | null>(null);
