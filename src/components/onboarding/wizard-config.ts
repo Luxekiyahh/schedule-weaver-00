@@ -311,6 +311,7 @@ export function emptyService(name = ""): ServiceDraft {
 export function initialWizard(): WizardState {
   return {
     industry: null,
+    themeId: "default",
     businessName: "",
     ownerTitle: "",
     bio: "",
