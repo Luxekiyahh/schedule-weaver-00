@@ -172,7 +172,9 @@ export const getStorefront = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: ws } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug, timezone, owner_id, domain_status")
+      .select(
+        "id, name, slug, timezone, owner_id, domain_status, theme_id, primary_color, secondary_color, font_family, logo_url",
+      )
       .eq("slug", data.slug)
       .maybeSingle();
     if (!ws) return { workspace: null };
