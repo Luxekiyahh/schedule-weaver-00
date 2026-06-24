@@ -117,9 +117,10 @@ function ServicesPage() {
       <div className="mx-auto max-w-[1280px] px-6 py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <Link to="/dashboard/home" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to home
-            </Link>
+            <button onClick={() => navigate({ to: "/dashboard/home" })} className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">
+              <ChevronLeft className="h-3.5 w-3.5" /> Back to Dashboard
+            </button>
+
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Services</h1>
             <p className="mt-1 text-sm text-slate-500">
               {isAdmin ? "Manage your bookable offerings and pricing." : "Browse workspace services and choose which ones you offer."}
