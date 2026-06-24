@@ -60,13 +60,15 @@ function PricingPage() {
     }
     setPendingTier(tier);
     const plan = planByTier(tier);
-    const priceIds = sub.setupFeePaid ? [plan.priceId] : [SETUP_FEE_PRICE_ID, plan.priceId];
+    const priceLookupKeys = sub.setupFeePaid ? [plan.priceId] : [SETUP_FEE_PRICE_ID, plan.priceId];
     try {
       await openCheckout({
-        priceIds,
+        workspaceId: sub.workspaceId,
+        priceLookupKeys,
+        includeSetupFee: !sub.setupFeePaid,
         customerEmail: email,
-        customData: { workspaceId: sub.workspaceId },
-        successUrl: `${window.location.origin}/dashboard/home?checkout=success`,
+        successPath: "/dashboard/home",
+        cancelPath: "/pricing",
       });
     } catch (e) {
       toast.error("Could not open checkout", { description: String(e) });
