@@ -71,14 +71,13 @@ function StorefrontPage() {
   // Only on the apex tenant host; subdomain and preview hosts are left alone.
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    // Only canonicalize once the tenant's subdomain has a working certificate
-    // (domain_status === "active"); otherwise the path form stays valid.
-    if (data.workspace?.domain_status !== "active") return;
+    // The *.procschedule.com wildcard cert is live, so always forward apex
+    // path-form visits to the tenant subdomain.
     const host = window.location.hostname.toLowerCase();
     if (host === TENANT_ROOT_DOMAIN || host === `www.${TENANT_ROOT_DOMAIN}`) {
       window.location.replace(getTenantUrl(params.slug, host, "active"));
     }
-  }, [params.slug, data.workspace?.domain_status]);
+  }, [params.slug]);
 
   if (!data.workspace) return null;
   return <StorefrontView data={data} />;
