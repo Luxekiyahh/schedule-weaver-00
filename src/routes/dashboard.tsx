@@ -51,7 +51,10 @@ function DashboardLayout() {
   useEffect(() => {
     if (sub.loading || !synced) return;
     if (!sub.isActive && !allowed) {
-      navigate({ to: "/pricing", search: { inactive: "1" } as never });
+      toast.error("Your subscription is inactive", {
+        description: "Choose a plan to continue using your dashboard.",
+      });
+      navigate({ to: "/pricing" });
     }
   }, [sub.loading, synced, sub.isActive, allowed, navigate]);
 
