@@ -1,44 +1,46 @@
-# Rebuild the ProcSchedule Onboarding Wizard
+# Rebuild the Onboarding "Client View" Preview
 
-Rebuild `/onboarding` as an 8-step, two-column wizard (form left, live "Client view" preview right; stacked on mobile) that saves everything to the backend on completion. Dark, minimal aesthetic using existing design tokens.
+Replace the current simplified pink preview (`src/components/onboarding/LivePreview.tsx`) with a high-fidelity **dynamic dark-luxury** template. The layout and section hierarchy are inspired by the DolliiMariie booking site, but the color treatment is reusable for any tenant.
 
-## Data model (one migration)
+## Core principle
 
-Reuse existing tables; persist the few new shapes in JSON to avoid heavy schema churn:
+- **Fixed foundation, always:** near-black base (`#0A0A0A`), white / soft-white text, subtle ambient glow + glitter texture. This never changes regardless of the tenant's colors.
+- **Accent = tenant primary color** (extracted from logo or chosen in the color step): buttons, section heading underlines, active/hover states, price text, icon tints, pill borders.
+- **Supporting tone = tenant secondary color:** used sparingly for gradients, secondary highlights, and the hero wash.
+- **Real-time:** the accent updates live as the logo is uploaded/colors are extracted, while the dark base stays locked.
+- The wizard's existing **color-picker step stays as-is**.
 
-- `workspaces`: update `name`, `slug`, `primary_color`, `secondary_color`, `logo_url`, `timezone`.
-- `workspace_branding`: write `hero_headline` (business name), `hero_subhead` (bio/tagline), `primary_hex`, `accent_hex`, `logo_url`, and a structured `layout_config` JSON holding: `industry`, `owner_title`, `portfolio_urls[]`, `location` (`{type, address}`), `policies` (`{deposit, cancellation_window, grace_period, no_guests, custom_note}`), `intake_questions[]` (`{label, type}`).
-- `services`: insert one row per service (`name`, `description`, `duration_minutes`, `price_cents`). Add a nullable `options` JSONB column to `services` to store the repeatable label/price sub-rows.
-- `provider_availability`: replace the owner member's rows with the configured weekly hours.
-- Storage: reuse the existing public `branding` bucket for logo + portfolio images, pathed under `{workspaceId}/...`.
+## Visual language (ported from DolliiMariie, recolored)
 
-## Backend (server functions in `src/lib/onboarding.functions.ts`)
+- A centered mobile-style storefront frame inside the browser chrome mockup (keep the existing `your-business.procschedule.com` URL bar).
+- Script/serif display font for the business name and section headings (e.g. Cormorant Garamond / Italiana feel), sans body.
+- "Pill" section headings (rounded, accent-bordered, uppercase, letter-spaced).
+- Accent-bordered cards (the `gold-card` equivalent, retinted to the accent over the dark base) with soft inner glow.
+- Ornament dividers (`✦` with flanking hairlines) between sections.
+- Slow accent sheen on the business-name title.
 
-- `getOnboardingContext` (auth): returns the caller's owned workspace id + slug, prefilling business name if present.
-- `uploadOnboardingImage` (auth): returns a signed/admin upload to the `branding` bucket and the public URL (logo + each portfolio photo).
-- `completeOnboarding` (auth): validates with Zod and writes all wizard state in one call — workspace fields, branding + `layout_config`, services (+options), and availability. Authorizes via `has_workspace_role(workspaceId,'owner')`, uses `supabaseAdmin` loaded inside the handler. Idempotent (upsert branding, clear+reinsert services/availability).
+## Section order (all driven by live wizard state)
 
-## Frontend (`src/routes/onboarding.tsx`, public route, client wizard)
+1. **Hero** — logo (or monogram), business name in display font, owner title, bio, accent "Book your appointment" button. Background = subtle radial wash of primary→secondary over black.
+2. **Portfolio trio** — first 3 uploaded photos (graceful placeholders if none).
+3. **Hours** — open days with formatted times; location/address line.
+4. **Booking Policy** — 2-column accent cards built from `policies` (deposit, cancellation, grace, no-guests, custom note).
+5. **Pre-Appointment / Intake** — cards rendered from the wizard `intake` questions.
+6. **Portfolio gallery** — remaining uploaded photos in a 2-column grid.
+7. **Services** — accent-bordered cards mapping live `services` (name, duration, price, options).
+8. **Footer** — socials / business name flourish.
 
-Single route rendering `OnboardingWizard`. State machine in React state (`step` 1–8 + `wizard` object). Top progress bar: 8 labeled segments on desktop, dots on mobile. `Continue`/`Back` buttons with inline validation blocking advance when required fields are empty. No reloads.
+Empty states stay elegant (e.g. "Your services will appear here") so early steps still look premium.
 
-Steps:
-1. **Industry** — grid of icon tiles (Beauty & Hair, Fitness & Wellness, Home Services, Health & Medical, Consulting & Coaching, Auto & Detailing, Pet Services, Other); select highlights + auto-advances; stored as `industry`.
-2. **Business Identity** — Business Name, Your Name/Title, Bio/Tagline textarea (160 cap, industry-based placeholder), Logo upload (PNG/JPG/SVG). On upload: load color-thief UMD from the given CDN via a `<script>` tag in `__root.tsx` head, extract top 2 colors → `primaryColor`/`secondaryColor`, show swatches "Colors detected from your logo," allow override via `<input type=color>`. Preview header/accent update live.
-3. **Portfolio** — up to 9 images, 3×3 grid with remove (X), elegant placeholder tiles for empty slots, "add later" subtext. Feeds preview gallery.
-4. **Services** — expandable service cards (Name, optional Description, Duration dropdown incl. Custom, Price, repeatable Options label+price rows), `+ Add Service`, 3 industry-based name placeholders. Preview services list updates live.
-5. **Hours & Location** — Mon–Sun open/closed toggles with 30-min start/end dropdowns (6:00 AM–11:00 PM), defaults Mon–Fri 9–7, Sat–Sun 9–8. Location radios: studio/shop (address field), mobile (none), home (private address).
-6. **Policies** — industry-default deposit ($50), cancellation window dropdown (12/24/48/72h, default 24), grace period dropdown (None/10/15/20/30, default 15), no-guests toggle, custom note textarea. Feeds preview Booking Policy.
-7. **Intake Questions** — add custom questions (label + type: Short Text/Long Text/Yes/No/File Upload), 2 industry-based suggestions, `+ Add Question`, optional with "Skip for now".
-8. **Preview & Rating** — large reveal of full preview; "How do you feel about your design?" + 5 stars. On mount, call `completeOnboarding` to persist. 4–5 stars → confetti + "You're all set! Your site is live at [slug].procschedule.com" + "Go to my dashboard" → `/dashboard/home`. 1–3 stars → "let's make it perfect" message + "Schedule a design call" opening a Calendly placeholder URL (`https://calendly.com/your-link` TODO) in a new tab + secondary "Go to dashboard anyway".
+## Technical notes
 
-## Live Preview (`src/components/onboarding/LivePreview.tsx`)
+- Rewrite only `src/components/onboarding/LivePreview.tsx`. Signature stays `{ wizard, large }` so all callers in `src/routes/onboarding.tsx` are unaffected.
+- Colors applied inline via CSS variables derived from `wizard.primaryColor` / `wizard.secondaryColor` plus the existing `hexToRgba` helper (for accent tints, glows, borders at low alpha over black).
+- Keep using existing config helpers (`getIndustry`, `DAYS`, `formatTimeLabel`, `durationToMinutes`).
+- Self-contained styling via inline styles + Tailwind utilities scoped to the preview container; no global `styles.css` changes required, so the dark luxe look never leaks into the rest of the onboarding chrome.
+- No backend, data-model, or server-function changes.
 
-Simplified DolliiMariie-style booking template inside a browser/phone frame mockup labeled "Client view — live preview": header (business name + logo, colored by extracted palette), hero (bio/tagline), services list, hours, policy section — all bound to wizard state and updating in real time. Step 8 renders it larger.
+## Out of scope
 
-## Notes / dependencies
-
-- Confetti: add `canvas-confetti` (`bun add canvas-confetti`).
-- color-thief loaded from the specified CDN via root `<script>` (per Tailwind v4 remote-asset rule); accessed as `window.ColorThief`.
-- Reuse existing shadcn primitives, `motion` for transitions, and semantic tokens (no hardcoded colors except the user's own brand palette in the preview).
-- Calendly link left as a clearly-marked placeholder constant for you to fill in.
+- The actual published storefront themes (`src/components/booking-themes/*`) are unchanged.
+- Wizard steps, persistence, and color extraction logic are untouched.
