@@ -39,6 +39,8 @@ function money(cents: number) {
 }
 
 function BillingPage() {
+  const navigate = useNavigate();
+
   const sub = useSubscription();
   const { openCheckout, openPortal, loading: checkoutLoading } = useStripeCheckout();
   const changePlan = useServerFn(changeSubscriptionPlan);
