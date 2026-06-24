@@ -68,8 +68,8 @@ function PaymentsPage() {
   const navigate = useNavigate();
   const getSettings = useServerFn(getPaymentSettings);
   const saveSettings = useServerFn(savePaymentSettings);
-  const startConnect = useServerFn(startProviderConnect);
-  const refreshStatus = useServerFn(refreshConnectStatus);
+  const saveCredentials = useServerFn(saveProviderCredentials);
+  const disconnect = useServerFn(disconnectProvider);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -85,6 +85,15 @@ function PaymentsPage() {
   const [depositAmount, setDepositAmount] = useState("0.00");
   const [depositPercent, setDepositPercent] = useState("0");
   const [currency, setCurrency] = useState("USD");
+
+  // Credentials dialog
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [credEnv, setCredEnv] = useState<"sandbox" | "live">("live");
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [paypalClientId, setPaypalClientId] = useState("");
+  const [paypalSecret, setPaypalSecret] = useState("");
+  const [squareAccessToken, setSquareAccessToken] = useState("");
 
   useEffect(() => {
     (async () => {
