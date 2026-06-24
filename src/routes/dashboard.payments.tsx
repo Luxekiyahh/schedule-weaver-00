@@ -158,13 +158,40 @@ function PaymentsPage() {
     setSaving(false);
   };
 
-  const handleConnect = () => {
-    toast.info(
-      `Connecting your ${
-        provider === "none" ? "" : PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label
-      } account is coming soon`,
-      { description: "Account linking (OAuth) ships in the next phase." },
-    );
+  const handleConnect = async () => {
+    if (!workspaceId || provider === "none") return;
+    setConnecting(true);
+    try {
+      // Persist current settings first so the provider row is in sync.
+      await saveSettings({
+        data: {
+          workspaceId,
+          provider,
+          depositType,
+          depositAmountCents: Math.round(parseFloat(depositAmount || "0") * 100),
+          depositPercent: parseFloat(depositPercent || "0"),
+          currency,
+        },
+      });
+
+      const res = await startConnect({
+        data: {
+          workspaceId,
+          provider: provider as Exclude<PaymentProvider, "none">,
+          environment: getStripeEnvironment(),
+          origin: window.location.origin,
+        },
+      });
+
+      if ("url" in res) {
+        window.location.href = res.url;
+        return;
+      }
+      toast.error(res.error);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't start onboarding.");
+    }
+    setConnecting(false);
   };
 
   const statusPill = useMemo(() => {
