@@ -125,6 +125,7 @@ const serviceSchema = z.object({
 
 const completeSchema = z.object({
   industry: z.string().max(40),
+  themeId: z.enum(["default", "luxury-blush", "industrial-dark"]).default("default"),
   businessName: z.string().trim().min(1).max(120),
   ownerTitle: z.string().trim().max(120).optional().default(""),
   bio: z.string().trim().max(200).optional().default(""),
