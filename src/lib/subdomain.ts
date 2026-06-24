@@ -79,7 +79,7 @@ export function getTenantSlugFromHost(host?: string | null): string | null {
  * record resolves and serves HTTPS, and the subdomain form turns back on
  * everywhere with no other code changes.
  */
-export const WILDCARD_SUBDOMAINS_LIVE = false;
+export const WILDCARD_SUBDOMAINS_LIVE = true;
 
 /**
  * Build the canonical client-facing storefront URL for a tenant slug.
