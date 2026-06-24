@@ -210,7 +210,7 @@ function Dashboard() {
     if (!workspaceId) return;
     const { data, error } = await supabase
       .from("schedule_exceptions")
-      .select("id, block_date, label")
+      .select("id, block_date, label, start_time, end_time")
       .eq("workspace_id", workspaceId)
       .order("block_date", { ascending: true });
     if (error) { toast.error(error.message); return; }
@@ -225,6 +225,16 @@ function Dashboard() {
       toast.error("Pick a date and enter a label");
       return;
     }
+    if (!blockAllDay) {
+      if (!newBlockStart || !newBlockEnd) {
+        toast.error("Pick a start and end time");
+        return;
+      }
+      if (newBlockStart >= newBlockEnd) {
+        toast.error("End time must be after start time");
+        return;
+      }
+    }
     setSavingBlock(true);
     const { data: u } = await supabase.auth.getUser();
     const { data, error } = await supabase
@@ -233,16 +243,18 @@ function Dashboard() {
         workspace_id: workspaceId,
         block_date: newBlockDate,
         label: newBlockLabel.trim(),
+        start_time: blockAllDay ? null : newBlockStart,
+        end_time: blockAllDay ? null : newBlockEnd,
         created_by: u.user?.id ?? null,
       })
-      .select("id, block_date, label")
+      .select("id, block_date, label, start_time, end_time")
       .single();
     setSavingBlock(false);
     if (error) { toast.error(error.message); return; }
     setExceptions((prev) => [...prev, data as ScheduleException].sort((a, b) => a.block_date.localeCompare(b.block_date)));
     setNewBlockDate("");
     setNewBlockLabel("");
-    toast.success("Date block enforced");
+    toast.success(blockAllDay ? "Date block enforced" : "Hour block enforced");
   };
 
   const removeException = async (id: string) => {
