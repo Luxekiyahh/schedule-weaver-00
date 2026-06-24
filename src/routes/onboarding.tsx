@@ -60,17 +60,18 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingWizard,
   head: () => ({
     meta: [
-      { title: "Set up your booking site — ProcSchedule" },
+      { title: "Create your account & booking site — ProcSchedule" },
       {
         name: "description",
         content:
-          "Build your branded booking site in a few quick steps — industry, identity, services, hours, policies, and intake.",
+          "Sign up and build your branded booking site in a few quick steps — account, industry, identity, services, hours, policies, and intake.",
       },
     ],
   }),
 });
 
 const STEP_LABELS = [
+  "Account",
   "Industry",
   "Identity",
   "Photos",
@@ -80,6 +81,16 @@ const STEP_LABELS = [
   "Intake",
   "Preview",
 ];
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
 
 // ---------- helpers ----------
 
