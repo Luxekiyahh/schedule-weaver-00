@@ -934,6 +934,50 @@ export type Database = {
           },
         ]
       }
+      workspace_payment_credentials: {
+        Row: {
+          created_at: string
+          environment: string
+          paypal_client_id: string | null
+          paypal_secret: string | null
+          square_access_token: string | null
+          square_location_id: string | null
+          stripe_secret_key: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment?: string
+          paypal_client_id?: string | null
+          paypal_secret?: string | null
+          square_access_token?: string | null
+          square_location_id?: string | null
+          stripe_secret_key?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          paypal_client_id?: string | null
+          paypal_secret?: string | null
+          square_access_token?: string | null
+          square_location_id?: string | null
+          stripe_secret_key?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_payment_credentials_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_payment_settings: {
         Row: {
           connection_status: string
@@ -946,6 +990,7 @@ export type Database = {
           platform_fee_percent: number
           provider: string
           provider_account_id: string | null
+          stripe_publishable_key: string | null
           updated_at: string
           workspace_id: string
         }
@@ -960,6 +1005,7 @@ export type Database = {
           platform_fee_percent?: number
           provider?: string
           provider_account_id?: string | null
+          stripe_publishable_key?: string | null
           updated_at?: string
           workspace_id: string
         }
@@ -974,6 +1020,7 @@ export type Database = {
           platform_fee_percent?: number
           provider?: string
           provider_account_id?: string | null
+          stripe_publishable_key?: string | null
           updated_at?: string
           workspace_id?: string
         }

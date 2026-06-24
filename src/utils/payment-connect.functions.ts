@@ -1,27 +1,32 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { type StripeEnv, stripeFetch } from "@/lib/stripe.server";
 
 /**
- * Provider account onboarding (Phase 2B).
+ * Bring-your-own-key payment connection (Phase 2B).
  *
- * Turns the "Connect account" button into real, provider-specific onboarding:
- *  - Stripe   → Stripe Connect (Express) hosted onboarding. Works today via
- *               the Lovable Stripe gateway, no extra credentials required.
- *  - Square   → OAuth (requires SQUARE_APPLICATION_ID / SQUARE_APPLICATION_SECRET).
- *  - PayPal   → OAuth (requires PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET).
+ * Each workspace connects its OWN payment account by pasting that provider's
+ * API credentials. We validate the keys against the live provider API, store
+ * the secrets in a service-role-only table (never exposed to the browser), and
+ * keep a non-secret connection status + publishable key on
+ * `workspace_payment_settings`.
  *
- * Square / PayPal stay gated until their credentials are configured; until then
- * we return a clear, actionable message instead of silently doing nothing.
+ * These are the tenant's real provider keys, so we call the provider APIs
+ * directly (api.stripe.com / paypal / square) — NOT the Lovable gateway, which
+ * only fronts the platform's own managed Stripe account.
  */
 
 const PROVIDERS = ["stripe", "paypal", "square"] as const;
-type ConnectProvider = (typeof PROVIDERS)[number];
+
+
+async function admin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 async function assertWorkspaceMember(userId: string, workspaceId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
+  const db = await admin();
+  const { data } = await db
     .from("workspace_members")
     .select("workspace_id")
     .eq("user_id", userId)
@@ -31,182 +36,188 @@ async function assertWorkspaceMember(userId: string, workspaceId: string) {
   if (!data) throw new Error("You don't have access to this workspace.");
 }
 
-type SettingsRow = {
-  provider: string | null;
-  connection_status: string | null;
-  provider_account_id: string | null;
-};
+// ---- Provider validation (calls the real provider APIs directly) ----
 
-async function readSettings(workspaceId: string): Promise<SettingsRow | null> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("workspace_payment_settings")
-    .select("provider, connection_status, provider_account_id")
-    .eq("workspace_id", workspaceId)
-    .maybeSingle();
-  return (data as SettingsRow) ?? null;
+async function validateStripe(secretKey: string): Promise<{
+  accountId: string;
+  environment: "sandbox" | "live";
+}> {
+  if (!/^sk_(test|live)_/.test(secretKey) && !/^rk_(test|live)_/.test(secretKey)) {
+    throw new Error("That doesn't look like a Stripe secret key (it should start with sk_live_ or sk_test_).");
+  }
+  const res = await fetch("https://api.stripe.com/v1/account", {
+    headers: { Authorization: `Bearer ${secretKey}` },
+  });
+  const json = (await res.json().catch(() => ({}))) as {
+    id?: string;
+    error?: { message?: string };
+  };
+  if (!res.ok) {
+    throw new Error(json.error?.message || "Stripe rejected that key. Double-check it and try again.");
+  }
+  return {
+    accountId: json.id ?? "stripe_account",
+    environment: secretKey.includes("_live_") ? "live" : "sandbox",
+  };
 }
 
-async function updateSettings(
-  workspaceId: string,
-  patch: Partial<{
-    provider: string;
-    connection_status: string;
-    provider_account_id: string | null;
-  }>,
-) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { error } = await supabaseAdmin
-    .from("workspace_payment_settings")
-    .upsert({ workspace_id: workspaceId, ...patch }, { onConflict: "workspace_id" });
-  if (error) throw new Error(error.message);
+async function validatePaypal(
+  clientId: string,
+  secret: string,
+  environment: "sandbox" | "live",
+): Promise<{ accountId: string }> {
+  const base =
+    environment === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+  const basic = Buffer.from(`${clientId}:${secret}`).toString("base64");
+  const res = await fetch(`${base}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+  });
+  const json = (await res.json().catch(() => ({}))) as {
+    access_token?: string;
+    error_description?: string;
+  };
+  if (!res.ok || !json.access_token) {
+    throw new Error(
+      json.error_description ||
+        "PayPal rejected those credentials. Check the Client ID / Secret and environment.",
+    );
+  }
+  return { accountId: clientId };
 }
 
-/** Begin provider onboarding. Returns either a redirect URL or a gated message. */
-export const startProviderConnect = createServerFn({ method: "POST" })
+async function validateSquare(
+  accessToken: string,
+  environment: "sandbox" | "live",
+): Promise<{ accountId: string; locationId: string | null }> {
+  const base =
+    environment === "live"
+      ? "https://connect.squareup.com"
+      : "https://connect.squareupsandbox.com";
+  const res = await fetch(`${base}/v2/locations`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Square-Version": "2024-10-17",
+    },
+  });
+  const json = (await res.json().catch(() => ({}))) as {
+    locations?: Array<{ id?: string; merchant_id?: string }>;
+    errors?: Array<{ detail?: string }>;
+  };
+  if (!res.ok || !json.locations?.length) {
+    throw new Error(
+      json.errors?.[0]?.detail ||
+        "Square rejected that access token. Check the token and environment.",
+    );
+  }
+  const loc = json.locations[0];
+  return { accountId: loc.merchant_id ?? "square_account", locationId: loc.id ?? null };
+}
+
+/** Save & validate a workspace's own provider credentials. */
+export const saveProviderCredentials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
         workspaceId: z.string().uuid(),
         provider: z.enum(PROVIDERS),
-        environment: z.enum(["sandbox", "live"]),
-        origin: z.string().url(),
+        environment: z.enum(["sandbox", "live"]).default("live"),
+        // Stripe
+        stripeSecretKey: z.string().trim().optional(),
+        stripePublishableKey: z.string().trim().optional(),
+        // PayPal
+        paypalClientId: z.string().trim().optional(),
+        paypalSecret: z.string().trim().optional(),
+        // Square
+        squareAccessToken: z.string().trim().optional(),
       })
       .parse(input),
   )
   .handler(
-    async ({
-      data,
-      context,
-    }): Promise<{ url: string } | { error: string }> => {
+    async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
       await assertWorkspaceMember(context.userId, data.workspaceId);
-
-      const provider = data.provider as ConnectProvider;
-      const env = data.environment as StripeEnv;
-
-      // Make sure the row exists & reflects the chosen provider.
-      await updateSettings(data.workspaceId, { provider });
-
-      if (provider === "stripe") {
-        try {
-          return { url: await startStripeConnect(data.workspaceId, env, data.origin) };
-        } catch (e) {
-          return {
-            error: e instanceof Error ? e.message : "Couldn't start Stripe onboarding.",
-          };
-        }
-      }
-
-      // Square / PayPal — gated until credentials are configured.
-      if (provider === "square") {
-        const ready =
-          !!process.env.SQUARE_APPLICATION_ID && !!process.env.SQUARE_APPLICATION_SECRET;
-        if (!ready) {
-          return {
-            error:
-              "Square isn't enabled yet. Add your Square developer credentials and we'll turn on Square onboarding.",
-          };
-        }
-      }
-      if (provider === "paypal") {
-        const ready =
-          !!process.env.PAYPAL_CLIENT_ID && !!process.env.PAYPAL_CLIENT_SECRET;
-        if (!ready) {
-          return {
-            error:
-              "PayPal isn't enabled yet. Add your PayPal developer credentials and we'll turn on PayPal onboarding.",
-          };
-        }
-      }
-
-      return { error: "This provider isn't available yet." };
-    },
-  );
-
-/**
- * Create (or reuse) the workspace's Stripe Express connected account and return
- * a hosted onboarding link.
- */
-async function startStripeConnect(
-  workspaceId: string,
-  env: StripeEnv,
-  origin: string,
-): Promise<string> {
-  const existing = await readSettings(workspaceId);
-  let accountId = existing?.provider_account_id ?? null;
-
-  if (!accountId) {
-    const account = await stripeFetch<{ id: string }>(env, "/v1/accounts", {
-      method: "POST",
-      params: {
-        type: "express",
-        metadata: { workspace_id: workspaceId },
-      },
-    });
-    accountId = account.id;
-    await updateSettings(workspaceId, {
-      provider: "stripe",
-      provider_account_id: accountId,
-      connection_status: "pending",
-    });
-  }
-
-  const returnUrl = `${origin}/dashboard/payments?connect=return`;
-  const refreshUrl = `${origin}/dashboard/payments?connect=refresh`;
-
-  const link = await stripeFetch<{ url: string }>(env, "/v1/account_links", {
-    method: "POST",
-    params: {
-      account: accountId,
-      refresh_url: refreshUrl,
-      return_url: returnUrl,
-      type: "account_onboarding",
-    },
-  });
-
-  return link.url;
-}
-
-/** Re-check the connected provider account and update connection_status. */
-export const refreshConnectStatus = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z
-      .object({
-        workspaceId: z.string().uuid(),
-        environment: z.enum(["sandbox", "live"]),
-      })
-      .parse(input),
-  )
-  .handler(
-    async ({
-      data,
-      context,
-    }): Promise<{ connectionStatus: "disconnected" | "pending" | "connected" }> => {
-      await assertWorkspaceMember(context.userId, data.workspaceId);
-      const settings = await readSettings(data.workspaceId);
-
-      if (settings?.provider !== "stripe" || !settings.provider_account_id) {
-        return { connectionStatus: "disconnected" };
-      }
+      const db = await admin();
 
       try {
-        const account = await stripeFetch<{
-          charges_enabled?: boolean;
-          details_submitted?: boolean;
-        }>(data.environment as StripeEnv, `/v1/accounts/${settings.provider_account_id}`);
+        let accountId = "";
+        let environment = data.environment;
+        const credPatch: Record<string, unknown> = {
+          workspace_id: data.workspaceId,
+          // null out the other providers' secrets when switching
+          stripe_secret_key: null,
+          paypal_client_id: null,
+          paypal_secret: null,
+          square_access_token: null,
+          square_location_id: null,
+        };
+        const settingsPatch: Record<string, unknown> = {
+          workspace_id: data.workspaceId,
+          provider: data.provider,
+          stripe_publishable_key: null,
+        };
 
-        const status = account.charges_enabled
-          ? "connected"
-          : account.details_submitted
-            ? "pending"
-            : "pending";
+        if (data.provider === "stripe") {
+          if (!data.stripeSecretKey) throw new Error("Enter your Stripe secret key.");
+          const v = await validateStripe(data.stripeSecretKey);
+          accountId = v.accountId;
+          environment = v.environment;
+          credPatch.stripe_secret_key = data.stripeSecretKey;
+          settingsPatch.stripe_publishable_key = data.stripePublishableKey || null;
+        } else if (data.provider === "paypal") {
+          if (!data.paypalClientId || !data.paypalSecret)
+            throw new Error("Enter your PayPal Client ID and Secret.");
+          const v = await validatePaypal(data.paypalClientId, data.paypalSecret, data.environment);
+          accountId = v.accountId;
+          credPatch.paypal_client_id = data.paypalClientId;
+          credPatch.paypal_secret = data.paypalSecret;
+        } else if (data.provider === "square") {
+          if (!data.squareAccessToken) throw new Error("Enter your Square access token.");
+          const v = await validateSquare(data.squareAccessToken, data.environment);
+          accountId = v.accountId;
+          credPatch.square_access_token = data.squareAccessToken;
+          credPatch.square_location_id = v.locationId;
+        }
 
-        await updateSettings(data.workspaceId, { connection_status: status });
-        return { connectionStatus: status };
-      } catch {
-        return { connectionStatus: "pending" };
+        credPatch.environment = environment;
+
+        const { error: credErr } = await (db as any)
+          .from("workspace_payment_credentials")
+          .upsert(credPatch, { onConflict: "workspace_id" });
+        if (credErr) throw new Error(credErr.message);
+
+        settingsPatch.connection_status = "connected";
+        settingsPatch.provider_account_id = accountId;
+        const { error: setErr } = await (db as any)
+          .from("workspace_payment_settings")
+          .upsert(settingsPatch, { onConflict: "workspace_id" });
+        if (setErr) throw new Error(setErr.message);
+
+        return { ok: true };
+      } catch (e) {
+        return { error: e instanceof Error ? e.message : "Couldn't verify those credentials." };
       }
     },
   );
+
+/** Disconnect a provider — wipes stored secrets and resets status. */
+export const disconnectProvider = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertWorkspaceMember(context.userId, data.workspaceId);
+    const db = await admin();
+    await (db as any)
+      .from("workspace_payment_credentials")
+      .delete()
+      .eq("workspace_id", data.workspaceId);
+    await (db as any)
+      .from("workspace_payment_settings")
+      .update({ connection_status: "disconnected", provider_account_id: null, stripe_publishable_key: null })
+      .eq("workspace_id", data.workspaceId);
+    return { ok: true };
+  });

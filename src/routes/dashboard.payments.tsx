@@ -19,10 +19,20 @@ import {
   type DepositType,
 } from "@/utils/payment-settings.functions";
 import {
-  startProviderConnect,
-  refreshConnectStatus,
+  saveProviderCredentials,
+  disconnectProvider,
 } from "@/utils/payment-connect.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/dashboard/payments")({
   component: PaymentsPage,
@@ -58,8 +68,8 @@ function PaymentsPage() {
   const navigate = useNavigate();
   const getSettings = useServerFn(getPaymentSettings);
   const saveSettings = useServerFn(savePaymentSettings);
-  const startConnect = useServerFn(startProviderConnect);
-  const refreshStatus = useServerFn(refreshConnectStatus);
+  const saveCredentials = useServerFn(saveProviderCredentials);
+  const disconnect = useServerFn(disconnectProvider);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,6 +85,15 @@ function PaymentsPage() {
   const [depositAmount, setDepositAmount] = useState("0.00");
   const [depositPercent, setDepositPercent] = useState("0");
   const [currency, setCurrency] = useState("USD");
+
+  // Credentials dialog
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [credEnv, setCredEnv] = useState<"sandbox" | "live">("live");
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [paypalClientId, setPaypalClientId] = useState("");
+  const [paypalSecret, setPaypalSecret] = useState("");
+  const [squareAccessToken, setSquareAccessToken] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -105,26 +124,6 @@ function PaymentsPage() {
         setDepositPercent(String(s.depositPercent));
         setCurrency(s.currency);
 
-        // Returning from a provider's hosted onboarding — re-check the account.
-        const params = new URLSearchParams(window.location.search);
-        const connect = params.get("connect");
-        if (connect === "return" || connect === "refresh") {
-          try {
-            const r = await refreshStatus({
-              data: { workspaceId: wsId, environment: getStripeEnvironment() },
-            });
-            setConnectionStatus(r.connectionStatus);
-            if (r.connectionStatus === "connected") {
-              toast.success("Your account is connected and ready to accept payments.");
-            } else {
-              toast.info("Onboarding in progress — finish the remaining steps to go live.");
-            }
-          } catch {
-            /* ignore — status stays as loaded */
-          }
-          // Clean the query param from the URL.
-          window.history.replaceState({}, "", "/dashboard/payments");
-        }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Couldn't load payment settings");
       }
@@ -158,41 +157,60 @@ function PaymentsPage() {
     setSaving(false);
   };
 
-  const handleConnect = async () => {
+  const openConnect = () => {
+    if (provider === "none") return;
+    // Default environment guess: preview → sandbox, custom domain → live.
+    setCredEnv(getStripeEnvironment());
+    setStripeSecretKey("");
+    setStripePublishableKey("");
+    setPaypalClientId("");
+    setPaypalSecret("");
+    setSquareAccessToken("");
+    setConnectOpen(true);
+  };
+
+  const handleSaveCredentials = async () => {
     if (!workspaceId || provider === "none") return;
     setConnecting(true);
     try {
-      // Persist current settings first so the provider row is in sync.
-      await saveSettings({
-        data: {
-          workspaceId,
-          provider,
-          depositType,
-          depositAmountCents: Math.round(parseFloat(depositAmount || "0") * 100),
-          depositPercent: parseFloat(depositPercent || "0"),
-          currency,
-        },
-      });
-
-      const res = await startConnect({
+      const res = await saveCredentials({
         data: {
           workspaceId,
           provider: provider as Exclude<PaymentProvider, "none">,
-          environment: getStripeEnvironment(),
-          origin: window.location.origin,
+          environment: credEnv,
+          stripeSecretKey: stripeSecretKey || undefined,
+          stripePublishableKey: stripePublishableKey || undefined,
+          paypalClientId: paypalClientId || undefined,
+          paypalSecret: paypalSecret || undefined,
+          squareAccessToken: squareAccessToken || undefined,
         },
       });
-
-      if ("url" in res) {
-        window.location.href = res.url;
-        return;
+      if ("error" in res) {
+        toast.error(res.error);
+      } else {
+        setConnectionStatus("connected");
+        setConnectOpen(false);
+        toast.success("Account connected — you can now collect payments from clients.");
       }
-      toast.error(res.error);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't start onboarding.");
+      toast.error(e instanceof Error ? e.message : "Couldn't verify those credentials.");
     }
     setConnecting(false);
   };
+
+  const handleDisconnect = async () => {
+    if (!workspaceId) return;
+    setConnecting(true);
+    try {
+      await disconnect({ data: { workspaceId } });
+      setConnectionStatus("disconnected");
+      toast.success("Account disconnected.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't disconnect.");
+    }
+    setConnecting(false);
+  };
+
 
   const statusPill = useMemo(() => {
     if (provider === "none") return null;
@@ -293,27 +311,34 @@ function PaymentsPage() {
                 <div className="mt-5 flex items-center justify-between rounded-xl bg-slate-50 p-4">
                   <p className="text-xs text-slate-600">
                     {connectionStatus === "connected"
-                      ? "Your account is connected and ready to accept payments."
-                      : "Connect your account so payouts go directly to you."}
+                      ? `Your ${PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label} account is connected and ready to accept payments.`
+                      : `Add your ${PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label} API keys so payouts go directly to you.`}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleConnect}
-                    disabled={connectionStatus === "connected" || connecting}
-                  >
-                    {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {connectionStatus === "connected"
-                      ? "Connected"
-                      : connecting
-                        ? "Connecting…"
-                        : connectionStatus === "pending"
-                          ? "Continue setup"
-                          : "Connect account"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {connectionStatus === "connected" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDisconnect}
+                        disabled={connecting}
+                      >
+                        Disconnect
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openConnect}
+                      disabled={connecting}
+                    >
+                      {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {connectionStatus === "connected" ? "Update keys" : "Connect account"}
+                    </Button>
+                  </div>
                 </div>
               )}
             </section>
+
 
             {/* Deposit policy */}
             <section className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -409,6 +434,106 @@ function PaymentsPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Connect {provider !== "none" ? PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label : ""}
+            </DialogTitle>
+            <DialogDescription>
+              Paste your API keys below. We verify them with the provider and store them securely so
+              payments go directly to your own account.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-slate-500">Environment</Label>
+              <select
+                className="rounded-md border border-slate-200 px-2 py-1 text-sm"
+                value={credEnv}
+                onChange={(e) => setCredEnv(e.target.value as "sandbox" | "live")}
+              >
+                <option value="live">Live</option>
+                <option value="sandbox">Sandbox / Test</option>
+              </select>
+            </div>
+
+            {provider === "stripe" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="stripe-secret">Secret key</Label>
+                  <Input
+                    id="stripe-secret"
+                    type="password"
+                    placeholder="sk_live_… or sk_test_…"
+                    value={stripeSecretKey}
+                    onChange={(e) => setStripeSecretKey(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="stripe-pub">Publishable key (optional)</Label>
+                  <Input
+                    id="stripe-pub"
+                    placeholder="pk_live_… or pk_test_…"
+                    value={stripePublishableKey}
+                    onChange={(e) => setStripePublishableKey(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {provider === "paypal" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pp-client">Client ID</Label>
+                  <Input
+                    id="pp-client"
+                    value={paypalClientId}
+                    onChange={(e) => setPaypalClientId(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pp-secret">Secret</Label>
+                  <Input
+                    id="pp-secret"
+                    type="password"
+                    value={paypalSecret}
+                    onChange={(e) => setPaypalSecret(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {provider === "square" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="sq-token">Access token</Label>
+                <Input
+                  id="sq-token"
+                  type="password"
+                  value={squareAccessToken}
+                  onChange={(e) => setSquareAccessToken(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConnectOpen(false)} disabled={connecting}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-slate-900 hover:bg-slate-800"
+              onClick={handleSaveCredentials}
+              disabled={connecting}
+            >
+              {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Verify & connect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
