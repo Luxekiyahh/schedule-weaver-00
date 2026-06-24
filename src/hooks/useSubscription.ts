@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPaddleEnvironment } from "@/lib/paddle";
+import { getStripeEnvironment } from "@/lib/stripe";
 import { PLAN_FEATURES, type Feature, type PlanTier } from "@/lib/entitlements";
 
 export type SubscriptionState = {
@@ -55,7 +55,7 @@ export function useSubscription(): SubscriptionState {
         .from("subscriptions")
         .select("plan_tier, status, setup_fee_paid, current_period_end")
         .eq("workspace_id", wsId)
-        .eq("environment", getPaddleEnvironment())
+        .eq("environment", getStripeEnvironment())
         .maybeSingle();
 
       if (cancelled) return;

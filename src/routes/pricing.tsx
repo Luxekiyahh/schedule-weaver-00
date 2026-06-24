@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLANS, SETUP_FEE_CENTS, SETUP_FEE_PRICE_ID, planByTier, type PlanTier } from "@/lib/entitlements";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ function money(cents: number) {
 function PricingPage() {
   const navigate = useNavigate();
   const sub = useSubscription();
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const { openCheckout, loading: checkoutLoading } = useStripeCheckout();
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [email, setEmail] = useState<string | undefined>();
@@ -60,13 +60,15 @@ function PricingPage() {
     }
     setPendingTier(tier);
     const plan = planByTier(tier);
-    const priceIds = sub.setupFeePaid ? [plan.priceId] : [SETUP_FEE_PRICE_ID, plan.priceId];
+    const priceLookupKeys = sub.setupFeePaid ? [plan.priceId] : [SETUP_FEE_PRICE_ID, plan.priceId];
     try {
       await openCheckout({
-        priceIds,
+        workspaceId: sub.workspaceId,
+        priceLookupKeys,
+        includeSetupFee: !sub.setupFeePaid,
         customerEmail: email,
-        customData: { workspaceId: sub.workspaceId },
-        successUrl: `${window.location.origin}/dashboard/home?checkout=success`,
+        successPath: "/dashboard/home",
+        cancelPath: "/pricing",
       });
     } catch (e) {
       toast.error("Could not open checkout", { description: String(e) });
