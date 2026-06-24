@@ -507,6 +507,7 @@ function StepIndustry({
                 const i = getIndustry(ind.id);
                 patch({
                   industry: ind.id,
+                  themeId: defaultThemeForIndustry(ind.id),
                   bio: wizard.bio || "",
                   policies: { ...wizard.policies, deposit: String(i.deposit) },
                 });
