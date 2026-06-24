@@ -448,6 +448,33 @@ export type Database = {
           },
         ]
       }
+      schedule_exceptions: {
+        Row: {
+          block_date: string
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          workspace_id: string
+        }
+        Insert: {
+          block_date: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          workspace_id: string
+        }
+        Update: {
+          block_date?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       service_categories: {
         Row: {
           active: boolean

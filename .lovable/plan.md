@@ -1,61 +1,65 @@
-# Pricing restructure: optional Design Fee, sharper tiers, annual billing
+# Calendar Control Panel + Staff Route + Back Buttons
 
-## Goals
-1. Rename the $100 fee to **"Done-For-You Design"** and make it an **optional upsell**, not a mandatory bundled charge. The wizard-generated site stays free with any plan.
-2. Restructure tier features and bump Enterprise $60 → $65 (existing subscribers grandfathered automatically).
-3. Add **monthly / annual** billing with 2 months free on annual (~17% off). Monthly shown by default.
+## 1. New route: `/dashboard/staff` (placeholder)
 
-## New plan structure
+Create `src/routes/dashboard.staff.tsx` — a simple staff management page so the "Add Providers" button has a real destination.
 
-| Tier | Monthly | Annual (2 mo free) | Includes |
-|------|---------|--------------------|----------|
-| Basic | $30 | $300 | Wizard-built booking site, email confirmations, 24hr reminders, client management, deposit collection |
-| Pro | $45 | $450 | Everything in Basic + SMS reminders, post-visit feedback email, rebook nudge sequence, review redirect flow |
-| Enterprise | $65 | $650 | Everything in Pro + no-show automation, waitlist management, birthday/loyalty emails, priority support |
+- `createFileRoute("/dashboard/staff")` with the same `beforeLoad` auth guard used by sibling dashboard routes.
+- Header with a "Back to Dashboard" button (see section 4) and a title "Team & Providers".
+- Loads `workspace_members` (owner/admin/staff) for the current workspace and lists them in cards (name, email, role) — reusing the member-loading pattern already in the calendar route.
+- An "Invite provider" button can be a stubbed placeholder (toast: "Invites coming soon") so the page is functional but scoped; no new invite backend in this pass.
 
-**Done-For-You Design** — one-time **$100**, optional. Pitch: "Competitors charge $500–$2,000+ for custom setup. We build it for $100." Purchasable from the dashboard billing page, the pricing page (add-on section), and the onboarding finish step.
+## 2. Database: persist schedule exceptions
 
-## Implementation
+The existing `availability_exceptions` table is member-scoped (`member_id NOT NULL`) and meant for per-provider blocks. The requested feature is a workspace-wide date block ("Holiday Close"), so add a dedicated table.
 
-### 1. Stripe products & prices
-Create via the payments tool (test env; auto-syncs to live on publish):
-- Annual prices: `basic_yearly` ($300), `pro_yearly` ($450), `enterprise_yearly` ($650).
-- New `enterprise_monthly` price at $65 (reuses the `enterprise_monthly` lookup key; existing $60 subscriptions reference their original Stripe price object directly, so they're grandfathered).
-- `design_fee_onetime` ($100) product named "Done-For-You Design" — replaces the old `setup_fee_onetime` lookup key in code.
+Migration creating `public.schedule_exceptions`:
 
-### 2. `src/lib/entitlements.ts`
-- Add `BillingPeriod = "monthly" | "yearly"`.
-- Extend `PlanMeta` with `yearlyPriceId`, `yearlyCents`, monthly/annual price-id lookups.
-- Rewrite `PLANS` with the new taglines and feature bullets above.
-- Replace fee constants: `DESIGN_FEE_PRICE_ID = "design_fee_onetime"`, `DESIGN_FEE_CENTS = 10000`, and friendly label "Done-For-You Design".
-- Update `Feature` taxonomy: drop `ai_agents`; keep `booking`, `workflow_automations`, `sms_marketing`; add `no_show_automation` (enterprise). Update `PLAN_FEATURES` accordingly.
+```text
+columns: id, workspace_id (NOT NULL), block_date (date, NOT NULL),
+         label (text, NOT NULL), created_by (uuid, null), created_at
+```
 
-### 3. Feature gating migration (`workspace_has_feature`)
-Update the SQL helper: remove the `ai_agents` case, add `no_show_automation` → enterprise only. Keep the env-aware signature.
+- GRANT SELECT/INSERT/UPDATE/DELETE to `authenticated`, ALL to `service_role`.
+- Enable RLS. Policies scope every action to workspace members via the existing `public.is_workspace_member(workspace_id)` helper (read/insert/delete for members of that workspace).
 
-### 4. Webhook (`src/routes/api/public/payments/webhook.ts`)
-- Extend `LOOKUP_TO_TIER` to map the yearly lookup keys to their tiers.
-- Rename `SETUP_FEE_LOOKUP_KEY` → `design_fee_onetime` (the `setup_fee_paid` column is kept and now means "design service purchased").
+## 3. Calendar control panel — `src/routes/dashboard.calendar.tsx`
 
-### 5. Checkout flow (`src/utils/payments.functions.ts`)
-- No longer auto-bundle the fee into plan checkout. Plan checkout sends a single recurring lookup key (monthly or yearly).
-- The Design Fee is a standalone one-time checkout (existing `mode: "payment"` path already supports a single one-time price via `priceLookupKeys: ["design_fee_onetime"]`).
+**Imports**
+- Add `useNavigate` from `@tanstack/react-router`.
+- Add `motion, AnimatePresence` from `framer-motion`.
+- Ensure the Lucide set includes `Plus, CalendarX, Users, ChevronLeft, Trash2` (Plus/Users/ChevronLeft already imported; add `CalendarX, Trash2`).
 
-### 6. Pricing page (`src/routes/pricing.tsx`)
-- Add a Monthly / Annual toggle (monthly default); annual shows yearly price + "2 months free" badge.
-- Replace the bundled-fee banner with hero copy positioning the wizard site as included.
-- Remove setup-fee bundling from `handleSelect`; pass the period-appropriate lookup key.
-- Add an optional **Done-For-You Design** add-on card below the plans ("Want us to build it for you? $100, one-time").
+**Control panel header section** (rendered above the calendar grid, inside the main content container):
+- Two styled buttons:
+  - **Add Providers** — `onClick={() => navigate({ to: "/dashboard/staff" })}`, with `Users` icon.
+  - **Schedule Exceptions** — opens the modal (`CalendarX` icon).
 
-### 7. Dashboard billing (`src/routes/dashboard.billing.tsx`)
-- Add the Monthly / Annual toggle and yearly prices.
-- Remove the bundled-fee copy; `changeSubscriptionPlan` / checkout use the selected period's lookup key.
-- Add a **Done-For-You Design** upsell card (hidden once `setup_fee_paid` is true) that opens the one-time checkout.
+**Exceptions modal** (AnimatePresence overlay, not the shadcn Dialog, per spec):
+- Backdrop + centered card animated with `motion.div` (fade/scale), dismiss on backdrop click and an X/Close.
+- Inputs: a date picker (native `<input type="date">` bound to state) and a text `Input` for the block label (placeholder "Holiday Close").
+- "Enforce Date Block" button inserts into `schedule_exceptions` (workspace_id + block_date + label + created_by), then refreshes the local list.
+- Reactive list of active blocks; each row shows the date + label and a `Trash2` icon button that deletes the row from `schedule_exceptions` and updates state.
+- Load existing blocks for the workspace when the modal opens (or on workspace load).
+- Errors surfaced via `toast`.
 
-### 8. Onboarding finish step (`src/routes/onboarding.tsx`)
-- On the final "Here's your booking site" step, add an optional "Want us to customize it for you? — Done-For-You Design, $100" CTA that routes to the one-time Design Fee checkout. Skipping proceeds normally to plan selection.
+All new JSX kept inside the existing component tree with balanced tags.
 
-## Notes
-- Enterprise grandfathering needs no migration — old subscriptions keep their original Stripe price object.
-- Copy avoids the words "setup fee" everywhere; uses "Done-For-You Design".
-- No AI-agents language anywhere (removed from Enterprise and feature gating).
+## 4. "Back to Dashboard" buttons
+
+A small inline button using `navigate({ to: "/dashboard/home" })` with a `ChevronLeft` icon, placed top-left of the content area on:
+- `src/routes/dashboard.calendar.tsx` (new)
+- `src/routes/dashboard.staff.tsx` (new)
+- `src/routes/dashboard.services.tsx` — already has an `ArrowLeft` back link; normalize it to the same navigate-based control for consistency.
+- `src/routes/dashboard.billing.tsx` — same normalization.
+
+## Technical notes
+- Build safety: confirm no duplicate Lucide imports, single `useNavigate` declaration, and balanced JSX after edits; run a typecheck.
+- The exceptions feature is presentation + CRUD only; it does not yet block booking availability (that would be a follow-up wiring into the booking flow).
+
+## Sequence
+1. Run the `schedule_exceptions` migration (approval required) so generated types include the table.
+2. Create `dashboard.staff.tsx`.
+3. Edit `dashboard.calendar.tsx` (control panel + modal + back button).
+4. Add/normalize back buttons in services and billing.
+5. Typecheck.
