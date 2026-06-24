@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useServerFn } from "@tanstack/react-start";
-import { changeSubscriptionPlan } from "@/utils/payments.functions";
+import { changeSubscriptionPlan, syncWorkspaceSubscription } from "@/utils/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
