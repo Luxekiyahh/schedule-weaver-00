@@ -18,7 +18,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const PROVIDERS = ["stripe", "paypal", "square"] as const;
 
-type CredentialsTable = "workspace_payment_credentials";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
