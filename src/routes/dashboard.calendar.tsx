@@ -1,9 +1,10 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LogOut, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon,
-  Users, DollarSign, Clock, Loader2, UserCircle2,
+  Users, DollarSign, Clock, Loader2, UserCircle2, CalendarX, Trash2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/dashboard/calendar")({
   component: Dashboard,
