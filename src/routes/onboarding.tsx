@@ -31,7 +31,10 @@ import {
   completeOnboarding,
   getOnboardingContext,
   uploadOnboardingImage,
+  checkSlugAvailable,
 } from "@/lib/onboarding.functions";
+import { finalizeTenantSignup } from "@/lib/tenant.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { LivePreview } from "@/components/onboarding/LivePreview";
 import {
   INDUSTRIES,
