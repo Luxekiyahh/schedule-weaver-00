@@ -212,11 +212,11 @@ export const disconnectProvider = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     await assertWorkspaceMember(context.userId, data.workspaceId);
     const db = await admin();
-    await db
-      .from(("workspace_payment_credentials" as CredentialsTable))
+    await (db as any)
+      .from("workspace_payment_credentials")
       .delete()
       .eq("workspace_id", data.workspaceId);
-    await db
+    await (db as any)
       .from("workspace_payment_settings")
       .update({ connection_status: "disconnected", provider_account_id: null, stripe_publishable_key: null })
       .eq("workspace_id", data.workspaceId);
