@@ -72,11 +72,11 @@ function StorefrontPage() {
   const { data } = useSuspenseQuery(storefrontQuery(params.slug));
 
   // Canonicalize path-form links: procschedule.com/<slug> -> <slug>.procschedule.com.
-  // Only on the apex tenant host; subdomain and preview hosts are left alone.
+  // Only redirect once the wildcard subdomain is live; otherwise the path form
+  // IS the canonical, working URL and forwarding would 404.
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    // The *.procschedule.com wildcard cert is live, so always forward apex
-    // path-form visits to the tenant subdomain.
+    if (!WILDCARD_SUBDOMAINS_LIVE) return;
     const host = window.location.hostname.toLowerCase();
     if (host === TENANT_ROOT_DOMAIN || host === `www.${TENANT_ROOT_DOMAIN}`) {
       window.location.replace(getTenantUrl(params.slug, host, "active"));
