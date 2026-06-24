@@ -50,6 +50,9 @@ import {
   emptyService,
   uid,
   durationToMinutes,
+  defaultThemeForIndustry,
+  THEMES,
+  type ThemeId,
   type WizardState,
   type IndustryId,
   type IntakeType,
@@ -507,6 +510,7 @@ function StepIndustry({
                 const i = getIndustry(ind.id);
                 patch({
                   industry: ind.id,
+                  themeId: defaultThemeForIndustry(ind.id),
                   bio: wizard.bio || "",
                   policies: { ...wizard.policies, deposit: String(i.deposit) },
                 });
@@ -654,7 +658,42 @@ function StepIdentity({
             </div>
           </div>
         )}
+
+        <div className="rounded-xl border border-border p-4">
+          <p className="mb-1 text-sm font-medium">Storefront theme</p>
+          <p className="mb-3 text-xs text-muted-foreground">
+            We picked one based on your industry — change it anytime.
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {THEMES.map((t) => {
+              const active = wizard.themeId === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => patch({ themeId: t.id as ThemeId })}
+                  className={`flex flex-col gap-2 rounded-xl border p-3 text-left transition-all hover:border-primary/60 ${
+                    active ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"
+                  }`}
+                >
+                  <div className="flex gap-1.5">
+                    {t.swatch.map((c) => (
+                      <span
+                        key={c}
+                        className="h-5 w-5 rounded-full border border-black/10"
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-semibold">{t.label}</span>
+                  <span className="text-xs text-muted-foreground">{t.description}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
+
     </div>
   );
 }
@@ -1185,6 +1224,7 @@ function StepPreview({
     save({
       data: {
         industry: (wizard.industry ?? "other") as IndustryId,
+        themeId: wizard.themeId,
         businessName: wizard.businessName,
         ownerTitle: wizard.ownerTitle,
         bio: wizard.bio,

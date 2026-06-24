@@ -214,8 +214,56 @@ export type Policies = {
   customNote: string;
 };
 
+export type ThemeId = "default" | "luxury-blush" | "industrial-dark";
+
+export type ThemeOption = {
+  id: ThemeId;
+  label: string;
+  description: string;
+  swatch: string[];
+};
+
+export const THEMES: ThemeOption[] = [
+  {
+    id: "default",
+    label: "Modern Clean",
+    description: "Bright, minimal, and versatile — works for any business.",
+    swatch: ["#4f46e5", "#ec4899", "#f8fafc"],
+  },
+  {
+    id: "luxury-blush",
+    label: "Luxury Blush",
+    description: "Soft, elegant, serif-driven. Great for beauty & wellness.",
+    swatch: ["#f4c2c9", "#1a1a1a", "#fdf7f5"],
+  },
+  {
+    id: "industrial-dark",
+    label: "Industrial Dark",
+    description: "Bold, high-contrast dark mode. Great for auto & home services.",
+    swatch: ["#18181b", "#f59e0b", "#0a0a0a"],
+  },
+];
+
+/** Default storefront theme suggested for each industry. */
+export const INDUSTRY_THEME_DEFAULTS: Record<IndustryId, ThemeId> = {
+  beauty: "luxury-blush",
+  fitness: "default",
+  home: "industrial-dark",
+  health: "default",
+  consulting: "default",
+  auto: "industrial-dark",
+  pet: "default",
+  other: "default",
+};
+
+export function defaultThemeForIndustry(industry: IndustryId | null): ThemeId {
+  if (!industry) return "default";
+  return INDUSTRY_THEME_DEFAULTS[industry] ?? "default";
+}
+
 export type WizardState = {
   industry: IndustryId | null;
+  themeId: ThemeId;
   businessName: string;
   ownerTitle: string;
   bio: string;
@@ -263,6 +311,7 @@ export function emptyService(name = ""): ServiceDraft {
 export function initialWizard(): WizardState {
   return {
     industry: null,
+    themeId: "default",
     businessName: "",
     ownerTitle: "",
     bio: "",

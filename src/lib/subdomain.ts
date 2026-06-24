@@ -100,13 +100,14 @@ export function getTenantUrl(
     !!hostname &&
     TENANT_ROOT_DOMAINS.some((d) => hostname === d || hostname.endsWith(`.${d}`));
 
-  const isActive = domainStatus === "active";
+  // The wildcard *.procschedule.com certificate is live, so every tenant can
+  // use its subdomain immediately. `domainStatus` is retained for the signature
+  // but no longer gates subdomain usage on production.
+  void domainStatus;
 
   // Production / SSR (no host info -> assume production).
   if (!hostname || onTenantRoot) {
-    if (isActive) return `https://${slug}.${TENANT_ROOT_DOMAIN}`;
-    // Subdomain not connected yet -> apex path form (valid HTTPS via apex cert).
-    return `https://${TENANT_ROOT_DOMAIN}/${slug}`;
+    return `https://${slug}.${TENANT_ROOT_DOMAIN}`;
   }
 
   // Preview / sandbox / localhost -> path form so it resolves without a wildcard.
