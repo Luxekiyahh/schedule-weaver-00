@@ -9,8 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SetupRouteImport } from './routes/setup'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
@@ -33,16 +31,6 @@ import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/a
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SetupRoute = SetupRouteImport.update({
-  id: '/setup',
-  path: '/setup',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -161,8 +149,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
-  '/setup': typeof SetupRoute
-  '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
@@ -186,8 +172,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
-  '/setup': typeof SetupRoute
-  '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
@@ -212,8 +196,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
-  '/setup': typeof SetupRoute
-  '/signup': typeof SignupRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
   '/book/$slug': typeof BookSlugRoute
@@ -239,8 +221,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
-    | '/setup'
-    | '/signup'
     | '/admin/domains'
     | '/admin/services'
     | '/book/$slug'
@@ -264,8 +244,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
-    | '/setup'
-    | '/signup'
     | '/admin/domains'
     | '/admin/services'
     | '/book/$slug'
@@ -289,8 +267,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/pricing'
-    | '/setup'
-    | '/signup'
     | '/admin/domains'
     | '/admin/services'
     | '/book/$slug'
@@ -315,8 +291,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
-  SetupRoute: typeof SetupRoute
-  SignupRoute: typeof SignupRoute
   AdminDomainsRoute: typeof AdminDomainsRoute
   AdminServicesRoute: typeof AdminServicesRoute
   BookSlugRoute: typeof BookSlugRoute
@@ -329,20 +303,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/setup': {
-      id: '/setup'
-      path: '/setup'
-      fullPath: '/setup'
-      preLoaderRoute: typeof SetupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -523,8 +483,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
-  SetupRoute: SetupRoute,
-  SignupRoute: SignupRoute,
   AdminDomainsRoute: AdminDomainsRoute,
   AdminServicesRoute: AdminServicesRoute,
   BookSlugRoute: BookSlugRoute,

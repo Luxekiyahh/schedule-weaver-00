@@ -97,7 +97,7 @@ function AdminServicesPanel() {
           <Sparkles className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
           <p className="text-muted-foreground">No services yet. Run the setup wizard to seed a starter catalog.</p>
           <Button asChild className="mt-4">
-            <Link to="/setup">Go to setup</Link>
+            <Link to="/onboarding">Go to setup</Link>
           </Button>
         </div>
       ) : (
