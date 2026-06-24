@@ -55,7 +55,7 @@ export function useSubscription(): SubscriptionState {
         .from("subscriptions")
         .select("plan_tier, status, setup_fee_paid, current_period_end")
         .eq("workspace_id", wsId)
-        .eq("environment", getPaddleEnvironment())
+        .eq("environment", getStripeEnvironment())
         .maybeSingle();
 
       if (cancelled) return;
