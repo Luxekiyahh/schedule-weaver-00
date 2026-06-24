@@ -55,6 +55,18 @@ function BillingPage() {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? undefined));
   }, []);
 
+  // Self-heal: reconcile directly from Stripe when the workspace is known, so a
+  // missed or mis-tagged webhook doesn't leave a paid plan looking inactive.
+  useEffect(() => {
+    if (!sub.workspaceId) return;
+    let cancelled = false;
+    syncSub({ data: { workspaceId: sub.workspaceId, environment: getStripeEnvironment() } })
+      .then(() => { if (!cancelled) sub.refresh(); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sub.workspaceId]);
+
   // Refetch after returning from a successful checkout.
   useEffect(() => {
     if (typeof window === "undefined") return;
