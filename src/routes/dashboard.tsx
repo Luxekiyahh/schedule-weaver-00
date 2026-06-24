@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useSubscription } from "@/hooks/useSubscription";
 import { syncWorkspaceSubscription } from "@/utils/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
