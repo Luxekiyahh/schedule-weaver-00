@@ -34,7 +34,7 @@ function money(cents: number) {
 function PricingPage() {
   const navigate = useNavigate();
   const sub = useSubscription();
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const { openCheckout, loading: checkoutLoading } = useStripeCheckout();
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [email, setEmail] = useState<string | undefined>();
