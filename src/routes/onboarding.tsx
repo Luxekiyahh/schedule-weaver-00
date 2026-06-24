@@ -141,26 +141,33 @@ function OnboardingWizard() {
   const [wizard, setWizard] = useState<WizardState>(initialWizard);
   const [error, setError] = useState<string | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [hasAccount, setHasAccount] = useState(false);
 
   const getCtx = useServerFn(getOnboardingContext);
 
+  // If the visitor is already signed in, skip the account step and load context.
   useEffect(() => {
-    getCtx()
-      .then((ctx) => {
-        setWorkspaceId(ctx.workspaceId);
-        setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
-      })
-      .catch(() => {
-        navigate({ to: "/login" });
-      });
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) return; // brand-new visitor → start at the Account step
+      getCtx()
+        .then((ctx) => {
+          setWorkspaceId(ctx.workspaceId);
+          setHasAccount(true);
+          setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
+          setStep((s) => (s === 1 ? 2 : s));
+        })
+        .catch(() => {
+          /* signed in but no workspace yet — keep them on the account step */
+        });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const patch = (p: Partial<WizardState>) => setWizard((w) => ({ ...w, ...p }));
 
   function validateStep(s: number): string | null {
-    if (s === 1 && !wizard.industry) return "Pick an industry to continue.";
-    if (s === 2 && !wizard.businessName.trim()) return "Business name is required.";
+    if (s === 2 && !wizard.industry) return "Pick an industry to continue.";
+    if (s === 3 && !wizard.businessName.trim()) return "Business name is required.";
     return null;
   }
 
@@ -171,11 +178,20 @@ function OnboardingWizard() {
       return;
     }
     setError(null);
-    setStep((s) => Math.min(8, s + 1));
+    setStep((s) => Math.min(9, s + 1));
   }
   function back() {
     setError(null);
-    setStep((s) => Math.max(1, s - 1));
+    // Never let the user step back into the account creation form once created.
+    setStep((s) => Math.max(hasAccount ? 2 : 1, s - 1));
+  }
+
+  function onAccountCreated(ctx: { workspaceId: string; businessName: string }) {
+    setWorkspaceId(ctx.workspaceId);
+    setHasAccount(true);
+    setWizard((w) => ({ ...w, businessName: ctx.businessName }));
+    setError(null);
+    setStep(2);
   }
 
   return (
@@ -222,31 +238,32 @@ function OnboardingWizard() {
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.2 }}
             >
-              {step === 1 && <StepIndustry wizard={wizard} patch={patch} onPick={() => setTimeout(next, 120)} />}
-              {step === 2 && (
+              {step === 1 && <StepAccount onCreated={onAccountCreated} />}
+              {step === 2 && <StepIndustry wizard={wizard} patch={patch} onPick={() => setTimeout(next, 120)} />}
+              {step === 3 && (
                 <StepIdentity wizard={wizard} patch={patch} workspaceId={workspaceId} />
               )}
-              {step === 3 && <StepPhotos wizard={wizard} patch={patch} workspaceId={workspaceId} />}
-              {step === 4 && <StepServices wizard={wizard} patch={patch} />}
-              {step === 5 && <StepHours wizard={wizard} patch={patch} />}
-              {step === 6 && <StepPolicies wizard={wizard} patch={patch} />}
-              {step === 7 && <StepIntake wizard={wizard} patch={patch} />}
-              {step === 8 && <StepPreview wizard={wizard} navigate={navigate} />}
+              {step === 4 && <StepPhotos wizard={wizard} patch={patch} workspaceId={workspaceId} />}
+              {step === 5 && <StepServices wizard={wizard} patch={patch} />}
+              {step === 6 && <StepHours wizard={wizard} patch={patch} />}
+              {step === 7 && <StepPolicies wizard={wizard} patch={patch} />}
+              {step === 8 && <StepIntake wizard={wizard} patch={patch} />}
+              {step === 9 && <StepPreview wizard={wizard} navigate={navigate} />}
             </motion.div>
           </AnimatePresence>
 
           {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
 
-          {step < 8 && (
+          {step > 1 && step < 9 && (
             <div className="mt-8 flex items-center justify-between">
-              {step > 1 ? (
+              {step > 2 ? (
                 <Button variant="ghost" onClick={back}>
                   <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
                 </Button>
               ) : (
                 <span />
               )}
-              {step !== 1 && (
+              {step !== 2 && (
                 <Button onClick={next}>
                   Continue <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
@@ -254,6 +271,7 @@ function OnboardingWizard() {
             </div>
           )}
         </div>
+
 
         {/* Live preview */}
         <div className="order-2 lg:sticky lg:top-24 lg:self-start">
