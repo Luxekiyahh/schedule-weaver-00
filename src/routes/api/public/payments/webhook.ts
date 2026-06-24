@@ -204,7 +204,14 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
     handlers: {
       POST: async ({ request }) => {
         const url = new URL(request.url);
-        const env = (url.searchParams.get("env") || "sandbox") as StripeEnv;
+        const rawEnv = url.searchParams.get("env");
+        // Never silently default the env — a mis-tagged row lands in an
+        // environment the billing page doesn't read, so the plan looks inactive.
+        if (rawEnv !== "sandbox" && rawEnv !== "live") {
+          console.error("[stripe-webhook] invalid or missing env query param:", rawEnv);
+          return Response.json({ received: true, ignored: "invalid env" });
+        }
+        const env = rawEnv as StripeEnv;
         try {
           await handleWebhook(request, env);
           return Response.json({ received: true });
