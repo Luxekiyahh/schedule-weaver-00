@@ -42,6 +42,8 @@ function money(cents: number, ccy = "USD") {
 }
 
 function ServicesPage() {
+  const navigate = useNavigate();
+
   const [ctx, setCtx] = useState<Ctx | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [myLinks, setMyLinks] = useState<Set<string>>(new Set());
