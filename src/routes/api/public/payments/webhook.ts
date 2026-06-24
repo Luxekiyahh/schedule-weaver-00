@@ -7,8 +7,13 @@ const LOOKUP_TO_TIER: Record<string, "basic" | "pro" | "enterprise"> = {
   basic_monthly: "basic",
   pro_monthly: "pro",
   enterprise_monthly: "enterprise",
+  basic_yearly: "basic",
+  pro_yearly: "pro",
+  enterprise_yearly: "enterprise",
 };
-const SETUP_FEE_LOOKUP_KEY = "setup_fee_onetime";
+// The one-time "Done-For-You Design" upsell. The `setup_fee_paid` column is
+// retained and now means "design service purchased".
+const SETUP_FEE_LOOKUP_KEY = "design_fee_onetime";
 
 let _supabase: ReturnType<typeof createClient<any, any, any>> | null = null;
 function getSupabase() {

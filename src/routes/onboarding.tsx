@@ -1297,6 +1297,19 @@ function StepPreview({
           </div>
         )}
       </div>
+
+      {/* Optional Done-For-You Design upsell */}
+      <div className="mt-6 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-6">
+        <p className="text-base font-semibold">Want us to build it for you?</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your wizard-built site is ready and included free. For a one-time $100 Done-For-You Design, we'll personally
+          craft custom layouts, premium design, and brand consultation — competitors charge $500–$2,000+ for this.
+        </p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate({ to: "/pricing" })}>
+          Add Done-For-You Design — $100
+        </Button>
+      </div>
     </div>
+
   );
 }
