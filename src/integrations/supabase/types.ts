@@ -684,6 +684,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          options: Json
           price_cents: number
           updated_at: string
           workspace_id: string
@@ -697,6 +698,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          options?: Json
           price_cents?: number
           updated_at?: string
           workspace_id: string
@@ -710,6 +712,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          options?: Json
           price_cents?: number
           updated_at?: string
           workspace_id?: string
