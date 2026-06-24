@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLANS, SETUP_FEE_CENTS, SETUP_FEE_PRICE_ID, planByTier, type PlanTier } from "@/lib/entitlements";
 import { Button } from "@/components/ui/button";
