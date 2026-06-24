@@ -78,11 +78,19 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       params.payment_intent_data = { metadata };
     }
 
-    const session = await stripeFetch<{ id: string; url: string }>(
-      env,
-      "/v1/checkout/sessions",
-      { method: "POST", params },
-    );
+    let session: { id: string; url: string };
+    try {
+      session = await stripeFetch(env, "/v1/checkout/sessions", { method: "POST", params });
+    } catch (err) {
+      // Automatic tax can't be enabled until the Stripe account's head-office
+      // address is configured (done during go-live verification). Fall back to
+      // a working checkout without automatic tax so customers can still pay.
+      const message = err instanceof Error ? err.message.toLowerCase() : "";
+      if (!message.includes("tax")) throw err;
+      delete params.automatic_tax;
+      delete params.tax_id_collection;
+      session = await stripeFetch(env, "/v1/checkout/sessions", { method: "POST", params });
+    }
 
     return { id: session.id, url: session.url };
   });
