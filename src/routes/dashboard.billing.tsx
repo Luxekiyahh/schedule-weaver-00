@@ -141,9 +141,10 @@ function BillingPage() {
       <div className="max-w-5xl mx-auto p-6 space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <Link to="/dashboard/home" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2">
-              <ArrowLeft className="h-4 w-4" /> Back to dashboard
-            </Link>
+            <button onClick={() => navigate({ to: "/dashboard/home" })} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2">
+              <ChevronLeft className="h-4 w-4" /> Back to Dashboard
+            </button>
+
             <h1 className="text-3xl font-semibold tracking-tight">Billing & Plan</h1>
             <p className="text-muted-foreground mt-1">Choose the plan that fits your business.</p>
           </div>
