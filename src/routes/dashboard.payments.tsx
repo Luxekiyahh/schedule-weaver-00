@@ -434,6 +434,106 @@ function PaymentsPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Connect {provider !== "none" ? PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label : ""}
+            </DialogTitle>
+            <DialogDescription>
+              Paste your API keys below. We verify them with the provider and store them securely so
+              payments go directly to your own account.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-slate-500">Environment</Label>
+              <select
+                className="rounded-md border border-slate-200 px-2 py-1 text-sm"
+                value={credEnv}
+                onChange={(e) => setCredEnv(e.target.value as "sandbox" | "live")}
+              >
+                <option value="live">Live</option>
+                <option value="sandbox">Sandbox / Test</option>
+              </select>
+            </div>
+
+            {provider === "stripe" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="stripe-secret">Secret key</Label>
+                  <Input
+                    id="stripe-secret"
+                    type="password"
+                    placeholder="sk_live_… or sk_test_…"
+                    value={stripeSecretKey}
+                    onChange={(e) => setStripeSecretKey(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="stripe-pub">Publishable key (optional)</Label>
+                  <Input
+                    id="stripe-pub"
+                    placeholder="pk_live_… or pk_test_…"
+                    value={stripePublishableKey}
+                    onChange={(e) => setStripePublishableKey(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {provider === "paypal" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pp-client">Client ID</Label>
+                  <Input
+                    id="pp-client"
+                    value={paypalClientId}
+                    onChange={(e) => setPaypalClientId(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pp-secret">Secret</Label>
+                  <Input
+                    id="pp-secret"
+                    type="password"
+                    value={paypalSecret}
+                    onChange={(e) => setPaypalSecret(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {provider === "square" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="sq-token">Access token</Label>
+                <Input
+                  id="sq-token"
+                  type="password"
+                  value={squareAccessToken}
+                  onChange={(e) => setSquareAccessToken(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConnectOpen(false)} disabled={connecting}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-slate-900 hover:bg-slate-800"
+              onClick={handleSaveCredentials}
+              disabled={connecting}
+            >
+              {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Verify & connect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
