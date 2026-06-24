@@ -127,7 +127,7 @@ export function StorefrontView({ data }: { data: any }) {
     fontStack: fontFamilyStack(ws.font_family),
   };
 
-  let ThemedLayout: (props: StorefrontThemeProps) => JSX.Element;
+  let ThemedLayout: (props: StorefrontThemeProps) => React.ReactElement;
   switch (ws.theme_id) {
     case "luxury-blush":
       ThemedLayout = LuxuryBlushLayout;
