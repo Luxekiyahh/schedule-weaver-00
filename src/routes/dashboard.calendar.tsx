@@ -1,9 +1,10 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LogOut, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon,
-  Users, DollarSign, Clock, Loader2, UserCircle2,
+  Users, DollarSign, Clock, Loader2, UserCircle2, CalendarX, Trash2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/dashboard/calendar")({
   component: Dashboard,
@@ -49,6 +51,9 @@ type Service = {
 };
 
 type Customer = { id: string; full_name: string; email: string | null };
+
+type ScheduleException = { id: string; block_date: string; label: string };
+
 
 type Appointment = {
   id: string;
@@ -102,7 +107,15 @@ function Dashboard() {
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
   const [newOpen, setNewOpen] = useState(false);
 
+  const navigate = useNavigate();
+  const [exceptionsOpen, setExceptionsOpen] = useState(false);
+  const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
+  const [newBlockDate, setNewBlockDate] = useState("");
+  const [newBlockLabel, setNewBlockLabel] = useState("");
+  const [savingBlock, setSavingBlock] = useState(false);
+
   const isAdmin = myRole === "owner" || myRole === "admin";
+
 
   // Bootstrap: workspace + role
   useEffect(() => {
@@ -189,6 +202,54 @@ function Dashboard() {
 
   useEffect(() => { loadAppointments(); }, [loadAppointments]);
 
+  // Schedule exceptions (workspace-wide date blocks)
+  const loadExceptions = useCallback(async () => {
+    if (!workspaceId) return;
+    const { data, error } = await supabase
+      .from("schedule_exceptions")
+      .select("id, block_date, label")
+      .eq("workspace_id", workspaceId)
+      .order("block_date", { ascending: true });
+    if (error) { toast.error(error.message); return; }
+    setExceptions((data ?? []) as ScheduleException[]);
+  }, [workspaceId]);
+
+  useEffect(() => { loadExceptions(); }, [loadExceptions]);
+
+  const addException = async () => {
+    if (!workspaceId) return;
+    if (!newBlockDate || !newBlockLabel.trim()) {
+      toast.error("Pick a date and enter a label");
+      return;
+    }
+    setSavingBlock(true);
+    const { data: u } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("schedule_exceptions")
+      .insert({
+        workspace_id: workspaceId,
+        block_date: newBlockDate,
+        label: newBlockLabel.trim(),
+        created_by: u.user?.id ?? null,
+      })
+      .select("id, block_date, label")
+      .single();
+    setSavingBlock(false);
+    if (error) { toast.error(error.message); return; }
+    setExceptions((prev) => [...prev, data as ScheduleException].sort((a, b) => a.block_date.localeCompare(b.block_date)));
+    setNewBlockDate("");
+    setNewBlockLabel("");
+    toast.success("Date block enforced");
+  };
+
+  const removeException = async (id: string) => {
+    const { error } = await supabase.from("schedule_exceptions").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setExceptions((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Block removed");
+  };
+
+
   // Metrics (admin only)
   const metrics = useMemo(() => {
     const today = startOfDay(new Date()).getTime();
@@ -267,7 +328,26 @@ function Dashboard() {
       </header>
 
       <div className="mx-auto max-w-[1400px] px-6 py-6">
+        {/* Back to Dashboard + control panel */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <button
+            onClick={() => navigate({ to: "/dashboard/home" })}
+            className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+          >
+            <ChevronLeft className="h-4 w-4" /> Back to Dashboard
+          </button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate({ to: "/dashboard/staff" })}>
+              <Users className="h-4 w-4" /> Add Providers
+            </Button>
+            <Button variant="outline" onClick={() => setExceptionsOpen(true)}>
+              <CalendarX className="h-4 w-4" /> Schedule Exceptions
+            </Button>
+          </div>
+        </div>
+
         {/* Metrics */}
+
         {isAdmin && (
           <div className="mb-6 grid gap-4 sm:grid-cols-3">
             <MetricCard icon={<Clock className="h-4 w-4" />} label="Appointments today" value={metrics.today.toString()} />
@@ -376,7 +456,113 @@ function Dashboard() {
         onCreated={() => { loadAppointments(); setNewOpen(false); }}
         onCustomerAdded={(c) => setCustomers((p) => [c, ...p])}
       />
+
+      {/* Schedule Exceptions overlay modal */}
+      <AnimatePresence>
+        {exceptionsOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setExceptionsOpen(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-xl"
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: "spring", stiffness: 300, damping: 26 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-slate-900 text-white">
+                    <CalendarX className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">Schedule Exceptions</h3>
+                    <p className="text-xs text-slate-500">Block off dates like holidays.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setExceptionsOpen(false)}
+                  className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="block-date">Date</Label>
+                  <Input
+                    id="block-date"
+                    type="date"
+                    value={newBlockDate}
+                    onChange={(e) => setNewBlockDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="block-label">Label</Label>
+                  <Input
+                    id="block-label"
+                    placeholder="Holiday Close"
+                    value={newBlockLabel}
+                    onChange={(e) => setNewBlockLabel(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={addException}
+                  disabled={savingBlock}
+                  className="w-full bg-slate-900 hover:bg-slate-800"
+                >
+                  {savingBlock ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  Enforce Date Block
+                </Button>
+              </div>
+
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Active blocks
+                </p>
+                {exceptions.length === 0 ? (
+                  <p className="rounded-lg border border-dashed py-6 text-center text-sm text-slate-400">
+                    No date blocks yet.
+                  </p>
+                ) : (
+                  <ul className="max-h-56 space-y-2 overflow-auto">
+                    {exceptions.map((ex) => (
+                      <li
+                        key={ex.id}
+                        className="flex items-center gap-3 rounded-lg border bg-slate-50 px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">{ex.label}</p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(ex.block_date + "T00:00:00").toLocaleDateString([], {
+                              weekday: "short", month: "short", day: "numeric", year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeException(ex.id)}
+                          className="ml-auto rounded-md p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                          aria-label="Remove block"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+
   );
 }
 

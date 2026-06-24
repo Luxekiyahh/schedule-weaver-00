@@ -16,6 +16,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardStaffRouteImport } from './routes/dashboard.staff'
 import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
@@ -65,6 +66,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardStaffRoute = DashboardStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardServicesRoute = DashboardServicesRouteImport.update({
   id: '/services',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
+  '/dashboard/staff': typeof DashboardStaffRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
+  '/dashboard/staff': typeof DashboardStaffRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/services': typeof DashboardServicesRoute
+  '/dashboard/staff': typeof DashboardStaffRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/services'
+    | '/dashboard/staff'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/api/public/payments/webhook'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/services'
+    | '/dashboard/staff'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/api/public/payments/webhook'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/services'
+    | '/dashboard/staff'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/api/public/payments/webhook'
@@ -351,6 +363,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/staff': {
+      id: '/dashboard/staff'
+      path: '/staff'
+      fullPath: '/dashboard/staff'
+      preLoaderRoute: typeof DashboardStaffRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/services': {
       id: '/dashboard/services'
@@ -460,6 +479,7 @@ interface DashboardRouteChildren {
   DashboardHomeRoute: typeof DashboardHomeRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardServicesRoute: typeof DashboardServicesRoute
+  DashboardStaffRoute: typeof DashboardStaffRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -469,6 +489,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardHomeRoute: DashboardHomeRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardServicesRoute: DashboardServicesRoute,
+  DashboardStaffRoute: DashboardStaffRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -495,13 +516,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,8 +1,9 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Briefcase, Plus, Pencil, Trash2, Clock, DollarSign, Loader2, ArrowLeft, Link2,
+  Briefcase, Plus, Pencil, Trash2, Clock, DollarSign, Loader2, ChevronLeft, Link2,
+
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,8 @@ function money(cents: number, ccy = "USD") {
 }
 
 function ServicesPage() {
+  const navigate = useNavigate();
+
   const [ctx, setCtx] = useState<Ctx | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [myLinks, setMyLinks] = useState<Set<string>>(new Set());
@@ -114,9 +117,10 @@ function ServicesPage() {
       <div className="mx-auto max-w-[1280px] px-6 py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <Link to="/dashboard/home" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to home
-            </Link>
+            <button onClick={() => navigate({ to: "/dashboard/home" })} className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">
+              <ChevronLeft className="h-3.5 w-3.5" /> Back to Dashboard
+            </button>
+
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Services</h1>
             <p className="mt-1 text-sm text-slate-500">
               {isAdmin ? "Manage your bookable offerings and pricing." : "Browse workspace services and choose which ones you offer."}
