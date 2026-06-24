@@ -131,7 +131,7 @@ function OnboardingWizard() {
   const getCtx = useServerFn(getOnboardingContext);
 
   useEffect(() => {
-    getCtx({ data: {} })
+    getCtx()
       .then((ctx) => {
         setWorkspaceId(ctx.workspaceId);
         setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
