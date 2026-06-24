@@ -596,6 +596,9 @@ function Dashboard() {
                             {new Date(ex.block_date + "T00:00:00").toLocaleDateString([], {
                               weekday: "short", month: "short", day: "numeric", year: "numeric",
                             })}
+                            {ex.start_time && ex.end_time
+                              ? ` · ${ex.start_time.slice(0, 5)}–${ex.end_time.slice(0, 5)}`
+                              : " · All day"}
                           </p>
                         </div>
                         <button
