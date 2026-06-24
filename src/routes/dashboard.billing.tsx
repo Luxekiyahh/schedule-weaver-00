@@ -29,9 +29,11 @@ function money(cents: number) {
 
 function BillingPage() {
   const sub = useSubscription();
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const { openCheckout, openPortal, loading: checkoutLoading } = useStripeCheckout();
+  const changePlan = useServerFn(changeSubscriptionPlan);
   const [email, setEmail] = useState<string | undefined>();
   const [pendingTier, setPendingTier] = useState<PlanTier | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? undefined));
