@@ -104,7 +104,15 @@ function Dashboard() {
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
   const [newOpen, setNewOpen] = useState(false);
 
+  const navigate = useNavigate();
+  const [exceptionsOpen, setExceptionsOpen] = useState(false);
+  const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
+  const [newBlockDate, setNewBlockDate] = useState("");
+  const [newBlockLabel, setNewBlockLabel] = useState("");
+  const [savingBlock, setSavingBlock] = useState(false);
+
   const isAdmin = myRole === "owner" || myRole === "admin";
+
 
   // Bootstrap: workspace + role
   useEffect(() => {
