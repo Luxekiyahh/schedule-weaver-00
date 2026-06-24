@@ -52,7 +52,7 @@ type Service = {
 
 type Customer = { id: string; full_name: string; email: string | null };
 
-type ScheduleException = { id: string; block_date: string; label: string };
+type ScheduleException = { id: string; block_date: string; label: string; start_time: string | null; end_time: string | null };
 
 
 type Appointment = {
@@ -112,6 +112,9 @@ function Dashboard() {
   const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
   const [newBlockDate, setNewBlockDate] = useState("");
   const [newBlockLabel, setNewBlockLabel] = useState("");
+  const [blockAllDay, setBlockAllDay] = useState(true);
+  const [newBlockStart, setNewBlockStart] = useState("09:00");
+  const [newBlockEnd, setNewBlockEnd] = useState("17:00");
   const [savingBlock, setSavingBlock] = useState(false);
 
   const isAdmin = myRole === "owner" || myRole === "admin";
