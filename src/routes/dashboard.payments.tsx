@@ -18,6 +18,11 @@ import {
   type PaymentProvider,
   type DepositType,
 } from "@/utils/payment-settings.functions";
+import {
+  startProviderConnect,
+  refreshConnectStatus,
+} from "@/utils/payment-connect.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/dashboard/payments")({
   component: PaymentsPage,
