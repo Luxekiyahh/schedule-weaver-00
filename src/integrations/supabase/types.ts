@@ -453,24 +453,30 @@ export type Database = {
           block_date: string
           created_at: string
           created_by: string | null
+          end_time: string | null
           id: string
           label: string
+          start_time: string | null
           workspace_id: string
         }
         Insert: {
           block_date: string
           created_at?: string
           created_by?: string | null
+          end_time?: string | null
           id?: string
           label: string
+          start_time?: string | null
           workspace_id: string
         }
         Update: {
           block_date?: string
           created_at?: string
           created_by?: string | null
+          end_time?: string | null
           id?: string
           label?: string
+          start_time?: string | null
           workspace_id?: string
         }
         Relationships: []
