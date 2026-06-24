@@ -300,9 +300,16 @@ function PaymentsPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleConnect}
-                    disabled={connectionStatus === "connected"}
+                    disabled={connectionStatus === "connected" || connecting}
                   >
-                    {connectionStatus === "connected" ? "Connected" : "Connect account"}
+                    {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {connectionStatus === "connected"
+                      ? "Connected"
+                      : connecting
+                        ? "Connecting…"
+                        : connectionStatus === "pending"
+                          ? "Continue setup"
+                          : "Connect account"}
                   </Button>
                 </div>
               )}
