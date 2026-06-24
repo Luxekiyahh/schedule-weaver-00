@@ -328,7 +328,26 @@ function Dashboard() {
       </header>
 
       <div className="mx-auto max-w-[1400px] px-6 py-6">
+        {/* Back to Dashboard + control panel */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <button
+            onClick={() => navigate({ to: "/dashboard/home" })}
+            className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+          >
+            <ChevronLeft className="h-4 w-4" /> Back to Dashboard
+          </button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate({ to: "/dashboard/staff" })}>
+              <Users className="h-4 w-4" /> Add Providers
+            </Button>
+            <Button variant="outline" onClick={() => setExceptionsOpen(true)}>
+              <CalendarX className="h-4 w-4" /> Schedule Exceptions
+            </Button>
+          </div>
+        </div>
+
         {/* Metrics */}
+
         {isAdmin && (
           <div className="mb-6 grid gap-4 sm:grid-cols-3">
             <MetricCard icon={<Clock className="h-4 w-4" />} label="Appointments today" value={metrics.today.toString()} />
