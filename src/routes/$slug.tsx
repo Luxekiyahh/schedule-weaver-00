@@ -89,14 +89,56 @@ function StorefrontPage() {
  * when a tenant subdomain (e.g. dolliimarie.procschedule.com) is detected.
  */
 export function StorefrontView({ data }: { data: any }) {
+  const ws = data.workspace;
+
+  // Keep the bespoke Dolliimarie page exactly as-is.
+  if (ws.slug === "dolliimarie") {
+    return (
+      <>
+        <OwnerAdminOverlay ownerId={ws.owner_id} />
+        <DolliimarieStorefront data={data} />
+      </>
+    );
+  }
+
+  // Theme-aware: render the skin the tenant selected during onboarding, using
+  // the same prop contract as /book/$slug.
+  const themeProps: StorefrontThemeProps = {
+    workspace: {
+      id: ws.id,
+      name: ws.name,
+      slug: ws.slug,
+      theme_id: ws.theme_id ?? null,
+      primary_color: ws.primary_color ?? null,
+      secondary_color: ws.secondary_color ?? null,
+      font_family: ws.font_family ?? null,
+      logo_url: ws.logo_url ?? null,
+    },
+    categories: data.categories ?? [],
+    variants: data.variants ?? [],
+    lengthOptions: data.lengthOptions ?? [],
+    slug: ws.slug,
+    primary: ws.primary_color || "#4f46e5",
+    secondary: ws.secondary_color || "#ec4899",
+    fontStack: fontFamilyStack(ws.font_family),
+  };
+
+  let ThemedLayout: (props: StorefrontThemeProps) => JSX.Element;
+  switch (ws.theme_id) {
+    case "luxury-blush":
+      ThemedLayout = LuxuryBlushLayout;
+      break;
+    case "industrial-dark":
+      ThemedLayout = IndustrialDarkLayout;
+      break;
+    default:
+      ThemedLayout = DefaultStorefrontLayout;
+  }
+
   return (
     <>
-      <OwnerAdminOverlay ownerId={data.workspace.owner_id} />
-      {data.workspace.slug === "dolliimarie" ? (
-        <DolliimarieStorefront data={data} />
-      ) : (
-        <DefaultStorefront data={data} />
-      )}
+      <OwnerAdminOverlay ownerId={ws.owner_id} />
+      <ThemedLayout {...themeProps} />
     </>
   );
 }
