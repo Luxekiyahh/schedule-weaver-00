@@ -729,44 +729,50 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean
           created_at: string
           current_period_end: string | null
+          current_period_start: string | null
           environment: string
           id: string
-          paddle_customer_id: string | null
-          paddle_subscription_id: string | null
           plan_tier: Database["public"]["Enums"]["plan_tier"]
           price_id: string | null
           setup_fee_paid: boolean
           status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           updated_at: string
           workspace_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           environment?: string
           id?: string
-          paddle_customer_id?: string | null
-          paddle_subscription_id?: string | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
           price_id?: string | null
           setup_fee_paid?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string
           workspace_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           environment?: string
           id?: string
-          paddle_customer_id?: string | null
-          paddle_subscription_id?: string | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
           price_id?: string | null
           setup_fee_paid?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string
           workspace_id?: string
         }
@@ -1024,6 +1030,9 @@ export type Database = {
         | "past_due"
         | "canceled"
         | "incomplete"
+        | "incomplete_expired"
+        | "unpaid"
+        | "paused"
       workspace_role: "client" | "staff" | "admin" | "owner"
     }
     CompositeTypes: {
@@ -1166,6 +1175,9 @@ export const Constants = {
         "past_due",
         "canceled",
         "incomplete",
+        "incomplete_expired",
+        "unpaid",
+        "paused",
       ],
       workspace_role: ["client", "staff", "admin", "owner"],
     },
