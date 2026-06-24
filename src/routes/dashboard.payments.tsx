@@ -19,10 +19,20 @@ import {
   type DepositType,
 } from "@/utils/payment-settings.functions";
 import {
-  startProviderConnect,
-  refreshConnectStatus,
+  saveProviderCredentials,
+  disconnectProvider,
 } from "@/utils/payment-connect.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/dashboard/payments")({
   component: PaymentsPage,
