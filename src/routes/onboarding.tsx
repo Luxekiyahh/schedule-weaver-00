@@ -31,7 +31,10 @@ import {
   completeOnboarding,
   getOnboardingContext,
   uploadOnboardingImage,
+  checkSlugAvailable,
 } from "@/lib/onboarding.functions";
+import { finalizeTenantSignup } from "@/lib/tenant.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { LivePreview } from "@/components/onboarding/LivePreview";
 import {
   INDUSTRIES,
@@ -57,17 +60,18 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingWizard,
   head: () => ({
     meta: [
-      { title: "Set up your booking site — ProcSchedule" },
+      { title: "Create your account & booking site — ProcSchedule" },
       {
         name: "description",
         content:
-          "Build your branded booking site in a few quick steps — industry, identity, services, hours, policies, and intake.",
+          "Sign up and build your branded booking site in a few quick steps — account, industry, identity, services, hours, policies, and intake.",
       },
     ],
   }),
 });
 
 const STEP_LABELS = [
+  "Account",
   "Industry",
   "Identity",
   "Photos",
@@ -77,6 +81,16 @@ const STEP_LABELS = [
   "Intake",
   "Preview",
 ];
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
 
 // ---------- helpers ----------
 
@@ -127,26 +141,33 @@ function OnboardingWizard() {
   const [wizard, setWizard] = useState<WizardState>(initialWizard);
   const [error, setError] = useState<string | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [hasAccount, setHasAccount] = useState(false);
 
   const getCtx = useServerFn(getOnboardingContext);
 
+  // If the visitor is already signed in, skip the account step and load context.
   useEffect(() => {
-    getCtx()
-      .then((ctx) => {
-        setWorkspaceId(ctx.workspaceId);
-        setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
-      })
-      .catch(() => {
-        navigate({ to: "/login" });
-      });
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) return; // brand-new visitor → start at the Account step
+      getCtx()
+        .then((ctx) => {
+          setWorkspaceId(ctx.workspaceId);
+          setHasAccount(true);
+          setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
+          setStep((s) => (s === 1 ? 2 : s));
+        })
+        .catch(() => {
+          /* signed in but no workspace yet — keep them on the account step */
+        });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const patch = (p: Partial<WizardState>) => setWizard((w) => ({ ...w, ...p }));
 
   function validateStep(s: number): string | null {
-    if (s === 1 && !wizard.industry) return "Pick an industry to continue.";
-    if (s === 2 && !wizard.businessName.trim()) return "Business name is required.";
+    if (s === 2 && !wizard.industry) return "Pick an industry to continue.";
+    if (s === 3 && !wizard.businessName.trim()) return "Business name is required.";
     return null;
   }
 
@@ -157,11 +178,20 @@ function OnboardingWizard() {
       return;
     }
     setError(null);
-    setStep((s) => Math.min(8, s + 1));
+    setStep((s) => Math.min(9, s + 1));
   }
   function back() {
     setError(null);
-    setStep((s) => Math.max(1, s - 1));
+    // Never let the user step back into the account creation form once created.
+    setStep((s) => Math.max(hasAccount ? 2 : 1, s - 1));
+  }
+
+  function onAccountCreated(ctx: { workspaceId: string; businessName: string }) {
+    setWorkspaceId(ctx.workspaceId);
+    setHasAccount(true);
+    setWizard((w) => ({ ...w, businessName: ctx.businessName }));
+    setError(null);
+    setStep(2);
   }
 
   return (
@@ -208,31 +238,32 @@ function OnboardingWizard() {
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.2 }}
             >
-              {step === 1 && <StepIndustry wizard={wizard} patch={patch} onPick={() => setTimeout(next, 120)} />}
-              {step === 2 && (
+              {step === 1 && <StepAccount onCreated={onAccountCreated} />}
+              {step === 2 && <StepIndustry wizard={wizard} patch={patch} onPick={() => setTimeout(next, 120)} />}
+              {step === 3 && (
                 <StepIdentity wizard={wizard} patch={patch} workspaceId={workspaceId} />
               )}
-              {step === 3 && <StepPhotos wizard={wizard} patch={patch} workspaceId={workspaceId} />}
-              {step === 4 && <StepServices wizard={wizard} patch={patch} />}
-              {step === 5 && <StepHours wizard={wizard} patch={patch} />}
-              {step === 6 && <StepPolicies wizard={wizard} patch={patch} />}
-              {step === 7 && <StepIntake wizard={wizard} patch={patch} />}
-              {step === 8 && <StepPreview wizard={wizard} navigate={navigate} />}
+              {step === 4 && <StepPhotos wizard={wizard} patch={patch} workspaceId={workspaceId} />}
+              {step === 5 && <StepServices wizard={wizard} patch={patch} />}
+              {step === 6 && <StepHours wizard={wizard} patch={patch} />}
+              {step === 7 && <StepPolicies wizard={wizard} patch={patch} />}
+              {step === 8 && <StepIntake wizard={wizard} patch={patch} />}
+              {step === 9 && <StepPreview wizard={wizard} navigate={navigate} />}
             </motion.div>
           </AnimatePresence>
 
           {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
 
-          {step < 8 && (
+          {step > 1 && step < 9 && (
             <div className="mt-8 flex items-center justify-between">
-              {step > 1 ? (
+              {step > 2 ? (
                 <Button variant="ghost" onClick={back}>
                   <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
                 </Button>
               ) : (
                 <span />
               )}
-              {step !== 1 && (
+              {step !== 2 && (
                 <Button onClick={next}>
                   Continue <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
@@ -240,6 +271,7 @@ function OnboardingWizard() {
             </div>
           )}
         </div>
+
 
         {/* Live preview */}
         <div className="order-2 lg:sticky lg:top-24 lg:self-start">
@@ -254,6 +286,205 @@ type StepProps = {
   wizard: WizardState;
   patch: (p: Partial<WizardState>) => void;
 };
+
+// ---------- Step: Account (create account) ----------
+function StepAccount({
+  onCreated,
+}: {
+  onCreated: (ctx: { workspaceId: string; businessName: string }) => void;
+}) {
+  const navigate = useNavigate();
+  const finalize = useServerFn(finalizeTenantSignup);
+  const getCtx = useServerFn(getOnboardingContext);
+  const checkSlug = useServerFn(checkSlugAvailable);
+
+  const [businessName, setBusinessName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<
+    "idle" | "checking" | "ok" | "taken" | "invalid"
+  >("idle");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!slugTouched) setSlug(slugify(businessName));
+  }, [businessName, slugTouched]);
+
+  useEffect(() => {
+    if (!slug) {
+      setSlugStatus("idle");
+      return;
+    }
+    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug) || slug.length < 2) {
+      setSlugStatus("invalid");
+      return;
+    }
+    setSlugStatus("checking");
+    const t = setTimeout(async () => {
+      try {
+        const r = await checkSlug({ data: { slug } });
+        setSlugStatus(r.available ? "ok" : "taken");
+      } catch {
+        setSlugStatus("idle");
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [slug, checkSlug]);
+
+  const canSubmit =
+    !loading &&
+    !!email &&
+    password.length >= 8 &&
+    !!businessName.trim() &&
+    slugStatus === "ok";
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!canSubmit) return;
+    setLoading(true);
+    try {
+      const { data: auth, error: authErr } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: businessName },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
+      if (authErr) throw authErr;
+      if (!auth.user?.id) throw new Error("Signup did not return a user.");
+
+      // handle_new_user trigger creates a default workspace + membership.
+      await finalize({ data: { businessName: businessName.trim(), slug } });
+
+      // Without an active session the rest of the wizard can't upload/save.
+      if (!auth.session) {
+        navigate({ to: "/login", search: { confirm: "1" } as never });
+        return;
+      }
+
+      const ctx = await getCtx();
+      onCreated({ workspaceId: ctx.workspaceId, businessName: businessName.trim() });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create account.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Your branded booking page will live at{" "}
+        <span className="font-mono">your-name.procschedule.com</span>
+      </p>
+
+      <div className="mt-6 space-y-5">
+        <div>
+          <Label htmlFor="acct-bn">Business name</Label>
+          <Input
+            id="acct-bn"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="e.g. Dolliimarie Hair Studio"
+            className="mt-1.5"
+            autoFocus
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="acct-slug">Your URL</Label>
+          <div className="mt-1.5 flex items-stretch overflow-hidden rounded-md border focus-within:ring-1 focus-within:ring-ring">
+            <input
+              id="acct-slug"
+              value={slug}
+              onChange={(e) => {
+                setSlugTouched(true);
+                setSlug(e.target.value.toLowerCase());
+              }}
+              placeholder="your-name"
+              className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
+              required
+            />
+            <span className="flex items-center bg-muted px-3 py-2 text-sm text-muted-foreground">
+              .procschedule.com
+            </span>
+            <div className="flex items-center px-3">
+              {slugStatus === "checking" && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+              {slugStatus === "ok" && <Check className="h-4 w-4 text-green-600" />}
+              {(slugStatus === "taken" || slugStatus === "invalid") && (
+                <X className="h-4 w-4 text-destructive" />
+              )}
+            </div>
+          </div>
+          {slugStatus === "taken" && (
+            <p className="mt-1 text-xs text-destructive">This URL is taken.</p>
+          )}
+          {slugStatus === "invalid" && (
+            <p className="mt-1 text-xs text-destructive">
+              Use lowercase letters, numbers, and hyphens (min 2).
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="acct-email">Email</Label>
+          <Input
+            id="acct-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@business.com"
+            className="mt-1.5"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="acct-pw">Password</Label>
+          <Input
+            id="acct-pw"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            minLength={8}
+            className="mt-1.5"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        <Button type="submit" disabled={!canSubmit} className="w-full">
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Create account & continue
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <a href="/login" className="text-primary hover:underline">
+            Sign in
+          </a>
+        </p>
+      </div>
+    </form>
+  );
+}
+
+
 
 // ---------- Step 1 ----------
 function StepIndustry({
@@ -1040,11 +1271,11 @@ function StepPreview({
         {highRated && (
           <div className="mt-6">
             <p className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
-              <Check className="h-4 w-4 text-green-500" /> You're all set! Your site is live at{" "}
+              <Check className="h-4 w-4 text-green-500" /> You're all set! Your site is ready at{" "}
               <span className="font-semibold">{slug ?? "your-business"}.procschedule.com</span>
             </p>
-            <Button className="mt-4" onClick={() => navigate({ to: "/dashboard/home" })}>
-              Go to my dashboard
+            <Button className="mt-4" onClick={() => navigate({ to: "/pricing" })}>
+              Choose your plan
             </Button>
           </div>
         )}
@@ -1059,8 +1290,8 @@ function StepPreview({
               <Button onClick={() => window.open(CALENDLY_URL, "_blank", "noopener,noreferrer")}>
                 Schedule a design call
               </Button>
-              <Button variant="ghost" onClick={() => navigate({ to: "/dashboard/home" })}>
-                Go to dashboard anyway
+              <Button variant="ghost" onClick={() => navigate({ to: "/pricing" })}>
+                Choose your plan
               </Button>
             </div>
           </div>

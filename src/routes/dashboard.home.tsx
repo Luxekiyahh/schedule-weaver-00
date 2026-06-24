@@ -62,6 +62,17 @@ function HomePage() {
   const [activeServices, setActiveServices] = useState(0);
   const [copied, setCopied] = useState(false);
 
+  // Landed here after a successful checkout from the pricing page.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") === "success") {
+      toast.success("Thanks! Your plan is being activated — this can take a few seconds.");
+      window.history.replaceState({}, "", "/dashboard/home");
+    }
+  }, []);
+
+
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
@@ -301,7 +312,7 @@ function HomePage() {
           <section>
             <h2 className="mb-3 px-1 text-base font-semibold text-slate-900">Quick actions</h2>
             <div className="grid grid-cols-2 gap-3">
-              <ActionCard to="/setup" icon={<Wand2 className="h-5 w-5" />} title="AI Storefront Designer" desc="Customize your live site" tone="violet" />
+              <ActionCard to="/onboarding" icon={<Wand2 className="h-5 w-5" />} title="AI Storefront Designer" desc="Customize your live site" tone="violet" />
               <ActionCard to="/dashboard/calendar" icon={<Plus className="h-5 w-5" />} title="Book appointment" desc="Manually create a booking" tone="indigo" />
               <ActionCard to="/dashboard/services" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
               <ActionCard to="/dashboard/availability" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />

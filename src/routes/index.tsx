@@ -115,7 +115,7 @@ function Nav() {
             Sign In
           </Link>
           <Link
-            to="/signup"
+            to="/onboarding"
             className="inline-flex items-center gap-1.5 rounded-lg bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-white/90 transition shadow-lg shadow-white/10"
           >
             Get Started <ArrowRight className="w-3.5 h-3.5" />
@@ -171,7 +171,7 @@ function Hero() {
           className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3"
         >
           <Link
-            to="/signup"
+            to="/onboarding"
             className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-6 py-3.5 text-sm font-semibold shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] transition"
           >
             Launch Your Storefront
@@ -323,7 +323,7 @@ function DemoModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
         <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-black/40 px-6 py-4">
           <p className="text-xs text-white/50">No signup required · 60-second product tour</p>
           <Link
-            to="/signup"
+            to="/onboarding"
             onClick={() => onOpenChange(false)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-xs font-semibold shadow-lg shadow-indigo-500/30 hover:scale-[1.02] transition"
           >
@@ -757,7 +757,7 @@ function Features() {
               No credit card. AI designs your brand. We handle the rest.
             </p>
             <Link
-              to="/signup"
+              to="/onboarding"
               className="mt-7 inline-flex items-center gap-2 rounded-xl bg-white text-black px-7 py-3.5 text-sm font-semibold hover:bg-white/90 transition shadow-2xl"
             >
               Launch Your Storefront <ArrowRight className="w-4 h-4" />
@@ -782,7 +782,7 @@ function Footer() {
         </div>
         <div className="flex items-center gap-5">
           <Link to="/login" className="hover:text-white transition">Sign in</Link>
-          <Link to="/signup" className="hover:text-white transition">Get started</Link>
+          <Link to="/onboarding" className="hover:text-white transition">Get started</Link>
         </div>
       </div>
     </footer>

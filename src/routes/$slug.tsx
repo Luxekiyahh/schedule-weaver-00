@@ -27,7 +27,7 @@ export const Route = createFileRoute("/$slug")({
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-2">Storefront not found</h1>
         <p className="text-muted-foreground mb-6">No business is registered at this URL.</p>
-        <Link to="/signup" className="text-primary hover:underline">
+        <Link to="/onboarding" className="text-primary hover:underline">
           Claim this URL
         </Link>
       </div>
@@ -125,7 +125,7 @@ export function TenantStorefrontBySlug({ slug }: { slug: string }) {
           <p className="text-muted-foreground mb-6">
             No business is registered at <code>{slug}</code>.
           </p>
-          <a href="https://procschedule.com/signup" className="text-primary hover:underline">
+          <a href="https://procschedule.com/onboarding" className="text-primary hover:underline">
             Claim this subdomain
           </a>
         </div>
@@ -390,7 +390,7 @@ function DolliimarieStorefront({ data }: { data: any }) {
           <p className="dm-script dm-text-gold text-3xl mt-2 leading-none">@{handle}</p>
           <p className="mt-6 dm-label text-[10px]">
             Powered by{" "}
-            <Link to="/signup" className="underline underline-offset-4 hover:text-[color:var(--dm-primary)]">
+            <Link to="/onboarding" className="underline underline-offset-4 hover:text-[color:var(--dm-primary)]">
               ProcSchedule
             </Link>
           </p>
@@ -871,7 +871,7 @@ function DefaultStorefront({ data }: { data: any }) {
             Stylist sign in
           </button>
           <span>·</span>
-          <a href="https://procschedule.com/signup" className="hover:text-[color:var(--lx-pink-ink)] transition">
+          <a href="https://procschedule.com/onboarding" className="hover:text-[color:var(--lx-pink-ink)] transition">
             Powered by ProcSchedule
           </a>
         </div>
