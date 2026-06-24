@@ -1,46 +1,52 @@
-# Rebuild the Onboarding "Client View" Preview
+# Unify Signup into Onboarding → Pricing → Dashboard
 
-Replace the current simplified pink preview (`src/components/onboarding/LivePreview.tsx`) with a high-fidelity **dynamic dark-luxury** template. The layout and section hierarchy are inspired by the DolliiMariie booking site, but the color treatment is reusable for any tenant.
+## Goal
+Collapse the funnel into a single path:
+`/onboarding` (create account + build site) → `/pricing` (pick a plan + pay) → `/dashboard/home` (after successful payment). Remove the now-redundant `/signup` and `/setup` pages.
 
-## Core principle
+## Flow after change
+```
+Visitor → /onboarding
+  Step 1: Create account (business name, URL, email, password)  ← NEW
+  Steps 2–8: industry, identity, photos, services, hours, policies, intake, preview
+  Finish → redirect to /pricing
+/pricing → "Get started" (logged in) → Paddle checkout (setup fee + plan)
+         → payment success → /dashboard/home
+```
 
-- **Fixed foundation, always:** near-black base (`#0A0A0A`), white / soft-white text, subtle ambient glow + glitter texture. This never changes regardless of the tenant's colors.
-- **Accent = tenant primary color** (extracted from logo or chosen in the color step): buttons, section heading underlines, active/hover states, price text, icon tints, pill borders.
-- **Supporting tone = tenant secondary color:** used sparingly for gradients, secondary highlights, and the hero wash.
-- **Real-time:** the accent updates live as the logo is uploaded/colors are extracted, while the dark base stays locked.
-- The wizard's existing **color-picker step stays as-is**.
+## Changes
 
-## Visual language (ported from DolliiMariie, recolored)
+### 1. `/onboarding` becomes the account-creation entry point
+File: `src/routes/onboarding.tsx`
+- Add a new **Step 1 "Account"** before the current Industry step (shifting the wizard from 8 to 9 steps; update `STEP_LABELS`, progress bar, and `next()/back()` bounds).
+- The Account step collects **business name, URL slug, email, password**, reusing the exact controls and live slug-availability check currently in `signup.tsx` (`checkSlugAvailable`, `slugify`, debounce, status icons).
+- On "Continue" from the Account step: call `supabase.auth.signUp(...)` then `finalizeTenantSignup({ businessName, slug })` (same calls signup.tsx makes today). Store the returned context so the rest of the wizard has a `workspaceId` for image uploads and `completeOnboarding`.
+- Replace the current `getOnboardingContext()`-on-mount logic: instead of redirecting unauthenticated visitors to `/login`, only load context if a session already exists; otherwise begin at the Account step. (Already-logged-in users skip straight to Industry.)
+- Pre-fill the wizard `businessName` from the Account step.
 
-- A centered mobile-style storefront frame inside the browser chrome mockup (keep the existing `your-business.procschedule.com` URL bar).
-- Script/serif display font for the business name and section headings (e.g. Cormorant Garamond / Italiana feel), sans body.
-- "Pill" section headings (rounded, accent-bordered, uppercase, letter-spaced).
-- Accent-bordered cards (the `gold-card` equivalent, retinted to the accent over the dark base) with soft inner glow.
-- Ornament dividers (`✦` with flanking hairlines) between sections.
-- Slow accent sheen on the business-name title.
+### 2. Onboarding completion → `/pricing`
+File: `src/routes/onboarding.tsx` (`StepPreview`)
+- Change both "Go to my dashboard" / "Go to dashboard anyway" destinations from `/dashboard/home` to `/pricing` (the next step is now choosing a plan). Copy updated to "Choose your plan".
 
-## Section order (all driven by live wizard state)
+### 3. `/pricing` drives checkout
+File: `src/routes/pricing.tsx`
+- Convert the static "Get started" `<Link to="/signup">` buttons into plan-aware actions:
+  - **Logged in:** open Paddle checkout for that tier using the same logic as billing (`usePaddleCheckout`, `useSubscription`, setup fee via `SETUP_FEE_PRICE_ID` when unpaid, `customData: { workspaceId }`), with `successUrl = ${origin}/dashboard/home?checkout=success`.
+  - **Logged out:** navigate to `/onboarding`.
+- Add a small `?checkout=success` handler on `/dashboard/home` (toast + brief subscription refresh poll), mirroring what `/dashboard/billing` already does, so the post-payment landing on the dashboard reflects the active plan.
 
-1. **Hero** — logo (or monogram), business name in display font, owner title, bio, accent "Book your appointment" button. Background = subtle radial wash of primary→secondary over black.
-2. **Portfolio trio** — first 3 uploaded photos (graceful placeholders if none).
-3. **Hours** — open days with formatted times; location/address line.
-4. **Booking Policy** — 2-column accent cards built from `policies` (deposit, cancellation, grace, no-guests, custom note).
-5. **Pre-Appointment / Intake** — cards rendered from the wizard `intake` questions.
-6. **Portfolio gallery** — remaining uploaded photos in a 2-column grid.
-7. **Services** — accent-bordered cards mapping live `services` (name, duration, price, options).
-8. **Footer** — socials / business name flourish.
-
-Empty states stay elegant (e.g. "Your services will appear here") so early steps still look premium.
+### 4. Delete redundant routes
+- Remove `src/routes/signup.tsx` and `src/routes/setup.tsx` (the route tree regenerates automatically).
+- Update every reference to point at the new flow:
+  - `src/routes/index.tsx` (4× `to="/signup"`) → `/onboarding`.
+  - `src/routes/$slug.tsx` (links + absolute `procschedule.com/signup` URLs) → `/onboarding`.
+  - `src/routes/admin.services.tsx` `to="/setup"` → `/onboarding` (or `/dashboard/services`).
+  - `src/routes/dashboard.home.tsx` `ActionCard to="/setup"` → `/onboarding`.
 
 ## Technical notes
-
-- Rewrite only `src/components/onboarding/LivePreview.tsx`. Signature stays `{ wizard, large }` so all callers in `src/routes/onboarding.tsx` are unaffected.
-- Colors applied inline via CSS variables derived from `wizard.primaryColor` / `wizard.secondaryColor` plus the existing `hexToRgba` helper (for accent tints, glows, borders at low alpha over black).
-- Keep using existing config helpers (`getIndustry`, `DAYS`, `formatTimeLabel`, `durationToMinutes`).
-- Self-contained styling via inline styles + Tailwind utilities scoped to the preview container; no global `styles.css` changes required, so the dark luxe look never leaks into the rest of the onboarding chrome.
-- No backend, data-model, or server-function changes.
+- **Session requirement:** uploads and `completeOnboarding` use `requireSupabaseAuth`, so the account must exist with an active session before the photo/save steps. This requires email auto-confirm to remain enabled (already on); if confirmation were required there'd be no session mid-wizard. I'll keep the signup's existing "no session → go to /login" fallback as a safety net.
+- No database or server-function signature changes are needed — `finalizeTenantSignup`, `checkSlugAvailable`, `completeOnboarding`, and the Paddle checkout/webhook all stay as-is.
+- `head()` meta on `/onboarding` updated to signup-oriented copy.
 
 ## Out of scope
-
-- The actual published storefront themes (`src/components/booking-themes/*`) are unchanged.
-- Wizard steps, persistence, and color extraction logic are untouched.
+- No changes to billing webhook, plan definitions, or the `/dashboard/billing` page (it remains for existing users to manage/switch plans).
