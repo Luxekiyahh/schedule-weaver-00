@@ -1189,6 +1189,7 @@ function StepPreview({
     save({
       data: {
         industry: (wizard.industry ?? "other") as IndustryId,
+        themeId: wizard.themeId,
         businessName: wizard.businessName,
         ownerTitle: wizard.ownerTitle,
         bio: wizard.bio,
