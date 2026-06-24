@@ -52,7 +52,7 @@ type Service = {
 
 type Customer = { id: string; full_name: string; email: string | null };
 
-type ScheduleException = { id: string; block_date: string; label: string };
+type ScheduleException = { id: string; block_date: string; label: string; start_time: string | null; end_time: string | null };
 
 
 type Appointment = {
@@ -112,6 +112,9 @@ function Dashboard() {
   const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
   const [newBlockDate, setNewBlockDate] = useState("");
   const [newBlockLabel, setNewBlockLabel] = useState("");
+  const [blockAllDay, setBlockAllDay] = useState(true);
+  const [newBlockStart, setNewBlockStart] = useState("09:00");
+  const [newBlockEnd, setNewBlockEnd] = useState("17:00");
   const [savingBlock, setSavingBlock] = useState(false);
 
   const isAdmin = myRole === "owner" || myRole === "admin";
@@ -207,7 +210,7 @@ function Dashboard() {
     if (!workspaceId) return;
     const { data, error } = await supabase
       .from("schedule_exceptions")
-      .select("id, block_date, label")
+      .select("id, block_date, label, start_time, end_time")
       .eq("workspace_id", workspaceId)
       .order("block_date", { ascending: true });
     if (error) { toast.error(error.message); return; }
@@ -222,6 +225,16 @@ function Dashboard() {
       toast.error("Pick a date and enter a label");
       return;
     }
+    if (!blockAllDay) {
+      if (!newBlockStart || !newBlockEnd) {
+        toast.error("Pick a start and end time");
+        return;
+      }
+      if (newBlockStart >= newBlockEnd) {
+        toast.error("End time must be after start time");
+        return;
+      }
+    }
     setSavingBlock(true);
     const { data: u } = await supabase.auth.getUser();
     const { data, error } = await supabase
@@ -230,16 +243,18 @@ function Dashboard() {
         workspace_id: workspaceId,
         block_date: newBlockDate,
         label: newBlockLabel.trim(),
+        start_time: blockAllDay ? null : newBlockStart,
+        end_time: blockAllDay ? null : newBlockEnd,
         created_by: u.user?.id ?? null,
       })
-      .select("id, block_date, label")
+      .select("id, block_date, label, start_time, end_time")
       .single();
     setSavingBlock(false);
     if (error) { toast.error(error.message); return; }
     setExceptions((prev) => [...prev, data as ScheduleException].sort((a, b) => a.block_date.localeCompare(b.block_date)));
     setNewBlockDate("");
     setNewBlockLabel("");
-    toast.success("Date block enforced");
+    toast.success(blockAllDay ? "Date block enforced" : "Hour block enforced");
   };
 
   const removeException = async (id: string) => {
@@ -512,13 +527,51 @@ function Dashboard() {
                     onChange={(e) => setNewBlockLabel(e.target.value)}
                   />
                 </div>
+                <div className="flex items-center gap-2 rounded-lg border bg-slate-50 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setBlockAllDay(true)}
+                    className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition ${blockAllDay ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
+                  >
+                    All day
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBlockAllDay(false)}
+                    className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition ${!blockAllDay ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
+                  >
+                    Hours
+                  </button>
+                </div>
+                {!blockAllDay && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="block-start">From</Label>
+                      <Input
+                        id="block-start"
+                        type="time"
+                        value={newBlockStart}
+                        onChange={(e) => setNewBlockStart(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="block-end">To</Label>
+                      <Input
+                        id="block-end"
+                        type="time"
+                        value={newBlockEnd}
+                        onChange={(e) => setNewBlockEnd(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
                 <Button
                   onClick={addException}
                   disabled={savingBlock}
                   className="w-full bg-slate-900 hover:bg-slate-800"
                 >
                   {savingBlock ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  Enforce Date Block
+                  {blockAllDay ? "Enforce Date Block" : "Enforce Hour Block"}
                 </Button>
               </div>
 
@@ -543,6 +596,9 @@ function Dashboard() {
                             {new Date(ex.block_date + "T00:00:00").toLocaleDateString([], {
                               weekday: "short", month: "short", day: "numeric", year: "numeric",
                             })}
+                            {ex.start_time && ex.end_time
+                              ? ` · ${ex.start_time.slice(0, 5)}–${ex.end_time.slice(0, 5)}`
+                              : " · All day"}
                           </p>
                         </div>
                         <button
