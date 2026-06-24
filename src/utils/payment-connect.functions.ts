@@ -186,14 +186,14 @@ export const saveProviderCredentials = createServerFn({ method: "POST" })
 
         credPatch.environment = environment;
 
-        const { error: credErr } = await db
-          .from(("workspace_payment_credentials" as CredentialsTable))
+        const { error: credErr } = await (db as any)
+          .from("workspace_payment_credentials")
           .upsert(credPatch, { onConflict: "workspace_id" });
         if (credErr) throw new Error(credErr.message);
 
         settingsPatch.connection_status = "connected";
         settingsPatch.provider_account_id = accountId;
-        const { error: setErr } = await db
+        const { error: setErr } = await (db as any)
           .from("workspace_payment_settings")
           .upsert(settingsPatch, { onConflict: "workspace_id" });
         if (setErr) throw new Error(setErr.message);
