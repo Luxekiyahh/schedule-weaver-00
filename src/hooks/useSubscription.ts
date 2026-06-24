@@ -72,7 +72,14 @@ export function useSubscription(): SubscriptionState {
   }, [tick]);
 
   const periodOk = !currentPeriodEnd || new Date(currentPeriodEnd) > new Date();
-  const isActive = Boolean(tier && status && ACTIVE_STATUSES.includes(status) && periodOk);
+  // Active statuses are always live; a canceled subscription still has access
+  // until the end of its paid period (grace period).
+  const isActive = Boolean(
+    tier &&
+      status &&
+      ((ACTIVE_STATUSES.includes(status) && periodOk) ||
+        (status === "canceled" && currentPeriodEnd && new Date(currentPeriodEnd) > new Date())),
+  );
 
   const can = useCallback(
     (feature: Feature) => {
