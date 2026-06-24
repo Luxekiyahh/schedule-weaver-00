@@ -1290,8 +1290,8 @@ function StepPreview({
               <Button onClick={() => window.open(CALENDLY_URL, "_blank", "noopener,noreferrer")}>
                 Schedule a design call
               </Button>
-              <Button variant="ghost" onClick={() => navigate({ to: "/dashboard/home" })}>
-                Go to dashboard anyway
+              <Button variant="ghost" onClick={() => navigate({ to: "/pricing" })}>
+                Choose your plan
               </Button>
             </div>
           </div>
