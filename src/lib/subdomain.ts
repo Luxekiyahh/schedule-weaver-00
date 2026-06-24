@@ -73,19 +73,16 @@ export function getTenantSlugFromHost(host?: string | null): string | null {
 /**
  * Build the canonical client-facing storefront URL for a tenant slug.
  *
- * IMPORTANT — per-hostname SSL: Lovable only issues a TLS certificate for a
- * subdomain once it has been explicitly connected as a custom domain in the
- * project. A tenant whose subdomain hasn't been connected yet (domain_status
- * !== "active") would get a certificate error on `<slug>.procschedule.com`.
- * For those tenants we use the apex path form `https://procschedule.com/<slug>`,
- * which is always covered by the apex certificate and resolves correctly.
+ * The wildcard *.procschedule.com certificate is live, so every tenant can be
+ * served from its own subdomain immediately after signup — there is no longer
+ * a per-tenant SSL gate. `domainStatus` is accepted for call-site compatibility
+ * but does NOT change the result.
  *
  * Behaviour:
  *   - On real procschedule.com hosts (or SSR / no host info, assumed prod):
- *       domain_status "active"  -> https://<slug>.procschedule.com
- *       otherwise               -> https://procschedule.com/<slug>
+ *       always -> https://<slug>.procschedule.com
  *   - On Lovable preview/sandbox hosts and localhost — where no wildcard
- *     subdomain exists — always the path form (`<origin>/<slug>`).
+ *     subdomain exists — the path form (`<origin>/<slug>`) so links resolve.
  */
 export function getTenantUrl(
   slug: string,
