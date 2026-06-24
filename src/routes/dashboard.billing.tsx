@@ -141,6 +141,16 @@ function BillingPage() {
                   : `Subscribe to launch your booking site. A one-time ${money(SETUP_FEE_CENTS)} setup & design fee applies to all plans.`}
               </CardDescription>
             </CardHeader>
+            {currentTier && (
+              <CardContent>
+                <Button variant="outline" onClick={handleManage} disabled={portalLoading}>
+                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Manage subscription"}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Update payment method, view invoices, or cancel. Cancelling keeps your access until the end of the billing period.
+                </p>
+              </CardContent>
+            )}
           </Card>
         )}
 
