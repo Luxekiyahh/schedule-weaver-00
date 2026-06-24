@@ -194,6 +194,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .update({
         name: data.businessName,
         slug,
+        theme_id: data.themeId,
         primary_color: data.primaryColor,
         secondary_color: data.secondaryColor,
         logo_url: data.logoUrl ?? null,
