@@ -318,6 +318,7 @@ function HomePage() {
               <ActionCard to="/dashboard/availability" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />
               <ActionCard to="/dashboard/notifications" icon={<Bell className="h-5 w-5" />} title="Notifications" desc="Email & SMS alerts" tone="rose" />
               <ActionCard to="/dashboard/billing" icon={<DollarSign className="h-5 w-5" />} title="Billing & Plan" desc="Manage your subscription" tone="indigo" />
+              <ActionCard to="/dashboard/payments" icon={<Wallet className="h-5 w-5" />} title="Payments" desc="Guest checkout & payouts" tone="emerald" />
 
             </div>
 
