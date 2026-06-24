@@ -18,6 +18,11 @@ import {
   type PaymentProvider,
   type DepositType,
 } from "@/utils/payment-settings.functions";
+import {
+  startProviderConnect,
+  refreshConnectStatus,
+} from "@/utils/payment-connect.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/dashboard/payments")({
   component: PaymentsPage,
@@ -53,9 +58,12 @@ function PaymentsPage() {
   const navigate = useNavigate();
   const getSettings = useServerFn(getPaymentSettings);
   const saveSettings = useServerFn(savePaymentSettings);
+  const startConnect = useServerFn(startProviderConnect);
+  const refreshStatus = useServerFn(refreshConnectStatus);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [workspaceName, setWorkspaceName] = useState("Workspace");
 
@@ -96,6 +104,27 @@ function PaymentsPage() {
         setDepositAmount((s.depositAmountCents / 100).toFixed(2));
         setDepositPercent(String(s.depositPercent));
         setCurrency(s.currency);
+
+        // Returning from a provider's hosted onboarding — re-check the account.
+        const params = new URLSearchParams(window.location.search);
+        const connect = params.get("connect");
+        if (connect === "return" || connect === "refresh") {
+          try {
+            const r = await refreshStatus({
+              data: { workspaceId: wsId, environment: getStripeEnvironment() },
+            });
+            setConnectionStatus(r.connectionStatus);
+            if (r.connectionStatus === "connected") {
+              toast.success("Your account is connected and ready to accept payments.");
+            } else {
+              toast.info("Onboarding in progress — finish the remaining steps to go live.");
+            }
+          } catch {
+            /* ignore — status stays as loaded */
+          }
+          // Clean the query param from the URL.
+          window.history.replaceState({}, "", "/dashboard/payments");
+        }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Couldn't load payment settings");
       }
@@ -129,13 +158,40 @@ function PaymentsPage() {
     setSaving(false);
   };
 
-  const handleConnect = () => {
-    toast.info(
-      `Connecting your ${
-        provider === "none" ? "" : PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label
-      } account is coming soon`,
-      { description: "Account linking (OAuth) ships in the next phase." },
-    );
+  const handleConnect = async () => {
+    if (!workspaceId || provider === "none") return;
+    setConnecting(true);
+    try {
+      // Persist current settings first so the provider row is in sync.
+      await saveSettings({
+        data: {
+          workspaceId,
+          provider,
+          depositType,
+          depositAmountCents: Math.round(parseFloat(depositAmount || "0") * 100),
+          depositPercent: parseFloat(depositPercent || "0"),
+          currency,
+        },
+      });
+
+      const res = await startConnect({
+        data: {
+          workspaceId,
+          provider: provider as Exclude<PaymentProvider, "none">,
+          environment: getStripeEnvironment(),
+          origin: window.location.origin,
+        },
+      });
+
+      if ("url" in res) {
+        window.location.href = res.url;
+        return;
+      }
+      toast.error(res.error);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't start onboarding.");
+    }
+    setConnecting(false);
   };
 
   const statusPill = useMemo(() => {
@@ -244,9 +300,16 @@ function PaymentsPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleConnect}
-                    disabled={connectionStatus === "connected"}
+                    disabled={connectionStatus === "connected" || connecting}
                   >
-                    {connectionStatus === "connected" ? "Connected" : "Connect account"}
+                    {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {connectionStatus === "connected"
+                      ? "Connected"
+                      : connecting
+                        ? "Connecting…"
+                        : connectionStatus === "pending"
+                          ? "Continue setup"
+                          : "Connect account"}
                   </Button>
                 </div>
               )}
