@@ -311,27 +311,34 @@ function PaymentsPage() {
                 <div className="mt-5 flex items-center justify-between rounded-xl bg-slate-50 p-4">
                   <p className="text-xs text-slate-600">
                     {connectionStatus === "connected"
-                      ? "Your account is connected and ready to accept payments."
-                      : "Connect your account so payouts go directly to you."}
+                      ? `Your ${PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label} account is connected and ready to accept payments.`
+                      : `Add your ${PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label} API keys so payouts go directly to you.`}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleConnect}
-                    disabled={connectionStatus === "connected" || connecting}
-                  >
-                    {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {connectionStatus === "connected"
-                      ? "Connected"
-                      : connecting
-                        ? "Connecting…"
-                        : connectionStatus === "pending"
-                          ? "Continue setup"
-                          : "Connect account"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {connectionStatus === "connected" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDisconnect}
+                        disabled={connecting}
+                      >
+                        Disconnect
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openConnect}
+                      disabled={connecting}
+                    >
+                      {connecting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {connectionStatus === "connected" ? "Update keys" : "Connect account"}
+                    </Button>
+                  </div>
                 </div>
               )}
             </section>
+
 
             {/* Deposit policy */}
             <section className="rounded-2xl border bg-white p-6 shadow-sm">
