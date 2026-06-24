@@ -1,886 +1,293 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import confetti from "canvas-confetti";
 import {
   ArrowLeft,
   ArrowRight,
-  Briefcase,
-  Calendar,
   Check,
-  CheckCircle2,
-  Clock,
-  DollarSign,
   Loader2,
-  Lock,
-  Mail,
   Plus,
-  Sparkles,
+  Star,
   Trash2,
-  User,
+  Upload,
   X,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
-import { checkSlugAvailable } from "@/lib/onboarding.functions";
-import { TENANT_ROOT_DOMAIN } from "@/lib/subdomain";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  completeOnboarding,
+  getOnboardingContext,
+  uploadOnboardingImage,
+} from "@/lib/onboarding.functions";
+import { LivePreview } from "@/components/onboarding/LivePreview";
+import {
+  INDUSTRIES,
+  INTAKE_TYPE_LABELS,
+  DURATION_OPTIONS,
+  CANCELLATION_OPTIONS,
+  GRACE_OPTIONS,
+  TIME_OPTIONS,
+  DAYS,
+  CALENDLY_URL,
+  getIndustry,
+  initialWizard,
+  emptyService,
+  uid,
+  durationToMinutes,
+  type WizardState,
+  type IndustryId,
+  type IntakeType,
+  type LocationType,
+} from "@/components/onboarding/wizard-config";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingWizard,
   head: () => ({
     meta: [
-      { title: "Get started — Onboarding" },
+      { title: "Set up your booking site — ProcSchedule" },
       {
         name: "description",
         content:
-          "Set up your scheduling workspace in four quick steps: account, business, services, and availability.",
+          "Build your branded booking site in a few quick steps — industry, identity, services, hours, policies, and intake.",
       },
     ],
   }),
 });
 
-type StepId = 0 | 1 | 2 | 3;
+const STEP_LABELS = [
+  "Industry",
+  "Identity",
+  "Photos",
+  "Services",
+  "Hours",
+  "Policies",
+  "Intake",
+  "Preview",
+];
 
-const STEPS = [
-  { id: 0, label: "Account", icon: User },
-  { id: 1, label: "Workspace", icon: Briefcase },
-  { id: 2, label: "Services", icon: Sparkles },
-  { id: 3, label: "Availability", icon: Calendar },
-] as const;
+// ---------- helpers ----------
 
-const DAYS = [
-  { dow: 1, label: "Monday" },
-  { dow: 2, label: "Tuesday" },
-  { dow: 3, label: "Wednesday" },
-  { dow: 4, label: "Thursday" },
-  { dow: 5, label: "Friday" },
-  { dow: 6, label: "Saturday" },
-  { dow: 0, label: "Sunday" },
-] as const;
-
-type ServiceDraft = {
-  id: string;
-  name: string;
-  duration: number;
-  priceDollars: string;
-};
-
-type DayDraft = {
-  dow: number;
-  active: boolean;
-  start: string;
-  end: string;
-};
-
-function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
+async function fileToBase64(file: File): Promise<{ base64: string; dataUrl: string }> {
+  const dataUrl: string = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+  const base64 = dataUrl.split(",")[1] ?? "";
+  return { base64, dataUrl };
 }
+
+function extractColors(dataUrl: string): Promise<[string, string] | null> {
+  return new Promise((resolve) => {
+    const CT = (window as unknown as { ColorThief?: new () => { getPalette: (img: HTMLImageElement, n: number) => number[][] } }).ColorThief;
+    if (!CT) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const thief = new CT();
+        const palette = thief.getPalette(img, 3);
+        const toHex = (rgb: number[]) =>
+          "#" + rgb.map((c) => c.toString(16).padStart(2, "0")).join("");
+        if (palette && palette.length >= 2) {
+          resolve([toHex(palette[0]), toHex(palette[1])]);
+        } else if (palette && palette.length === 1) {
+          resolve([toHex(palette[0]), toHex(palette[0])]);
+        } else {
+          resolve(null);
+        }
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+// ---------- main ----------
 
 function OnboardingWizard() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<StepId>(0);
-  const [direction, setDirection] = useState<1 | -1>(1);
-  const [submitting, setSubmitting] = useState(false);
-  const [topError, setTopError] = useState<string | null>(null);
-  const [finalizing, setFinalizing] = useState(false);
-
-  // Step 1
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  // Step 2
-  const [bizName, setBizName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [slugTouched, setSlugTouched] = useState(false);
-  const [slugStatus, setSlugStatus] = useState<
-    "idle" | "checking" | "available" | "taken" | "invalid"
-  >("idle");
-
-  // Step 3
-  const [services, setServices] = useState<ServiceDraft[]>([
-    {
-      id: crypto.randomUUID(),
-      name: "60-Minute Initial Consultation",
-      duration: 60,
-      priceDollars: "120.00",
-    },
-  ]);
-
-  // Step 4
-  const [days, setDays] = useState<DayDraft[]>(
-    DAYS.map((d) => ({
-      dow: d.dow,
-      active: d.dow >= 1 && d.dow <= 5,
-      start: "09:00",
-      end: "17:00",
-    })),
-  );
-
-  // Session state
+  const [step, setStep] = useState(1);
+  const [wizard, setWizard] = useState<WizardState>(initialWizard);
+  const [error, setError] = useState<string | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
-  const [memberId, setMemberId] = useState<string | null>(null);
 
-  const checkSlug = useServerFn(checkSlugAvailable);
+  const getCtx = useServerFn(getOnboardingContext);
 
-  // Auto-derive slug from business name
   useEffect(() => {
-    if (!slugTouched) setSlug(slugify(bizName));
-  }, [bizName, slugTouched]);
+    getCtx({ data: {} })
+      .then((ctx) => {
+        setWorkspaceId(ctx.workspaceId);
+        setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
+      })
+      .catch(() => {
+        navigate({ to: "/login" });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Debounced slug availability check
-  const slugDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (step !== 1) return;
-    if (slugDebounce.current) clearTimeout(slugDebounce.current);
-    if (!slug) {
-      setSlugStatus("idle");
+  const patch = (p: Partial<WizardState>) => setWizard((w) => ({ ...w, ...p }));
+
+  function validateStep(s: number): string | null {
+    if (s === 1 && !wizard.industry) return "Pick an industry to continue.";
+    if (s === 2 && !wizard.businessName.trim()) return "Business name is required.";
+    return null;
+  }
+
+  function next() {
+    const err = validateStep(step);
+    if (err) {
+      setError(err);
       return;
     }
-    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug) || slug.length < 2) {
-      setSlugStatus("invalid");
-      return;
-    }
-    setSlugStatus("checking");
-    slugDebounce.current = setTimeout(async () => {
-      try {
-        const res = await checkSlug({
-          data: {
-            slug,
-            excludeWorkspaceId: workspaceId ?? undefined,
-          },
-        });
-        setSlugStatus(res.available ? "available" : "taken");
-      } catch {
-        setSlugStatus("idle");
-      }
-    }, 350);
-    return () => {
-      if (slugDebounce.current) clearTimeout(slugDebounce.current);
-    };
-  }, [slug, step, workspaceId, checkSlug]);
-
-  const canNext = useMemo(() => {
-    if (submitting) return false;
-    if (step === 0) {
-      return (
-        firstName.trim().length >= 1 &&
-        lastName.trim().length >= 1 &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
-        password.length >= 8
-      );
-    }
-    if (step === 1) {
-      return bizName.trim().length >= 2 && slugStatus === "available";
-    }
-    if (step === 2) {
-      return services.every(
-        (s) =>
-          s.name.trim().length >= 1 &&
-          s.duration > 0 &&
-          !Number.isNaN(parseFloat(s.priceDollars)),
-      );
-    }
-    if (step === 3) {
-      const actives = days.filter((d) => d.active);
-      return actives.length >= 1 && actives.every((d) => d.start < d.end);
-    }
-    return false;
-  }, [step, submitting, firstName, lastName, email, password, bizName, slugStatus, services, days]);
-
-  async function handleStep0() {
-    setTopError(null);
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/onboarding`,
-        data: { full_name: `${firstName.trim()} ${lastName.trim()}`.trim() },
-      },
-    });
-    if (error) throw new Error(error.message);
-    if (!data.session) {
-      throw new Error(
-        "Account created but no active session was returned. Please log in.",
-      );
-    }
-
-    // Ensure profile reflects the entered name (the signup trigger uses metadata
-    // but we update explicitly in case the user edited fields).
-    await supabase
-      .from("profiles")
-      .update({
-        full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
-      })
-      .eq("id", data.user!.id);
-
-    // Trigger auto-created the solo workspace + owner membership. Fetch them.
-    const { data: ws, error: wsErr } = await supabase
-      .from("workspaces")
-      .select("id, slug, name")
-      .eq("owner_id", data.user!.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (wsErr || !ws) throw new Error(wsErr?.message ?? "Workspace not provisioned.");
-    setWorkspaceId(ws.id);
-
-    const { data: mem, error: memErr } = await supabase
-      .from("workspace_members")
-      .select("id")
-      .eq("workspace_id", ws.id)
-      .eq("user_id", data.user!.id)
-      .maybeSingle();
-    if (memErr || !mem) throw new Error(memErr?.message ?? "Membership not provisioned.");
-    setMemberId(mem.id);
-
-    // Seed step 2 with the auto-generated slug/name as a starting point.
-    if (!bizName) setBizName(ws.name ?? "");
+    setError(null);
+    setStep((s) => Math.min(8, s + 1));
   }
-
-  async function handleStep1() {
-    if (!workspaceId) throw new Error("Missing workspace.");
-    const { error } = await supabase
-      .from("workspaces")
-      .update({
-        name: bizName.trim(),
-        slug,
-        is_solo: false,
-      })
-      .eq("id", workspaceId);
-    if (error) {
-      if (error.code === "23505") throw new Error("That URL is already taken.");
-      throw new Error(error.message);
-    }
-  }
-
-  async function handleStep2() {
-    if (!workspaceId || !memberId) throw new Error("Missing workspace.");
-    const rows = services.map((s) => ({
-      workspace_id: workspaceId,
-      name: s.name.trim(),
-      duration_minutes: s.duration,
-      price_cents: Math.round(parseFloat(s.priceDollars || "0") * 100),
-      currency: "USD",
-    }));
-    const { data: inserted, error } = await supabase
-      .from("services")
-      .insert(rows)
-      .select("id");
-    if (error) throw new Error(error.message);
-
-    // Link the owner as provider on every created service.
-    if (inserted && inserted.length) {
-      const links = inserted.map((s) => ({
-        workspace_id: workspaceId,
-        service_id: s.id,
-        member_id: memberId,
-      }));
-      const { error: linkErr } = await supabase
-        .from("service_providers")
-        .insert(links);
-      if (linkErr) throw new Error(linkErr.message);
-    }
-  }
-
-  async function handleStep3() {
-    if (!workspaceId || !memberId) throw new Error("Missing workspace.");
-    const rows = days
-      .filter((d) => d.active)
-      .map((d) => ({
-        workspace_id: workspaceId,
-        member_id: memberId,
-        day_of_week: d.dow,
-        start_time: `${d.start}:00`,
-        end_time: `${d.end}:00`,
-      }));
-    if (rows.length === 0) return;
-    const { error } = await supabase.from("provider_availability").insert(rows);
-    if (error) throw new Error(error.message);
-  }
-
-  async function next() {
-    if (!canNext) return;
-    setSubmitting(true);
-    setTopError(null);
-    try {
-      if (step === 0) await handleStep0();
-      else if (step === 1) await handleStep1();
-      else if (step === 2) await handleStep2();
-      else if (step === 3) {
-        await handleStep3();
-        setFinalizing(true);
-        await new Promise((r) => setTimeout(r, 1500));
-        navigate({ to: "/dashboard/home" });
-        return;
-      }
-      setDirection(1);
-      setStep((s) => ((s + 1) as StepId));
-    } catch (e) {
-      setTopError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   function back() {
-    if (step === 0 || submitting) return;
-    setDirection(-1);
-    setTopError(null);
-    setStep((s) => ((s - 1) as StepId));
+    setError(null);
+    setStep((s) => Math.max(1, s - 1));
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
-      <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-5 py-10 sm:px-8">
-        {/* Header / progress */}
-        <header className="mb-10">
-          <div className="mb-1 flex items-center gap-2 text-sm font-medium text-indigo-600">
-            <Sparkles className="h-4 w-4" />
-            Welcome aboard
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-            Set up your scheduling workspace
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Takes about 2 minutes. You can refine everything later.
-          </p>
-
-          <ProgressBar current={step} />
-        </header>
-
-        {/* Card */}
-        <main className="flex-1">
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-[0_10px_40px_-20px_rgba(15,23,42,0.2)] backdrop-blur sm:p-8">
-            <AnimatePresence custom={direction} mode="wait">
-              {finalizing ? (
-                <SuccessState key="success" />
-              ) : (
-                <motion.div
-                  key={step}
-                  custom={direction}
-                  initial={{ opacity: 0, x: direction * 24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: direction * -24 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                >
-                  {step === 0 && (
-                    <StepAccount
-                      firstName={firstName}
-                      lastName={lastName}
-                      email={email}
-                      password={password}
-                      setFirstName={setFirstName}
-                      setLastName={setLastName}
-                      setEmail={setEmail}
-                      setPassword={setPassword}
-                    />
-                  )}
-                  {step === 1 && (
-                    <StepWorkspace
-                      bizName={bizName}
-                      slug={slug}
-                      slugStatus={slugStatus}
-                      onBizName={setBizName}
-                      onSlug={(v) => {
-                        setSlugTouched(true);
-                        setSlug(slugify(v));
-                      }}
-                    />
-                  )}
-                  {step === 2 && (
-                    <StepServices services={services} setServices={setServices} />
-                  )}
-                  {step === 3 && <StepAvailability days={days} setDays={setDays} />}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {topError && !finalizing && (
-              <div className="mt-5 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                <X className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{topError}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Footer nav */}
-          {!finalizing && (
-            <div className="mt-6 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={back}
-                disabled={step === 0 || submitting}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900 disabled:opacity-40"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </button>
-
-              <div className="flex items-center gap-3">
-                {step === 2 && services.length === 1 && services[0].name === "" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDirection(1);
-                      setStep((s) => ((s + 1) as StepId));
-                    }}
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800"
-                  >
-                    Skip for now
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={next}
-                  disabled={!canNext}
-                  className="group inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Working…
-                    </>
-                  ) : step === 3 ? (
-                    <>
-                      Finish setup
-                      <Check className="h-4 w-4" />
-                    </>
-                  ) : (
-                    <>
-                      Continue
-                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
-}
-
-/* ---------- progress ---------- */
-
-function ProgressBar({ current }: { current: number }) {
-  return (
-    <ol className="mt-7 flex items-center gap-2">
-      {STEPS.map((s, i) => {
-        const done = i < current;
-        const active = i === current;
-        const Icon = s.icon;
-        return (
-          <li key={s.id} className="flex flex-1 items-center gap-2">
-            <div
-              className={[
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-all",
-                done
-                  ? "border-indigo-600 bg-indigo-600 text-white"
-                  : active
-                    ? "border-indigo-600 bg-white text-indigo-600 ring-4 ring-indigo-100"
-                    : "border-slate-200 bg-white text-slate-400",
-              ].join(" ")}
-            >
-              {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-            </div>
-            <div className="hidden flex-col sm:flex">
-              <span
-                className={[
-                  "text-xs font-medium",
-                  active ? "text-slate-900" : done ? "text-slate-700" : "text-slate-400",
-                ].join(" ")}
-              >
-                Step {i + 1}
-              </span>
-              <span
-                className={[
-                  "text-xs",
-                  active || done ? "text-slate-600" : "text-slate-400",
-                ].join(" ")}
-              >
-                {s.label}
-              </span>
-            </div>
-            {i < STEPS.length - 1 && (
-              <div className="relative ml-2 hidden h-px flex-1 bg-slate-200 sm:block">
-                <motion.div
-                  className="absolute inset-y-0 left-0 bg-indigo-600"
-                  initial={false}
-                  animate={{ width: done ? "100%" : "0%" }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            )}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
-/* ---------- steps ---------- */
-
-function Field({
-  label,
-  icon: Icon,
-  children,
-  hint,
-}: {
-  label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-  hint?: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-700">
-        {Icon && <Icon className="h-3.5 w-3.5 text-slate-400" />}
-        {label}
-      </span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
-    </label>
-  );
-}
-
-const inputCls =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
-
-function StepAccount(props: {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  setFirstName: (v: string) => void;
-  setLastName: (v: string) => void;
-  setEmail: (v: string) => void;
-  setPassword: (v: string) => void;
-}) {
-  return (
-    <div>
-      <h2 className="text-xl font-semibold text-slate-900">Create your account</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        You'll be the owner of this workspace.
-      </p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Field label="First name" icon={User}>
-          <input
-            className={inputCls}
-            value={props.firstName}
-            onChange={(e) => props.setFirstName(e.target.value)}
-            placeholder="Jane"
-            autoComplete="given-name"
-          />
-        </Field>
-        <Field label="Last name" icon={User}>
-          <input
-            className={inputCls}
-            value={props.lastName}
-            onChange={(e) => props.setLastName(e.target.value)}
-            placeholder="Doe"
-            autoComplete="family-name"
-          />
-        </Field>
-        <div className="sm:col-span-2">
-          <Field label="Work email" icon={Mail}>
-            <input
-              type="email"
-              className={inputCls}
-              value={props.email}
-              onChange={(e) => props.setEmail(e.target.value)}
-              placeholder="jane@acme.com"
-              autoComplete="email"
-            />
-          </Field>
-        </div>
-        <div className="sm:col-span-2">
-          <Field
-            label="Password"
-            icon={Lock}
-            hint="At least 8 characters. Use a mix you'll remember."
-          >
-            <input
-              type="password"
-              className={inputCls}
-              value={props.password}
-              onChange={(e) => props.setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
-          </Field>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StepWorkspace(props: {
-  bizName: string;
-  slug: string;
-  slugStatus: "idle" | "checking" | "available" | "taken" | "invalid";
-  onBizName: (v: string) => void;
-  onSlug: (v: string) => void;
-}) {
-  return (
-    <div>
-      <h2 className="text-xl font-semibold text-slate-900">Name your business</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        This is what your clients will see on your booking page.
-      </p>
-      <div className="mt-6 space-y-4">
-        <Field label="Business name" icon={Briefcase}>
-          <input
-            className={inputCls}
-            value={props.bizName}
-            onChange={(e) => props.onBizName(e.target.value)}
-            placeholder="Acme Studio"
-            autoFocus
-          />
-        </Field>
-        <Field
-          label="Booking URL"
-          hint={`Your custom subdomain <your-slug>.${TENANT_ROOT_DOMAIN} activates shortly after signup. Until then, your page is live right away at ${TENANT_ROOT_DOMAIN}/<your-slug>.`}
-        >
-          <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
-            <span className="flex items-center bg-slate-50 px-3 text-xs text-slate-500">
-              https://
-            </span>
-            <input
-              className="flex-1 bg-transparent px-3 py-2.5 text-sm text-slate-900 outline-none"
-              value={props.slug}
-              onChange={(e) => props.onSlug(e.target.value)}
-              placeholder="acme-studio"
-            />
-            <span className="flex items-center bg-slate-50 px-3 text-xs text-slate-500">
-              .{TENANT_ROOT_DOMAIN}
-            </span>
-            <span className="flex w-10 items-center justify-center">
-              <SlugIndicator status={props.slugStatus} />
-            </span>
-          </div>
-          {props.slugStatus === "taken" && (
-            <span className="mt-1 block text-xs text-red-600">
-              Sorry, that URL is taken. Try a variation.
-            </span>
-          )}
-          {props.slugStatus === "invalid" && (
-            <span className="mt-1 block text-xs text-amber-600">
-              Use lowercase letters, numbers and hyphens only.
-            </span>
-          )}
-          {props.slugStatus === "available" && (
-            <span className="mt-1 block text-xs text-emerald-600">
-              Nice — that URL is available.
-            </span>
-          )}
-        </Field>
-      </div>
-    </div>
-  );
-}
-
-function SlugIndicator({
-  status,
-}: {
-  status: "idle" | "checking" | "available" | "taken" | "invalid";
-}) {
-  if (status === "checking")
-    return <Loader2 className="h-4 w-4 animate-spin text-slate-400" />;
-  if (status === "available")
-    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-  if (status === "taken") return <X className="h-4 w-4 text-red-500" />;
-  if (status === "invalid") return <X className="h-4 w-4 text-amber-500" />;
-  return null;
-}
-
-function StepServices({
-  services,
-  setServices,
-}: {
-  services: ServiceDraft[];
-  setServices: (s: ServiceDraft[]) => void;
-}) {
-  function update(id: string, patch: Partial<ServiceDraft>) {
-    setServices(services.map((s) => (s.id === id ? { ...s, ...patch } : s)));
-  }
-  function add() {
-    setServices([
-      ...services,
-      {
-        id: crypto.randomUUID(),
-        name: "",
-        duration: 30,
-        priceDollars: "50.00",
-      },
-    ]);
-  }
-  function remove(id: string) {
-    if (services.length === 1) return;
-    setServices(services.filter((s) => s.id !== id));
-  }
-
-  return (
-    <div>
-      <h2 className="text-xl font-semibold text-slate-900">Add your first service</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        What can clients book? You can add more later.
-      </p>
-
-      <div className="mt-6 space-y-3">
-        {services.map((s, idx) => (
-          <div
-            key={s.id}
-            className="rounded-xl border border-slate-200 bg-slate-50/50 p-4"
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                Service {idx + 1}
-              </span>
-              {services.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => remove(s.id)}
-                  className="text-slate-400 hover:text-red-500"
-                  aria-label="Remove service"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-6">
-              <div className="sm:col-span-6">
-                <Field label="Service name">
-                  <input
-                    className={inputCls}
-                    value={s.name}
-                    onChange={(e) => update(s.id, { name: e.target.value })}
-                    placeholder="60-Minute Initial Consultation"
-                  />
-                </Field>
-              </div>
-              <div className="sm:col-span-3">
-                <Field label="Duration" icon={Clock}>
-                  <select
-                    className={inputCls}
-                    value={s.duration}
-                    onChange={(e) =>
-                      update(s.id, { duration: parseInt(e.target.value, 10) })
-                    }
-                  >
-                    {[15, 30, 45, 60, 75, 90, 120, 180].map((m) => (
-                      <option key={m} value={m}>
-                        {m} minutes
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-              <div className="sm:col-span-3">
-                <Field label="Price" icon={DollarSign}>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
-                      $
-                    </span>
-                    <input
-                      inputMode="decimal"
-                      className={`${inputCls} pl-6`}
-                      value={s.priceDollars}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/[^0-9.]/g, "");
-                        update(s.id, { priceDollars: v });
-                      }}
-                      placeholder="0.00"
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Progress */}
+      <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="flex items-center gap-1.5">
+            {STEP_LABELS.map((label, i) => {
+              const idx = i + 1;
+              const active = idx === step;
+              const done = idx < step;
+              return (
+                <div key={label} className="flex flex-1 flex-col items-center gap-1">
+                  <div className="flex w-full items-center">
+                    <div
+                      className={`h-1.5 w-full rounded-full transition-colors ${
+                        done || active ? "bg-primary" : "bg-muted"
+                      }`}
                     />
                   </div>
-                </Field>
-              </div>
-            </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={add}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-indigo-400 hover:text-indigo-600"
-        >
-          <Plus className="h-4 w-4" />
-          Add another service
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function StepAvailability({
-  days,
-  setDays,
-}: {
-  days: DayDraft[];
-  setDays: (d: DayDraft[]) => void;
-}) {
-  function update(dow: number, patch: Partial<DayDraft>) {
-    setDays(days.map((d) => (d.dow === dow ? { ...d, ...patch } : d)));
-  }
-  return (
-    <div>
-      <h2 className="text-xl font-semibold text-slate-900">When are you available?</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Set your standard weekly hours. You can override specific dates later.
-      </p>
-      <div className="mt-6 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
-        {DAYS.map((d) => {
-          const row = days.find((x) => x.dow === d.dow)!;
-          return (
-            <div
-              key={d.dow}
-              className="grid grid-cols-12 items-center gap-3 px-4 py-3"
-            >
-              <div className="col-span-5 sm:col-span-4">
-                <div className="flex items-center gap-3">
-                  <Toggle
-                    checked={row.active}
-                    onChange={(v) => update(d.dow, { active: v })}
-                  />
                   <span
-                    className={`text-sm font-medium ${row.active ? "text-slate-900" : "text-slate-400"}`}
+                    className={`hidden text-[11px] sm:block ${
+                      active ? "font-semibold text-foreground" : "text-muted-foreground"
+                    }`}
                   >
-                    {d.label}
+                    {label}
                   </span>
                 </div>
-              </div>
-              <div className="col-span-7 sm:col-span-8">
-                {row.active ? (
-                  <div className="flex items-center justify-end gap-2">
-                    <input
-                      type="time"
-                      className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                      value={row.start}
-                      onChange={(e) =>
-                        update(d.dow, { start: e.target.value })
-                      }
-                    />
-                    <span className="text-xs text-slate-400">to</span>
-                    <input
-                      type="time"
-                      className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                      value={row.end}
-                      onChange={(e) => update(d.dow, { end: e.target.value })}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-right text-xs text-slate-400">
-                    Unavailable
-                  </div>
-                )}
-              </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-2">
+        {/* Form */}
+        <div className="order-1">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.2 }}
+            >
+              {step === 1 && <StepIndustry wizard={wizard} patch={patch} onPick={() => setTimeout(next, 120)} />}
+              {step === 2 && (
+                <StepIdentity wizard={wizard} patch={patch} workspaceId={workspaceId} />
+              )}
+              {step === 3 && <StepPhotos wizard={wizard} patch={patch} workspaceId={workspaceId} />}
+              {step === 4 && <StepServices wizard={wizard} patch={patch} />}
+              {step === 5 && <StepHours wizard={wizard} patch={patch} />}
+              {step === 6 && <StepPolicies wizard={wizard} patch={patch} />}
+              {step === 7 && <StepIntake wizard={wizard} patch={patch} />}
+              {step === 8 && <StepPreview wizard={wizard} navigate={navigate} />}
+            </motion.div>
+          </AnimatePresence>
+
+          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+
+          {step < 8 && (
+            <div className="mt-8 flex items-center justify-between">
+              {step > 1 ? (
+                <Button variant="ghost" onClick={back}>
+                  <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
+                </Button>
+              ) : (
+                <span />
+              )}
+              {step !== 1 && (
+                <Button onClick={next}>
+                  Continue <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              )}
             </div>
+          )}
+        </div>
+
+        {/* Live preview */}
+        <div className="order-2 lg:sticky lg:top-24 lg:self-start">
+          <LivePreview wizard={wizard} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type StepProps = {
+  wizard: WizardState;
+  patch: (p: Partial<WizardState>) => void;
+};
+
+// ---------- Step 1 ----------
+function StepIndustry({
+  wizard,
+  patch,
+  onPick,
+}: StepProps & { onPick: () => void }) {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">What kind of business do you run?</h1>
+      <p className="mt-1 text-sm text-muted-foreground">We'll tailor your setup based on your industry.</p>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2">
+        {INDUSTRIES.map((ind) => {
+          const Icon = ind.icon;
+          const selected = wizard.industry === ind.id;
+          return (
+            <button
+              key={ind.id}
+              onClick={() => {
+                const i = getIndustry(ind.id);
+                patch({
+                  industry: ind.id,
+                  bio: wizard.bio || "",
+                  policies: { ...wizard.policies, deposit: String(i.deposit) },
+                });
+                onPick();
+              }}
+              className={`flex flex-col items-start gap-3 rounded-xl border p-4 text-left transition-all hover:border-primary/60 hover:shadow-sm ${
+                selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"
+              }`}
+            >
+              <Icon className="h-6 w-6 text-primary" />
+              <span className="text-sm font-semibold">{ind.label}</span>
+            </button>
           );
         })}
       </div>
@@ -888,68 +295,777 @@ function StepAvailability({
   );
 }
 
-function Toggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+// ---------- Step 2 ----------
+function StepIdentity({
+  wizard,
+  patch,
+  workspaceId,
+}: StepProps & { workspaceId: string | null }) {
+  const industry = getIndustry(wizard.industry);
+  const upload = useServerFn(uploadOnboardingImage);
+  const [uploading, setUploading] = useState(false);
+  const [detected, setDetected] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onLogo(file: File) {
+    setUploading(true);
+    try {
+      const { base64, dataUrl } = await fileToBase64(file);
+      patch({ logoDataUrl: dataUrl });
+      const colors = await extractColors(dataUrl);
+      if (colors) {
+        patch({ primaryColor: colors[0], secondaryColor: colors[1] });
+        setDetected(true);
+      }
+      if (workspaceId) {
+        const res = await upload({
+          data: {
+            workspaceId,
+            kind: "logo",
+            fileName: file.name,
+            contentType: file.type || "image/png",
+            dataBase64: base64,
+          },
+        });
+        patch({ logoUrl: res.url });
+      }
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border transition ${
-        checked
-          ? "border-indigo-600 bg-indigo-600"
-          : "border-slate-200 bg-slate-200"
-      }`}
-    >
-      <motion.span
-        layout
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ${
-          checked ? "translate-x-4" : "translate-x-0.5"
-        } mt-[1px]`}
-      />
-    </button>
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">Tell us about your business</h1>
+      <p className="mt-1 text-sm text-muted-foreground">This shapes your booking site's identity.</p>
+
+      <div className="mt-6 space-y-5">
+        <div>
+          <Label htmlFor="bn">Business Name</Label>
+          <Input
+            id="bn"
+            value={wizard.businessName}
+            onChange={(e) => patch({ businessName: e.target.value })}
+            placeholder="e.g. Dolliimarie Hair Studio"
+            className="mt-1.5"
+          />
+        </div>
+        <div>
+          <Label htmlFor="title">Your Name / Title</Label>
+          <Input
+            id="title"
+            value={wizard.ownerTitle}
+            onChange={(e) => patch({ ownerTitle: e.target.value })}
+            placeholder="e.g. Melanie, Lead Stylist"
+            className="mt-1.5"
+          />
+        </div>
+        <div>
+          <Label htmlFor="bio">Short Bio or Tagline</Label>
+          <Textarea
+            id="bio"
+            value={wizard.bio}
+            maxLength={160}
+            onChange={(e) => patch({ bio: e.target.value })}
+            placeholder={industry.bioPlaceholder}
+            className="mt-1.5"
+          />
+          <p className="mt-1 text-right text-xs text-muted-foreground">{wizard.bio.length}/160</p>
+        </div>
+
+        <div>
+          <Label>Logo</Label>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onLogo(f);
+            }}
+          />
+          <div className="mt-1.5 flex items-center gap-4">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-muted/40 hover:border-primary/60"
+            >
+              {uploading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              ) : wizard.logoDataUrl ? (
+                <img src={wizard.logoDataUrl} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                <Upload className="h-5 w-5 text-muted-foreground" />
+              )}
+            </button>
+            <div className="text-xs text-muted-foreground">
+              PNG, JPG or SVG.
+              <br />
+              We'll pull your brand colors automatically.
+            </div>
+          </div>
+        </div>
+
+        {detected && (
+          <div className="rounded-xl border border-border p-4">
+            <p className="mb-3 text-sm font-medium">Colors detected from your logo.</p>
+            <div className="flex gap-6">
+              <ColorField
+                label="Primary"
+                value={wizard.primaryColor}
+                onChange={(v) => patch({ primaryColor: v })}
+              />
+              <ColorField
+                label="Secondary"
+                value={wizard.secondaryColor}
+                onChange={(v) => patch({ secondaryColor: v })}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-function SuccessState() {
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
-    <motion.div
-      key="success"
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col items-center justify-center py-10 text-center"
-    >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 18 }}
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"
-      >
-        <Check className="h-8 w-8" strokeWidth={3} />
-      </motion.div>
-      <h2 className="mt-5 text-xl font-semibold text-slate-900">
-        Setting up your workspace…
-      </h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Bringing you to your dashboard.
-      </p>
-      <div className="mt-6 h-1 w-40 overflow-hidden rounded-full bg-slate-100">
-        <motion.div
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 1.4, ease: "easeInOut" }}
-          className="h-full bg-emerald-500"
+    <div className="flex items-center gap-2">
+      <label className="relative h-9 w-9 cursor-pointer overflow-hidden rounded-lg border border-border">
+        <span className="block h-full w-full" style={{ backgroundColor: value }} />
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 cursor-pointer opacity-0"
         />
+      </label>
+      <div className="text-xs">
+        <p className="font-medium">{label}</p>
+        <p className="uppercase text-muted-foreground">{value}</p>
       </div>
-    </motion.div>
+    </div>
+  );
+}
+
+// ---------- Step 3 ----------
+function StepPhotos({
+  wizard,
+  patch,
+  workspaceId,
+}: StepProps & { workspaceId: string | null }) {
+  const upload = useServerFn(uploadOnboardingImage);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const slots = Array.from({ length: 9 });
+
+  async function addFiles(files: FileList) {
+    const remaining = 9 - wizard.portfolio.length;
+    const list = Array.from(files).slice(0, remaining);
+    for (const f of list) {
+      const id = uid();
+      const { base64, dataUrl } = await fileToBase64(f);
+      patch({ portfolio: [...wizardRef.current.portfolio, { id, dataUrl }] });
+      if (workspaceId) {
+        try {
+          const res = await upload({
+            data: {
+              workspaceId,
+              kind: "portfolio",
+              fileName: f.name,
+              contentType: f.type || "image/jpeg",
+              dataBase64: base64,
+            },
+          });
+          patch({
+            portfolio: wizardRef.current.portfolio.map((p) =>
+              p.id === id ? { ...p, url: res.url } : p,
+            ),
+          });
+        } catch {
+          /* ignore upload errors; preview still works */
+        }
+      }
+    }
+  }
+
+  // keep a ref to latest portfolio for async loops
+  const wizardRef = useRef(wizard);
+  wizardRef.current = wizard;
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">Show off your work</h1>
+      <p className="mt-1 text-sm text-muted-foreground">Add up to 9 photos for your gallery.</p>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => e.target.files && addFiles(e.target.files)}
+      />
+
+      <div className="mt-6 grid grid-cols-3 gap-3">
+        {slots.map((_, i) => {
+          const photo = wizard.portfolio[i];
+          if (photo) {
+            return (
+              <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-xl border border-border">
+                <img src={photo.dataUrl} alt="Portfolio" className="h-full w-full object-cover" />
+                <button
+                  onClick={() => patch({ portfolio: wizard.portfolio.filter((p) => p.id !== photo.id) })}
+                  className="absolute right-1.5 top-1.5 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          }
+          const isNext = i === wizard.portfolio.length;
+          return (
+            <button
+              key={i}
+              onClick={() => isNext && fileRef.current?.click()}
+              className={`flex aspect-square items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 ${
+                isNext ? "hover:border-primary/60" : "cursor-default opacity-60"
+              }`}
+            >
+              {isNext ? <Plus className="h-5 w-5 text-muted-foreground" /> : null}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-4 text-sm text-muted-foreground">
+        Don't have photos yet? You can add them later from your dashboard.
+      </p>
+    </div>
+  );
+}
+
+// ---------- Step 4 ----------
+function StepServices({ wizard, patch }: StepProps) {
+  const industry = getIndustry(wizard.industry);
+  const placeholders = industry.services;
+
+  function update(id: string, p: Partial<WizardState["services"][number]>) {
+    patch({ services: wizard.services.map((s) => (s.id === id ? { ...s, ...p } : s)) });
+  }
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">What services do you offer?</h1>
+      <p className="mt-1 text-sm text-muted-foreground">Add the services clients can book.</p>
+
+      <div className="mt-6 space-y-4">
+        {wizard.services.map((s, idx) => (
+          <div key={s.id} className="rounded-xl border border-border p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-1 space-y-3">
+                <Input
+                  value={s.name}
+                  onChange={(e) => update(s.id, { name: e.target.value })}
+                  placeholder={placeholders[idx % placeholders.length]}
+                />
+                <Textarea
+                  value={s.description}
+                  onChange={(e) => update(s.id, { description: e.target.value })}
+                  placeholder="Description (optional)"
+                  className="min-h-[60px]"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Duration</Label>
+                    <Select value={s.duration} onValueChange={(v) => update(s.id, { duration: v })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DURATION_OPTIONS.map((d) => (
+                          <SelectItem key={d.value} value={d.value}>
+                            {d.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Price ($)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={s.price}
+                      onChange={(e) => update(s.id, { price: e.target.value })}
+                      placeholder="0"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                {s.duration === "custom" && (
+                  <div>
+                    <Label className="text-xs">Custom duration (minutes)</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={s.customDuration}
+                      onChange={(e) => update(s.id, { customDuration: e.target.value })}
+                      placeholder="e.g. 75"
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+
+                {/* Options */}
+                <div className="space-y-2">
+                  {s.options.map((opt) => (
+                    <div key={opt.id} className="flex items-center gap-2">
+                      <Input
+                        value={opt.label}
+                        onChange={(e) =>
+                          update(s.id, {
+                            options: s.options.map((o) =>
+                              o.id === opt.id ? { ...o, label: e.target.value } : o,
+                            ),
+                          })
+                        }
+                        placeholder="Option (e.g. Small)"
+                      />
+                      <Input
+                        type="number"
+                        min="0"
+                        value={opt.price}
+                        onChange={(e) =>
+                          update(s.id, {
+                            options: s.options.map((o) =>
+                              o.id === opt.id ? { ...o, price: e.target.value } : o,
+                            ),
+                          })
+                        }
+                        placeholder="+$"
+                        className="w-24"
+                      />
+                      <button
+                        onClick={() =>
+                          update(s.id, { options: s.options.filter((o) => o.id !== opt.id) })
+                        }
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() =>
+                      update(s.id, {
+                        options: [...s.options, { id: uid(), label: "", price: "" }],
+                      })
+                    }
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    + Add option
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => patch({ services: wizard.services.filter((x) => x.id !== s.id) })}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <Button
+          variant="outline"
+          onClick={() =>
+            patch({
+              services: [
+                ...wizard.services,
+                emptyService(placeholders[wizard.services.length % placeholders.length] ?? ""),
+              ],
+            })
+          }
+        >
+          <Plus className="mr-1.5 h-4 w-4" /> Add Service
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Step 5 ----------
+function StepHours({ wizard, patch }: StepProps) {
+  function update(dow: number, p: Partial<WizardState["hours"][number]>) {
+    patch({ hours: wizard.hours.map((h) => (h.dow === dow ? { ...h, ...p } : h)) });
+  }
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">When are you available?</h1>
+      <p className="mt-1 text-sm text-muted-foreground">Set your weekly hours and location.</p>
+
+      <div className="mt-6 space-y-2">
+        {DAYS.map((d) => {
+          const h = wizard.hours.find((x) => x.dow === d.dow)!;
+          return (
+            <div key={d.dow} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2">
+              <div className="flex w-32 items-center gap-2">
+                <Switch checked={h.open} onCheckedChange={(v) => update(d.dow, { open: v })} />
+                <span className="text-sm font-medium">{d.label}</span>
+              </div>
+              {h.open ? (
+                <div className="flex flex-1 items-center gap-2">
+                  <TimeSelect value={h.start} onChange={(v) => update(d.dow, { start: v })} />
+                  <span className="text-muted-foreground">–</span>
+                  <TimeSelect value={h.end} onChange={(v) => update(d.dow, { end: v })} />
+                </div>
+              ) : (
+                <span className="flex-1 text-sm text-muted-foreground">Closed</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-8">
+        <Label className="text-sm font-semibold">Location</Label>
+        <RadioGroup
+          value={wizard.locationType}
+          onValueChange={(v) => patch({ locationType: v as LocationType })}
+          className="mt-3 space-y-3"
+        >
+          <LocationOption value="studio" label="I work at a studio or shop" />
+          <LocationOption value="mobile" label="I'm mobile / I go to clients" />
+          <LocationOption value="home" label="I work from home (address kept private)" />
+        </RadioGroup>
+
+        {(wizard.locationType === "studio" || wizard.locationType === "home") && (
+          <Input
+            value={wizard.address}
+            onChange={(e) => patch({ address: e.target.value })}
+            placeholder="Street address"
+            className="mt-3"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LocationOption({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <RadioGroupItem value={value} id={`loc-${value}`} />
+      <Label htmlFor={`loc-${value}`} className="font-normal">
+        {label}
+      </Label>
+    </div>
+  );
+}
+
+function TimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="h-9 w-32">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {TIME_OPTIONS.map((t) => (
+          <SelectItem key={t.value} value={t.value}>
+            {t.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// ---------- Step 6 ----------
+function StepPolicies({ wizard, patch }: StepProps) {
+  const pol = wizard.policies;
+  const set = (p: Partial<WizardState["policies"]>) => patch({ policies: { ...pol, ...p } });
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">Set your booking rules</h1>
+      <p className="mt-1 text-sm text-muted-foreground">These appear in your Booking Policy section.</p>
+
+      <div className="mt-6 space-y-5">
+        <div>
+          <Label>Non-refundable deposit required to book ($)</Label>
+          <Input
+            type="number"
+            min="0"
+            value={pol.deposit}
+            onChange={(e) => set({ deposit: e.target.value })}
+            className="mt-1.5"
+          />
+        </div>
+        <div>
+          <Label>Cancellation window</Label>
+          <Select value={pol.cancellation} onValueChange={(v) => set({ cancellation: v })}>
+            <SelectTrigger className="mt-1.5">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CANCELLATION_OPTIONS.map((o) => (
+                <SelectItem key={o} value={o}>
+                  {o}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Late arrival grace period</Label>
+          <Select value={pol.grace} onValueChange={(v) => set({ grace: v })}>
+            <SelectTrigger className="mt-1.5">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {GRACE_OPTIONS.map((o) => (
+                <SelectItem key={o} value={o}>
+                  {o}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
+          <Label className="font-normal">No additional guests allowed</Label>
+          <Switch checked={pol.noGuests} onCheckedChange={(v) => set({ noGuests: v })} />
+        </div>
+        <div>
+          <Label>Custom policy note (optional)</Label>
+          <Textarea
+            value={pol.customNote}
+            onChange={(e) => set({ customNote: e.target.value })}
+            placeholder="Any extra rules clients should know."
+            className="mt-1.5"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Step 7 ----------
+function StepIntake({ wizard, patch }: StepProps) {
+  const industry = getIndustry(wizard.industry);
+
+  function ensureSuggestions() {
+    if (wizard.intake.length === 0) {
+      patch({
+        intake: industry.intake.map((q) => ({ id: uid(), label: q.label, type: q.type })),
+      });
+    }
+  }
+  // populate suggestions on first render
+  useEffect(() => {
+    ensureSuggestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function update(id: string, p: Partial<WizardState["intake"][number]>) {
+    patch({ intake: wizard.intake.map((q) => (q.id === id ? { ...q, ...p } : q)) });
+  }
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">
+        What do you need to know before the appointment?
+      </h1>
+      <p className="mt-1 text-sm text-muted-foreground">Clients answer these when they book.</p>
+
+      <div className="mt-6 space-y-3">
+        {wizard.intake.map((q) => (
+          <div key={q.id} className="flex items-center gap-2 rounded-lg border border-border p-3">
+            <Input
+              value={q.label}
+              onChange={(e) => update(q.id, { label: e.target.value })}
+              placeholder="Question"
+              className="flex-1"
+            />
+            <Select value={q.type} onValueChange={(v) => update(q.id, { type: v as IntakeType })}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(INTAKE_TYPE_LABELS) as IntakeType[]).map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {INTAKE_TYPE_LABELS[t]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <button
+              onClick={() => patch({ intake: wizard.intake.filter((x) => x.id !== q.id) })}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() =>
+              patch({ intake: [...wizard.intake, { id: uid(), label: "", type: "short" }] })
+            }
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Add Question
+          </Button>
+          <button
+            onClick={() => patch({ intake: [] })}
+            className="text-sm text-muted-foreground hover:underline"
+          >
+            Skip for now
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Step 8 ----------
+function StepPreview({
+  wizard,
+  navigate,
+}: {
+  wizard: WizardState;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  const save = useServerFn(completeOnboarding);
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [slug, setSlug] = useState<string | null>(null);
+  const [saving, setSaving] = useState(true);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    save({
+      data: {
+        industry: (wizard.industry ?? "other") as IndustryId,
+        businessName: wizard.businessName,
+        ownerTitle: wizard.ownerTitle,
+        bio: wizard.bio,
+        logoUrl: wizard.logoUrl ?? null,
+        primaryColor: wizard.primaryColor,
+        secondaryColor: wizard.secondaryColor,
+        portfolioUrls: wizard.portfolio.map((p) => p.url).filter((u): u is string => !!u),
+        services: wizard.services
+          .filter((s) => s.name.trim())
+          .map((s) => ({
+            name: s.name.trim(),
+            description: s.description.trim(),
+            durationMinutes: durationToMinutes(s),
+            priceCents: Math.round((parseFloat(s.price) || 0) * 100),
+            options: s.options
+              .filter((o) => o.label.trim())
+              .map((o) => ({ label: o.label.trim(), price: parseFloat(o.price) || 0 })),
+          })),
+        hours: wizard.hours.map((h) => ({ dow: h.dow, open: h.open, start: h.start, end: h.end })),
+        location: { type: wizard.locationType, address: wizard.address.trim() },
+        policies: {
+          deposit: parseFloat(wizard.policies.deposit) || 0,
+          cancellation: wizard.policies.cancellation,
+          grace: wizard.policies.grace,
+          noGuests: wizard.policies.noGuests,
+          customNote: wizard.policies.customNote.trim(),
+        },
+        intake: wizard.intake
+          .filter((q) => q.label.trim())
+          .map((q) => ({ label: q.label.trim(), type: q.type })),
+      },
+    })
+      .then((res) => setSlug(res.slug))
+      .catch((e) => setSaveError(e?.message ?? "Could not save. Please try again."))
+      .finally(() => setSaving(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function pick(n: number) {
+    setRating(n);
+    if (n >= 4) {
+      confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 } });
+    }
+  }
+
+  const highRated = rating >= 4;
+  const lowRated = rating > 0 && rating < 4;
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">Here's your booking site.</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {saving ? "Saving your site…" : "Take a look — this is what your clients will see."}
+      </p>
+
+      <div className="mt-6 lg:hidden">
+        <LivePreview wizard={wizard} large />
+      </div>
+
+      {saveError && <p className="mt-4 text-sm text-destructive">{saveError}</p>}
+
+      <div className="mt-8 rounded-2xl border border-border p-6 text-center">
+        <p className="text-base font-semibold">How do you feel about your design?</p>
+        <div className="mt-4 flex justify-center gap-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              onClick={() => pick(n)}
+              onMouseEnter={() => setHover(n)}
+              onMouseLeave={() => setHover(0)}
+              aria-label={`${n} star`}
+            >
+              <Star
+                className={`h-8 w-8 transition-colors ${
+                  n <= (hover || rating)
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-muted-foreground"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+
+        {highRated && (
+          <div className="mt-6">
+            <p className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
+              <Check className="h-4 w-4 text-green-500" /> You're all set! Your site is live at{" "}
+              <span className="font-semibold">{slug ?? "your-business"}.procschedule.com</span>
+            </p>
+            <Button className="mt-4" onClick={() => navigate({ to: "/dashboard/home" })}>
+              Go to my dashboard
+            </Button>
+          </div>
+        )}
+
+        {lowRated && (
+          <div className="mt-6 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              No problem — let's make it perfect. Schedule a design session and I'll personally
+              update your site.
+            </p>
+            <div className="flex flex-col items-center gap-2">
+              <Button onClick={() => window.open(CALENDLY_URL, "_blank", "noopener,noreferrer")}>
+                Schedule a design call
+              </Button>
+              <Button variant="ghost" onClick={() => navigate({ to: "/dashboard/home" })}>
+                Go to dashboard anyway
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
