@@ -404,6 +404,9 @@ function StepAccount({
         <div>
           <Label htmlFor="acct-slug">Your URL</Label>
           <div className="mt-1.5 flex items-stretch overflow-hidden rounded-md border focus-within:ring-1 focus-within:ring-ring">
+            <span className="flex items-center bg-muted px-3 py-2 text-sm text-muted-foreground">
+              procschedule.com/
+            </span>
             <input
               id="acct-slug"
               value={slug}
@@ -415,9 +418,6 @@ function StepAccount({
               className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
               required
             />
-            <span className="flex items-center bg-muted px-3 py-2 text-sm text-muted-foreground">
-              .procschedule.com
-            </span>
             <div className="flex items-center px-3">
               {slugStatus === "checking" && (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
