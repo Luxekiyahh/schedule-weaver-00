@@ -384,7 +384,7 @@ function StepAccount({
       <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Your branded booking page will live at{" "}
-        <span className="font-mono">your-name.procschedule.com</span>
+        <span className="font-mono">procschedule.com/your-name</span>
       </p>
 
       <div className="mt-6 space-y-5">
