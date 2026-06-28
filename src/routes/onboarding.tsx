@@ -1312,7 +1312,7 @@ function StepPreview({
           <div className="mt-6">
             <p className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
               <Check className="h-4 w-4 text-green-500" /> You're all set! Your site is ready at{" "}
-              <span className="font-semibold">{slug ?? "your-business"}.procschedule.com</span>
+              <span className="font-semibold">procschedule.com/{slug ?? "your-business"}</span>
             </p>
             <Button className="mt-4" onClick={() => navigate({ to: "/pricing" })}>
               Choose your plan
