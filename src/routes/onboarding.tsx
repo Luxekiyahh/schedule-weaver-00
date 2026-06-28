@@ -384,7 +384,7 @@ function StepAccount({
       <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Your branded booking page will live at{" "}
-        <span className="font-mono">your-name.procschedule.com</span>
+        <span className="font-mono">procschedule.com/your-name</span>
       </p>
 
       <div className="mt-6 space-y-5">
@@ -404,6 +404,9 @@ function StepAccount({
         <div>
           <Label htmlFor="acct-slug">Your URL</Label>
           <div className="mt-1.5 flex items-stretch overflow-hidden rounded-md border focus-within:ring-1 focus-within:ring-ring">
+            <span className="flex items-center bg-muted px-3 py-2 text-sm text-muted-foreground">
+              procschedule.com/
+            </span>
             <input
               id="acct-slug"
               value={slug}
@@ -415,9 +418,6 @@ function StepAccount({
               className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
               required
             />
-            <span className="flex items-center bg-muted px-3 py-2 text-sm text-muted-foreground">
-              .procschedule.com
-            </span>
             <div className="flex items-center px-3">
               {slugStatus === "checking" && (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -1312,7 +1312,7 @@ function StepPreview({
           <div className="mt-6">
             <p className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
               <Check className="h-4 w-4 text-green-500" /> You're all set! Your site is ready at{" "}
-              <span className="font-semibold">{slug ?? "your-business"}.procschedule.com</span>
+              <span className="font-semibold">procschedule.com/{slug ?? "your-business"}</span>
             </p>
             <Button className="mt-4" onClick={() => navigate({ to: "/pricing" })}>
               Choose your plan
