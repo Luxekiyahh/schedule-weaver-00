@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { normalizeTheme, fontClass, cardRadius, layoutPadding } from "@/lib/theme";
+import { AlluringDollsBookingFlow } from "@/components/tenant-overrides/AlluringDollsBookingFlow";
 
 export const Route = createFileRoute("/booking/$slug")({
   component: BookingPage,
@@ -127,6 +128,31 @@ function BookingPage() {
       .finally(() => setSlotsLoading(false));
   }, [selectedDate, service?.id, providerId]);
 
+  const handleSubmit = async () => {
+    if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
+    setSubmitting(true);
+    try {
+      const res = await submit({
+        data: {
+          workspaceId: data.workspace.id,
+          serviceId: service.id,
+          providerMemberId: selectedSlot.member_id,
+          date: selectedDate,
+          time: selectedSlot.time,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          notes: form.notes,
+        },
+      });
+      setDone({ start_at: res.start_at });
+    } catch (e: any) {
+      toast.error(e.message ?? "Could not complete booking");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
@@ -159,6 +185,26 @@ function BookingPage() {
   }
 
   const ws = data.workspace;
+
+  if (ws.slug === "alluringdolls") {
+    return (
+      <AlluringDollsBookingFlow
+        workspaceName={ws.name}
+        services={data.services}
+        eligibleProviders={eligibleProviders}
+        step={step} setStep={setStep}
+        serviceId={serviceId} setServiceId={setServiceId}
+        providerId={providerId} setProviderId={setProviderId}
+        monthCursor={monthCursor} setMonthCursor={setMonthCursor}
+        selectedDate={selectedDate} setSelectedDate={setSelectedDate}
+        slotsLoading={slotsLoading} slots={slots} selectedSlot={selectedSlot} setSelectedSlot={setSelectedSlot}
+        form={form} setForm={setForm}
+        submitting={submitting} done={done}
+        onSubmit={handleSubmit}
+      />
+    );
+  }
+
   const theme = normalizeTheme((ws as { theme_config?: unknown }).theme_config);
   const pad = layoutPadding(theme.layout_mode);
   const radius = cardRadius(theme.card_style);
@@ -403,30 +449,7 @@ function BookingPage() {
                     style={{ backgroundColor: primary }}
                     className="text-white hover:opacity-90"
                     disabled={submitting || !form.firstName || !form.lastName || !form.email || !selectedSlot || !service}
-                    onClick={async () => {
-                      if (!service || !selectedSlot || !selectedDate || !data.workspace) return;
-                      setSubmitting(true);
-                      try {
-                        const res = await submit({
-                          data: {
-                            workspaceId: data.workspace.id,
-                            serviceId: service.id,
-                            providerMemberId: selectedSlot.member_id,
-                            date: selectedDate,
-                            time: selectedSlot.time,
-                            firstName: form.firstName,
-                            lastName: form.lastName,
-                            email: form.email,
-                            notes: form.notes,
-                          },
-                        });
-                        setDone({ start_at: res.start_at });
-                      } catch (e: any) {
-                        toast.error(e.message ?? "Could not complete booking");
-                      } finally {
-                        setSubmitting(false);
-                      }
-                    }}
+                    onClick={handleSubmit}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     Confirm booking
