@@ -11,6 +11,7 @@ import { DefaultStorefrontLayout } from "@/components/booking-themes/DefaultStor
 import { LuxuryBlushLayout } from "@/components/booking-themes/LuxuryBlushLayout";
 import { IndustrialDarkLayout } from "@/components/booking-themes/IndustrialDarkLayout";
 import { fontFamilyStack, type StorefrontThemeProps } from "@/components/booking-themes/types";
+import { AlluringDollsStorefront } from "@/components/tenant-overrides/AlluringDollsStorefront";
 
 const storefrontQuery = (slug: string) =>
   queryOptions({
@@ -101,6 +102,16 @@ export function StorefrontView({ data }: { data: any }) {
       <>
         <OwnerAdminOverlay ownerId={ws.owner_id} />
         <DolliimarieStorefront data={data} />
+      </>
+    );
+  }
+
+  // Bespoke Alluring Dolls page — dark luxury skin, real catalog data.
+  if (ws.slug === "alluringdolls") {
+    return (
+      <>
+        <OwnerAdminOverlay ownerId={ws.owner_id} />
+        <AlluringDollsStorefront data={data} />
       </>
     );
   }
