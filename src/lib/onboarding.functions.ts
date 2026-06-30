@@ -228,6 +228,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
     // 3. Services (replace)
     await supabaseAdmin.from("services").delete().eq("workspace_id", workspaceId);
+    let insertedServices: { id: string }[] = [];
     if (data.services.length) {
       const rows = data.services.map((s) => ({
         workspace_id: workspaceId,
@@ -237,8 +238,12 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         price_cents: s.priceCents,
         options: s.options,
       }));
-      const { error: svcErr } = await supabaseAdmin.from("services").insert(rows);
+      const { data: svcRows, error: svcErr } = await supabaseAdmin
+        .from("services")
+        .insert(rows)
+        .select("id");
       if (svcErr) throw new Error(svcErr.message);
+      insertedServices = svcRows ?? [];
     }
 
     // 4. Availability (replace owner member rows)
@@ -249,6 +254,23 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (member) {
+      // Make the owner a provider for every service (replace existing links).
+      await supabaseAdmin
+        .from("service_providers")
+        .delete()
+        .eq("workspace_id", workspaceId)
+        .eq("member_id", member.id);
+      if (insertedServices.length) {
+        const { error: spErr } = await supabaseAdmin.from("service_providers").insert(
+          insertedServices.map((s) => ({
+            workspace_id: workspaceId,
+            member_id: member.id,
+            service_id: s.id,
+          })),
+        );
+        if (spErr) throw new Error(spErr.message);
+      }
+
       await supabaseAdmin
         .from("provider_availability")
         .delete()
