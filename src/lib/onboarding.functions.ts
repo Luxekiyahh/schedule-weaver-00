@@ -254,6 +254,23 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (member) {
+      // Make the owner a provider for every service (replace existing links).
+      await supabaseAdmin
+        .from("service_providers")
+        .delete()
+        .eq("workspace_id", workspaceId)
+        .eq("member_id", member.id);
+      if (insertedServices.length) {
+        const { error: spErr } = await supabaseAdmin.from("service_providers").insert(
+          insertedServices.map((s) => ({
+            workspace_id: workspaceId,
+            member_id: member.id,
+            service_id: s.id,
+          })),
+        );
+        if (spErr) throw new Error(spErr.message);
+      }
+
       await supabaseAdmin
         .from("provider_availability")
         .delete()
