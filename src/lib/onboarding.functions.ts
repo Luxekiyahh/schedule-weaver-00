@@ -228,6 +228,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
     // 3. Services (replace)
     await supabaseAdmin.from("services").delete().eq("workspace_id", workspaceId);
+    let insertedServices: { id: string }[] = [];
     if (data.services.length) {
       const rows = data.services.map((s) => ({
         workspace_id: workspaceId,
@@ -237,8 +238,12 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         price_cents: s.priceCents,
         options: s.options,
       }));
-      const { error: svcErr } = await supabaseAdmin.from("services").insert(rows);
+      const { data: svcRows, error: svcErr } = await supabaseAdmin
+        .from("services")
+        .insert(rows)
+        .select("id");
       if (svcErr) throw new Error(svcErr.message);
+      insertedServices = svcRows ?? [];
     }
 
     // 4. Availability (replace owner member rows)
