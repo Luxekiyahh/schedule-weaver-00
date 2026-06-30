@@ -11,7 +11,7 @@ import { DefaultStorefrontLayout } from "@/components/booking-themes/DefaultStor
 import { LuxuryBlushLayout } from "@/components/booking-themes/LuxuryBlushLayout";
 import { IndustrialDarkLayout } from "@/components/booking-themes/IndustrialDarkLayout";
 import { fontFamilyStack, type StorefrontThemeProps } from "@/components/booking-themes/types";
-import { AlluringDollsStorefront } from "@/components/tenant-overrides/AlluringDollsStorefront";
+import { AlluringDollsStorefront } from "@/components/AlluringDollsStorefront";
 
 const storefrontQuery = (slug: string) =>
   queryOptions({
