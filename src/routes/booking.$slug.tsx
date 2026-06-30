@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { normalizeTheme, fontClass, cardRadius, layoutPadding } from "@/lib/theme";
-import { AlluringDollsBookingFlow } from "@/components/tenant-overrides/AlluringDollsBookingFlow";
+import { AlluringDollsBookingFlow } from "@/components/AlluringDollsBookingFlow";
 
 export const Route = createFileRoute("/booking/$slug")({
   component: BookingPage,
