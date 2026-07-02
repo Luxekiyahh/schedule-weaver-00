@@ -156,6 +156,26 @@ export const createBooking = createServerFn({ method: "POST" })
     const startIso = new Date(`${data.date}T${data.time}:00`).toISOString();
     const endIso = new Date(new Date(startIso).getTime() + svc.duration_minutes * 60000).toISOString();
 
+    // Re-check owner time-off blocks (schedule_exceptions) for this date.
+    const { data: blocks } = await supabaseAdmin
+      .from("schedule_exceptions")
+      .select("start_time, end_time")
+      .eq("workspace_id", data.workspaceId)
+      .eq("block_date", data.date);
+    const toMin = (t: string) => {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    };
+    const slotStartMin = toMin(data.time);
+    const slotEndMin = slotStartMin + svc.duration_minutes;
+    const isBlocked = (blocks ?? []).some((b) => {
+      const bStart = b.start_time ? toMin(b.start_time) : 0;
+      const bEnd = b.end_time ? toMin(b.end_time) : 24 * 60;
+      return bStart < slotEndMin && bEnd > slotStartMin;
+    });
+    if (isBlocked) throw new Error("That time is no longer available. Please pick another slot.");
+
+
     // Conflict re-check
     const { data: conflict } = await supabaseAdmin
       .from("appointments")
