@@ -61,7 +61,7 @@ export const getBookingSlots = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const dow = new Date(`${data.date}T12:00:00Z`).getUTCDay();
-    const [{ data: avail }, { data: appts }] = await Promise.all([
+    const [{ data: avail }, { data: appts }, { data: exceptions }] = await Promise.all([
       supabaseAdmin
         .from("provider_availability")
         .select("member_id, start_time, end_time, day_of_week")
@@ -76,7 +76,13 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         .gte("start_at", `${data.date}T00:00:00Z`)
         .lt("start_at", `${data.date}T23:59:59Z`)
         .neq("status", "cancelled"),
+      supabaseAdmin
+        .from("schedule_exceptions")
+        .select("block_date, start_time, end_time")
+        .eq("workspace_id", data.workspaceId)
+        .eq("block_date", data.date),
     ]);
+
 
     const toMin = (t: string) => {
       const [h, m] = t.split(":").map(Number);
@@ -85,11 +91,22 @@ export const getBookingSlots = createServerFn({ method: "POST" })
     const slots: { time: string; member_id: string }[] = [];
     const seenTimes = new Set<string>();
 
+    // Blocked ranges from schedule_exceptions (owner "Enforce Time Off").
+    // A block with null start/end covers the entire day.
+    const blockedRanges = (exceptions ?? []).map((ex) => ({
+      start: ex.start_time ? toMin(ex.start_time) : 0,
+      end: ex.end_time ? toMin(ex.end_time) : 24 * 60,
+    }));
+
     for (const a of avail ?? []) {
       const start = toMin(a.start_time);
       const end = toMin(a.end_time);
       const memberAppts = (appts ?? []).filter((p) => p.provider_id === a.member_id);
       for (let m = start; m + data.durationMinutes <= end; m += data.durationMinutes) {
+        const slotMinEnd = m + data.durationMinutes;
+        // Skip slots overlapping an owner time-off block.
+        const blocked = blockedRanges.some((b) => b.start < slotMinEnd && b.end > m);
+        if (blocked) continue;
         const hh = String(Math.floor(m / 60)).padStart(2, "0");
         const mm = String(m % 60).padStart(2, "0");
         const slotStartIso = new Date(`${data.date}T${hh}:${mm}:00`).toISOString();
@@ -138,6 +155,26 @@ export const createBooking = createServerFn({ method: "POST" })
 
     const startIso = new Date(`${data.date}T${data.time}:00`).toISOString();
     const endIso = new Date(new Date(startIso).getTime() + svc.duration_minutes * 60000).toISOString();
+
+    // Re-check owner time-off blocks (schedule_exceptions) for this date.
+    const { data: blocks } = await supabaseAdmin
+      .from("schedule_exceptions")
+      .select("start_time, end_time")
+      .eq("workspace_id", data.workspaceId)
+      .eq("block_date", data.date);
+    const toMin = (t: string) => {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    };
+    const slotStartMin = toMin(data.time);
+    const slotEndMin = slotStartMin + svc.duration_minutes;
+    const isBlocked = (blocks ?? []).some((b) => {
+      const bStart = b.start_time ? toMin(b.start_time) : 0;
+      const bEnd = b.end_time ? toMin(b.end_time) : 24 * 60;
+      return bStart < slotEndMin && bEnd > slotStartMin;
+    });
+    if (isBlocked) throw new Error("That time is no longer available. Please pick another slot.");
+
 
     // Conflict re-check
     const { data: conflict } = await supabaseAdmin

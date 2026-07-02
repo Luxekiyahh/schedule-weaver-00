@@ -246,6 +246,36 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       insertedServices = svcRows ?? [];
     }
 
+    // 3b. Mirror services into the public storefront catalog schema
+    // (service_categories + service_variants), which is what the public
+    // booking pages read. Without this, onboarded tenants show an empty
+    // storefront ("This business hasn't published any services yet.").
+    await supabaseAdmin.from("service_variants").delete().eq("workspace_id", workspaceId);
+    await supabaseAdmin.from("service_categories").delete().eq("workspace_id", workspaceId);
+    if (data.services.length) {
+      const categoryName = data.industry ? `${data.industry} Services` : "Services";
+      const { data: cat, error: catErr } = await supabaseAdmin
+        .from("service_categories")
+        .insert({ workspace_id: workspaceId, name: categoryName, sort_order: 0, active: true })
+        .select("id")
+        .single();
+      if (catErr) throw new Error(catErr.message);
+
+      const variantRows = data.services.map((s, i) => ({
+        workspace_id: workspaceId,
+        category_id: cat.id,
+        name: s.name,
+        description: s.description || null,
+        price_cents: s.priceCents,
+        duration_min: s.durationMinutes,
+        sort_order: i,
+        active: true,
+      }));
+      const { error: varErr } = await supabaseAdmin.from("service_variants").insert(variantRows);
+      if (varErr) throw new Error(varErr.message);
+    }
+
+
     // 4. Availability (replace owner member rows)
     const { data: member } = await supabaseAdmin
       .from("workspace_members")
