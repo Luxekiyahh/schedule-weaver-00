@@ -91,6 +91,13 @@ export const getBookingSlots = createServerFn({ method: "POST" })
     const slots: { time: string; member_id: string }[] = [];
     const seenTimes = new Set<string>();
 
+    // Blocked ranges from schedule_exceptions (owner "Enforce Time Off").
+    // A block with null start/end covers the entire day.
+    const blockedRanges = (exceptions ?? []).map((ex) => ({
+      start: ex.start_time ? toMin(ex.start_time) : 0,
+      end: ex.end_time ? toMin(ex.end_time) : 24 * 60,
+    }));
+
     for (const a of avail ?? []) {
       const start = toMin(a.start_time);
       const end = toMin(a.end_time);
