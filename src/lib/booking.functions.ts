@@ -103,6 +103,10 @@ export const getBookingSlots = createServerFn({ method: "POST" })
       const end = toMin(a.end_time);
       const memberAppts = (appts ?? []).filter((p) => p.provider_id === a.member_id);
       for (let m = start; m + data.durationMinutes <= end; m += data.durationMinutes) {
+        const slotMinEnd = m + data.durationMinutes;
+        // Skip slots overlapping an owner time-off block.
+        const blocked = blockedRanges.some((b) => b.start < slotMinEnd && b.end > m);
+        if (blocked) continue;
         const hh = String(Math.floor(m / 60)).padStart(2, "0");
         const mm = String(m % 60).padStart(2, "0");
         const slotStartIso = new Date(`${data.date}T${hh}:${mm}:00`).toISOString();
