@@ -61,7 +61,7 @@ export const getBookingSlots = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const dow = new Date(`${data.date}T12:00:00Z`).getUTCDay();
-    const [{ data: avail }, { data: appts }] = await Promise.all([
+    const [{ data: avail }, { data: appts }, { data: exceptions }] = await Promise.all([
       supabaseAdmin
         .from("provider_availability")
         .select("member_id, start_time, end_time, day_of_week")
@@ -76,7 +76,13 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         .gte("start_at", `${data.date}T00:00:00Z`)
         .lt("start_at", `${data.date}T23:59:59Z`)
         .neq("status", "cancelled"),
+      supabaseAdmin
+        .from("schedule_exceptions")
+        .select("block_date, start_time, end_time")
+        .eq("workspace_id", data.workspaceId)
+        .eq("block_date", data.date),
     ]);
+
 
     const toMin = (t: string) => {
       const [h, m] = t.split(":").map(Number);
