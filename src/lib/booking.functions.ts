@@ -279,12 +279,13 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   const fullName = `${data.firstName} ${data.lastName}`.trim();
   const { data: existing } = await supabaseAdmin
     .from("customers")
-    .select("id")
+    .select("id, require_prepay")
     .eq("workspace_id", data.workspaceId)
     .eq("email", data.email)
     .maybeSingle();
 
   let customerId = existing?.id as string | undefined;
+  let requirePrepay = Boolean(existing?.require_prepay);
   if (!customerId) {
     const { data: ins, error: insErr } = await supabaseAdmin
       .from("customers")
@@ -293,6 +294,15 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
       .single();
     if (insErr) throw new Error(insErr.message);
     customerId = ins.id;
+  }
+
+  // No-show prepay only applies on Enterprise workspaces with the feature.
+  if (requirePrepay) {
+    const { data: hasFeature } = await supabaseAdmin.rpc("workspace_has_feature", {
+      _workspace_id: data.workspaceId,
+      _feature: "no_show_prepay",
+    });
+    requirePrepay = Boolean(hasFeature);
   }
 
   // Compose notes with add-ons so providers + emails can surface them.
