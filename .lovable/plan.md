@@ -1,47 +1,45 @@
-# Landing Page Overhaul — Premium Editorial
+# Apply the ProcSchedule Editorial Brand to /login, /pricing, and /dashboard
 
-Rebuild `src/routes/index.tsx` (the only file involved) from the current dark/neon developer aesthetic into a clean, high-end editorial look for a broad market of service professionals (consultants, contractors, creatives). No backend, routing, or business-logic changes.
+Bring the auth, pricing, and dashboard surfaces in line with the new landing-page identity: ink `#141414` on off-white `#f8f7f4`, solid dark buttons, muted-gray secondary text, serif (`Georgia`) display headings, and the flat "ProcSchedule" wordmark. This is a presentation-only reskin — no logic, data, routing, or checkout behavior changes.
 
-## 1. Aesthetic direction
-- **Background:** soft off-white (`#f8f7f4` / warm paper), remove all dark `#0a0a0f` surfaces.
-- **Typography:** dark high-contrast ink (`#141414`) headings, muted gray body. Large editorial serif or refined display headline paired with a clean sans body (keeps a "premium business tool" feel, not developer/neon).
-- **Remove:** neon indigo→fuchsia gradients, glow blurs, grid overlay, `font-mono` labels, macOS-window "dev" chrome, the `src/routes/` code teaser strip, and the "type-safe / live" dev accents.
-- **Accent:** a single restrained accent (deep ink or a muted editorial tone) for buttons/links instead of gradients. Buttons become solid dark-on-light.
-- Keep framer-motion entrance animations (subtle), keep the Demo modal but restyle it light (or simplify its copy to remove dev jargon).
+## Brand tokens (applied consistently)
+- Primary/ink: `#141414` (buttons, active states, headings, icon chips)
+- Surface: `#f8f7f4` page background; `white` cards with `border-[#141414]/10`
+- Secondary text: `#141414/60`; muted `#141414/45`
+- Accent swaps: every `indigo-*` / `violet-*` accent → ink `#141414` (or `#141414/5`–`/10` tints); keep semantic status colors (emerald/amber/rose) for confirmed/pending/no-show
+- Display headings use `font-family: Georgia, 'Times New Roman', serif`
+- Focus rings: `focus:border-[#141414] focus:ring-[#141414]/10`
 
-## 2. Nav
-- Light sticky header, dark wordmark "ProcSchedule", simple links (Features, Pricing). Solid dark "Get Started" button.
+## 1. `/login` (`src/routes/login.tsx`)
+- Page bg gradient → flat `#f8f7f4`.
+- Logo chip `from-indigo-500 to-violet-600` → solid `#141414` with `#f8f7f4` calendar icon.
+- Inputs: indigo focus states → ink focus states.
+- Submit button stays dark (align to `#141414`).
+- "Sign up" link `text-indigo-600` → ink, underline on hover.
+- Heading in serif to match brand.
 
-## 3. Hero (rewrite)
-- **Remove** the "AI-NATIVE · MULTI-TENANT · v2.0" badge entirely.
-- **Headline:** "Stop Sending Your Clients to a Generic Calendar."
-- **Sub-headline:** "The ultimate booking and retention engine for service professionals. Skip the DIY website builders—we custom-code a high-converting scheduling site for your business for a flat $100 setup."
-- Primary CTA (e.g. "Get Started") + secondary "Watch Demo". Replace neon trust chips with neutral editorial ones (or drop them).
+## 2. `/pricing` (`src/routes/pricing.tsx`)
+- Page bg `bg-slate-50` → `#f8f7f4`; H1 to serif.
+- Billing toggle active state `bg-indigo-600` → `#141414`.
+- Featured (pro) card ring/border `indigo-500` → `#141414`; "Most popular" badge `bg-indigo-600` → ink.
+- Feature check icons `text-indigo-600` → ink.
+- Setup-fee callout card `border-indigo-200 from-indigo-50` + `bg-indigo-600` icon → neutral ink treatment (light `#141414/5` panel, ink icon chip).
+- Bottom links `text-indigo-600` → ink.
 
-## 4. Replace dashboard mockup
-- Remove the hair-extensions lineup (Ayana Brooks / "Luxury Install 22" / Color #4", etc.) and all salon references (Scissors icon, "Good morning, Melanie", revenue-per-service styling).
-- Build a **clean abstract calendar + appointments UI** on a light card: a small week/day calendar strip plus appointment rows for broad services:
-  - "Strategy Consultation"
-  - "Site Inspection"
-  - plus 1–2 neutral generic entries (e.g. "Discovery Call", "Project Review").
-- Neutral avatars/initials, muted status pills (Confirmed / Pending), light card with soft shadow and thin border. No macOS dots, no dev strip.
+## 3. `/dashboard` (all `dashboard.*.tsx` pages)
+Reskin every dashboard surface for a consistent look:
+- **dashboard.home.tsx**: eyebrow, action-card tones (`indigo`/`violet` → ink), the `from-slate-900 to-indigo-900` booking-link banner → solid `#141414`, empty-state icon chips, "AI Storefront Designer" tone, save button, focus states.
+- **dashboard.billing.tsx**: plan badge, billing toggle, current-plan ring, check icons, upsell card gradient/icon → ink.
+- **dashboard.calendar.tsx**: confirmed event style (`bg-indigo-50 border-indigo-500`) → ink-tinted; today highlight `text-indigo-600` / `bg-indigo-50/40` → ink; "view" link color.
+- **dashboard.availability.tsx**: info panel `bg-indigo-50/40 text-indigo-900` → neutral ink panel.
+- **dashboard.notifications.tsx**: icon chip `bg-indigo-100 text-indigo-600` → ink tint.
+- **dashboard.services.tsx**: empty-state icon chip → ink tint.
+- Sweep remaining `indigo-*`/`violet-*` accents in dashboard pages (services/staff/payments/customize) to the ink palette; leave status/semantic colors intact.
 
-## 5. Feature grid (rewrite all four)
-Replace icons/gradients with clean line icons on a light card. New copy:
-1. **The Done-For-You Booking Site** — "No clunky templates or coding required. We build you a fully branded, conversion-optimized storefront ready to accept deposits on day one."
-2. **Smart Lifecycle Automations** — "Trigger automated follow-ups based on the exact service booked, creating a seamless sales machine that brings clients back."
-3. **Strict No-Show Protection** — "Dynamic deposit rules that adapt to client history. Automatically require 100% upfront payments from clients with a history of late cancellations."
-4. **Secure Client Portfolios** — "Keep comprehensive records, project files, and private notes attached directly to the client's booking profile."
-- Update the section eyebrow/heading away from "Built for what Calendly forgot." dev framing to a broad professional message (e.g. "Everything you need to book and retain clients").
+## Out of scope
+- Storefront/booking components (`AlluringDolls*`, onboarding `LivePreview`) that carry per-tenant theming — those reflect the customer's brand, not ProcSchedule's, so they stay.
+- No copy rewrites beyond what's needed; no new features.
 
-## 6. Final CTA + footer
-- Restyle the closing CTA card to light editorial (remove radial neon glow); update copy to broad-market ("Your custom booking site, built for a flat $100 setup.").
-- Light footer, remove "Engineered for service teams" dev tone, keep sign in / get started links.
-
-## 7. SEO head()
-- Update `title` / `description` / `og:*` to broad-market, benefit-led copy (remove "Procedural Powerhouse", "AI-driven, multi-tenant" jargon). Keep single H1 = the new hero headline.
-
-## Technical notes
-- All changes are contained in `src/routes/index.tsx`; colors are currently hardcoded utility classes, so the rewrite swaps them for light equivalents (no `styles.css` token changes required, though I can optionally add tokens if you prefer).
-- Tenant-subdomain branch (`TenantStorefrontBySlug`) is untouched.
-- Verify with a typecheck and a Playwright screenshot of `/` after the rewrite.
+## Verification
+- `tsgo --noEmit` typecheck.
+- Playwright screenshots of `/login`, `/pricing`, and `/dashboard/home` (and calendar/billing) to confirm the ink-on-paper brand renders with no leftover indigo/violet accents.
