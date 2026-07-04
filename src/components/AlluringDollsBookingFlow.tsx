@@ -280,61 +280,16 @@ export function AlluringDollsBookingFlow({
                       No services available yet.
                     </p>
                   ) : (
-                    <div className="mt-5 space-y-3">
-                      {services.map((s) => {
-                        const active = serviceId === s.id;
-                        return (
-                          <button
-                            key={s.id}
-                            onClick={() => {
-                              setServiceId(s.id);
-                              setProviderId(ANY);
-                            }}
-                            data-active={active}
-                            className="ad-row group flex w-full items-start gap-4 p-4 text-left"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between gap-3">
-                                <h3
-                                  className="text-sm font-medium"
-                                  style={{ color: "var(--ad-ivory)" }}
-                                >
-                                  {s.name}
-                                </h3>
-                                <span
-                                  className="text-base font-medium"
-                                  style={{ color: "var(--ad-gold)" }}
-                                >
-                                  {money(s.price_cents, s.currency)}
-                                </span>
-                              </div>
-                              {s.description && (
-                                <p
-                                  className="mt-1 text-xs line-clamp-2"
-                                  style={{ color: "var(--ad-smoke)" }}
-                                >
-                                  {s.description}
-                                </p>
-                              )}
-                              <div
-                                className="mt-2 inline-flex items-center gap-1 text-[11px] uppercase tracking-wider"
-                                style={{ color: "var(--ad-smoke)" }}
-                              >
-                                <Clock className="h-3 w-3" /> {s.duration_minutes} min
-                              </div>
-                            </div>
-                            <div
-                              className="mt-1 grid h-5 w-5 place-items-center rounded-full transition"
-                              style={{
-                                border: `1px solid ${active ? "var(--ad-gold)" : "var(--ad-border)"}`,
-                                backgroundColor: active ? "var(--ad-gold)" : "transparent",
-                              }}
-                            >
-                              {active && <Check className="h-3 w-3" style={{ color: "#1a1108" }} />}
-                            </div>
-                          </button>
-                        );
-                      })}
+                    <div className="mt-5">
+                      <AdCategoryAccordion
+                        services={services}
+                        categories={categories}
+                        selectedId={serviceId}
+                        onSelect={(id) => {
+                          setServiceId(id);
+                          setProviderId(ANY);
+                        }}
+                      />
                     </div>
                   )}
                   <div className="mt-6 flex justify-end">
