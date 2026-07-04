@@ -10,6 +10,7 @@ import {
   createSquareDepositCheckout,
   confirmSquareDepositBooking,
 } from "@/lib/booking.functions";
+import { joinWaitlist } from "@/lib/waitlist.functions";
 
 import {
   ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight,
