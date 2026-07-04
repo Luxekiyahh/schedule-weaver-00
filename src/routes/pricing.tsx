@@ -125,17 +125,17 @@ function PricingPage() {
             <button
               type="button"
               onClick={() => setPeriod("monthly")}
-              className={`rounded-full px-4 py-1.5 transition ${period === "monthly" ? "bg-indigo-600 text-white" : "text-slate-600"}`}
+              className={`rounded-full px-4 py-1.5 transition ${period === "monthly" ? "bg-[#141414] text-[#f8f7f4]" : "text-slate-600"}`}
             >
               Monthly
             </button>
             <button
               type="button"
               onClick={() => setPeriod("yearly")}
-              className={`rounded-full px-4 py-1.5 transition ${period === "yearly" ? "bg-indigo-600 text-white" : "text-slate-600"}`}
+              className={`rounded-full px-4 py-1.5 transition ${period === "yearly" ? "bg-[#141414] text-[#f8f7f4]" : "text-slate-600"}`}
             >
               Annual
-              <span className={`ml-1.5 text-xs ${period === "yearly" ? "text-indigo-100" : "text-emerald-600"}`}>2 months free</span>
+              <span className={`ml-1.5 text-xs ${period === "yearly" ? "text-[#f8f7f4]/60" : "text-emerald-600"}`}>2 months free</span>
             </button>
           </div>
         </header>
@@ -148,13 +148,13 @@ function PricingPage() {
               <div
                 key={plan.tier}
                 className={`rounded-2xl border bg-white p-6 flex flex-col ${
-                  plan.tier === "pro" ? "border-indigo-500 ring-1 ring-indigo-500 shadow-lg" : "border-slate-200"
+                  plan.tier === "pro" ? "border-[#141414] ring-1 ring-[#141414] shadow-lg" : "border-slate-200"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">{plan.name}</h2>
                   {plan.tier === "pro" && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-600 text-white px-2.5 py-1 text-xs font-medium">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#141414] text-[#f8f7f4] px-2.5 py-1 text-xs font-medium">
                       <Sparkles className="h-3 w-3" /> Most popular
                     </span>
                   )}
@@ -170,7 +170,7 @@ function PricingPage() {
                 <ul className="mt-6 space-y-3 text-sm flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
-                      <Check className="h-4 w-4 text-indigo-600 mt-0.5 shrink-0" />
+                      <Check className="h-4 w-4 text-[#141414] mt-0.5 shrink-0" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -189,9 +189,9 @@ function PricingPage() {
         </div>
 
         {/* Optional Done-For-You Design add-on */}
-        <div className="mt-10 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-6 md:flex md:items-center md:justify-between md:gap-6">
+        <div className="mt-10 rounded-2xl border border-[#141414]/15 bg-[#141414]/[0.04] p-6 md:flex md:items-center md:justify-between md:gap-6">
           <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-indigo-600 p-2.5 text-white shrink-0">
+            <div className="rounded-xl bg-[#141414] p-2.5 text-[#f8f7f4] shrink-0">
               <Wand2 className="h-5 w-5" />
             </div>
             <div>
@@ -211,7 +211,7 @@ function PricingPage() {
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <a href="/dashboard/billing" className="text-indigo-600 font-medium hover:underline">
+          <a href="/dashboard/billing" className="text-[#141414] font-medium hover:underline">
             Manage your plan
           </a>
         </p>
