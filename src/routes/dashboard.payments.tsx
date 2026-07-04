@@ -159,8 +159,8 @@ function PaymentsPage() {
 
   const openConnect = () => {
     if (provider === "none") return;
-    // Default environment guess: preview → sandbox, custom domain → live.
-    setCredEnv(getStripeEnvironment());
+    // Square is live-only; other providers default by environment guess.
+    setCredEnv(provider === "square" ? "live" : getStripeEnvironment());
     setStripeSecretKey("");
     setStripePublishableKey("");
     setPaypalClientId("");
@@ -448,17 +448,23 @@ function PaymentsPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-slate-500">Environment</Label>
-              <select
-                className="rounded-md border border-slate-200 px-2 py-1 text-sm"
-                value={credEnv}
-                onChange={(e) => setCredEnv(e.target.value as "sandbox" | "live")}
-              >
-                <option value="live">Live</option>
-                <option value="sandbox">Sandbox / Test</option>
-              </select>
-            </div>
+            {provider === "square" ? (
+              <p className="text-xs text-slate-500">
+                Square runs in live mode — deposits are charged to your real Square account.
+              </p>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500">Environment</Label>
+                <select
+                  className="rounded-md border border-slate-200 px-2 py-1 text-sm"
+                  value={credEnv}
+                  onChange={(e) => setCredEnv(e.target.value as "sandbox" | "live")}
+                >
+                  <option value="live">Live</option>
+                  <option value="sandbox">Sandbox / Test</option>
+                </select>
+              </div>
+            )}
 
             {provider === "stripe" && (
               <>

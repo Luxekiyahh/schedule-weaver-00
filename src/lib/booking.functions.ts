@@ -570,6 +570,15 @@ export const createSquareDepositCheckout = createServerFn({ method: "POST" })
       throw new Error(json.errors?.[0]?.detail || "Could not start checkout. Please try again.");
     }
 
+    // Persist the Square order id so confirmation can look it up directly
+    // instead of scanning the location's recent orders.
+    if (json.payment_link.order_id) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ square_order_id: json.payment_link.order_id })
+        .eq("id", inserted.appointmentId);
+    }
+
     return { url: json.payment_link.url, appointmentId: inserted.appointmentId, depositCents };
   });
 
@@ -581,7 +590,7 @@ export const confirmSquareDepositBooking = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: appt } = await supabaseAdmin
       .from("appointments")
-      .select("id, workspace_id, status, start_at, end_at")
+      .select("id, workspace_id, status, start_at, end_at, deposit_cents, square_order_id")
       .eq("id", data.appointmentId)
       .maybeSingle();
     if (!appt) throw new Error("Booking not found.");
@@ -597,36 +606,62 @@ export const confirmSquareDepositBooking = createServerFn({ method: "POST" })
     if (!token || !locationId) throw new Error("Payment account unavailable.");
 
     const base = squareApiBase(creds?.environment);
-    // Square has no lookup-by-reference_id, so search this location's recent
-    // orders and match on the reference_id we set when creating the link.
-    const res = await fetch(`${base}/v2/orders/search`, {
-
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "Square-Version": SQUARE_VERSION,
-      },
-      body: JSON.stringify({
-        location_ids: [locationId],
-        query: {
-          filter: {
-            state_filter: { states: ["COMPLETED", "OPEN"] },
-          },
-        },
-        limit: 100,
-      }),
-    });
-    const json = (await res.json().catch(() => ({}))) as {
-      orders?: { id: string; reference_id?: string; state?: string; net_amount_due_money?: { amount?: number } }[];
-      errors?: { detail?: string }[];
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Square-Version": SQUARE_VERSION,
     };
-    if (!res.ok) throw new Error(json.errors?.[0]?.detail || "Could not verify payment.");
 
-    const order = (json.orders ?? []).find((o) => o.reference_id === data.appointmentId);
+    type SquareOrder = {
+      id: string;
+      reference_id?: string;
+      state?: string;
+      net_amount_due_money?: { amount?: number };
+      total_money?: { amount?: number };
+    };
+
+    let order: SquareOrder | undefined;
+
+    if (appt.square_order_id) {
+      // Preferred path: retrieve the exact order we created for this booking.
+      const res = await fetch(`${base}/v2/orders/${appt.square_order_id}`, { headers });
+      const json = (await res.json().catch(() => ({}))) as {
+        order?: SquareOrder;
+        errors?: { detail?: string }[];
+      };
+      if (!res.ok) throw new Error(json.errors?.[0]?.detail || "Could not verify payment.");
+      order = json.order;
+    } else {
+      // Fallback for legacy rows without a stored order id: scan recent orders
+      // and match on the reference_id we set when creating the link.
+      const res = await fetch(`${base}/v2/orders/search`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          location_ids: [locationId],
+          query: { filter: { state_filter: { states: ["COMPLETED", "OPEN"] } } },
+          limit: 100,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        orders?: SquareOrder[];
+        errors?: { detail?: string }[];
+      };
+      if (!res.ok) throw new Error(json.errors?.[0]?.detail || "Could not verify payment.");
+      order = (json.orders ?? []).find((o) => o.reference_id === data.appointmentId);
+    }
+
     if (!order) throw new Error("Your deposit hasn't been received yet. Please complete payment.");
     const paid = order.state === "COMPLETED" || (order.net_amount_due_money?.amount ?? 1) === 0;
     if (!paid) {
+      throw new Error("Your deposit hasn't been received yet. Please complete payment.");
+    }
+
+    // Guard against under-/tampered payments: the order total must cover the
+    // deposit we expected for this appointment.
+    const expected = Number(appt.deposit_cents ?? 0);
+    const orderTotal = Number(order.total_money?.amount ?? 0);
+    if (expected > 0 && orderTotal < expected) {
       throw new Error("Your deposit hasn't been received yet. Please complete payment.");
     }
 
