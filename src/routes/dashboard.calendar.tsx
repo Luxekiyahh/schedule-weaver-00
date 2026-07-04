@@ -485,6 +485,7 @@ function Dashboard() {
         appt={selectedAppt}
         onClose={() => setSelectedAppt(null)}
         onStatus={(s) => selectedAppt && updateStatus(selectedAppt.id, s)}
+        onDelete={() => selectedAppt && deleteAppointment(selectedAppt.id)}
       />
 
       {/* New appointment */}
