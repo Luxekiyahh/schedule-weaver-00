@@ -1,13 +1,15 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, Check, Copy, DollarSign, Sparkles, Clock, Users, Briefcase,
   Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2, Bell,
-  ExternalLink, Wand2, Wallet,
+  ExternalLink, Wand2, Wallet, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTenantUrl } from "@/lib/subdomain";
+import { getBusinessInfo, saveBusinessInfo } from "@/lib/tenant.functions";
 
 export const Route = createFileRoute("/dashboard/home")({
   component: HomePage,
