@@ -11,12 +11,30 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!ws) return { workspace: null, services: [], providers: [], serviceProviders: [] };
+    if (!ws)
+      return {
+        workspace: null,
+        services: [],
+        providers: [],
+        serviceProviders: [],
+        categories: [],
+        lengthOptions: [],
+        payment: null,
+      };
 
-    const [{ data: services }, { data: members }, { data: links }] = await Promise.all([
+    const [
+      { data: services },
+      { data: members },
+      { data: links },
+      { data: categories },
+      { data: lengthOptions },
+      { data: paySettings },
+    ] = await Promise.all([
       supabaseAdmin
         .from("services")
-        .select("id, name, description, duration_minutes, price_cents, currency")
+        .select(
+          "id, name, description, duration_minutes, price_cents, currency, category_id, image_url",
+        )
         .eq("workspace_id", ws.id)
         .eq("is_active", true)
         .order("created_at", { ascending: true }),
@@ -29,6 +47,23 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
         .from("service_providers")
         .select("service_id, member_id")
         .eq("workspace_id", ws.id),
+      supabaseAdmin
+        .from("service_categories")
+        .select("id, name, description, sort_order, image_url")
+        .eq("workspace_id", ws.id)
+        .eq("active", true)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("service_length_options")
+        .select("id, name, duration_min, price_cents, sort_order")
+        .eq("workspace_id", ws.id)
+        .eq("active", true)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("workspace_payment_settings")
+        .select("provider, connection_status, deposit_type, deposit_amount_cents, deposit_percent, currency")
+        .eq("workspace_id", ws.id)
+        .maybeSingle(),
     ]);
 
     const userIds = (members ?? []).map((m) => m.user_id);
@@ -42,11 +77,42 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       name: profMap.get(m.user_id) ?? "Team member",
     }));
 
+    // Only expose a deposit requirement when a provider is actually connected
+    // and the tenant configured a non-zero deposit.
+    const ps = paySettings as
+      | {
+          provider: string;
+          connection_status: string;
+          deposit_type: string;
+          deposit_amount_cents: number;
+          deposit_percent: number;
+          currency: string | null;
+        }
+      | null;
+    const payment =
+      ps &&
+      ps.provider &&
+      ps.provider !== "none" &&
+      ps.connection_status === "connected" &&
+      ps.deposit_type &&
+      ps.deposit_type !== "none"
+        ? {
+            provider: ps.provider,
+            depositType: ps.deposit_type,
+            depositAmountCents: Number(ps.deposit_amount_cents ?? 0),
+            depositPercent: Number(ps.deposit_percent ?? 0),
+            currency: ps.currency ?? "USD",
+          }
+        : null;
+
     return {
       workspace: ws,
       services: services ?? [],
       providers,
       serviceProviders: links ?? [],
+      categories: categories ?? [],
+      lengthOptions: lengthOptions ?? [],
+      payment,
     };
   });
 
