@@ -117,6 +117,10 @@ export const template = {
     addOns: "Extra Length (+$25)",
     notes: "Please arrive with hair blown out.",
     primary: "#cba35c",
+    businessAddress: "123 Glam Ave, Suite 4, Atlanta, GA 30303",
+    businessPhone: "(404) 555-0148",
+    businessEmail: "hello@alluringdolls.com",
+    businessWebsite: "www.alluringdolls.com",
   },
 } satisfies TemplateEntry;
 
