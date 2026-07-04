@@ -32,7 +32,7 @@ export const Route = createFileRoute("/dashboard/calendar")({
 
 type ViewMode = "day" | "week" | "month";
 type Role = "owner" | "admin" | "staff" | "client";
-type Status = "pending" | "confirmed" | "cancelled" | "completed";
+type Status = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
 
 type Member = {
   id: string;
@@ -88,6 +88,7 @@ const STATUS_STYLES: Record<Status, string> = {
   confirmed: "bg-indigo-50 border-l-4 border-indigo-500 text-indigo-900",
   cancelled: "bg-slate-100 border-l-4 border-slate-300 text-slate-500 line-through",
   completed: "bg-emerald-50 border-l-4 border-emerald-500 text-emerald-900",
+  no_show: "bg-rose-50 border-l-4 border-rose-500 text-rose-900",
 };
 
 function Dashboard() {
@@ -788,6 +789,7 @@ function ApptDialog({ appt, onClose, onStatus }: { appt: Appointment | null; onC
                     <SelectItem value="confirmed">Confirmed</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="no_show">No-show</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
