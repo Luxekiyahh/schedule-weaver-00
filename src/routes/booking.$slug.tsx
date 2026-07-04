@@ -286,6 +286,8 @@ function BookingPage() {
         services={data.services}
         categories={data.categories}
         lengthOptions={data.lengthOptions}
+        hairColors={data.hairColors ?? []}
+        selectedColorId={selectedColorId} setSelectedColorId={setSelectedColorId}
         selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns}
         addOnTotalCents={addOnTotalCents}
         depositRequired={depositRequired}
