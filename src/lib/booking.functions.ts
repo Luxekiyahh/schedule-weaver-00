@@ -570,6 +570,15 @@ export const createSquareDepositCheckout = createServerFn({ method: "POST" })
       throw new Error(json.errors?.[0]?.detail || "Could not start checkout. Please try again.");
     }
 
+    // Persist the Square order id so confirmation can look it up directly
+    // instead of scanning the location's recent orders.
+    if (json.payment_link.order_id) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ square_order_id: json.payment_link.order_id })
+        .eq("id", inserted.appointmentId);
+    }
+
     return { url: json.payment_link.url, appointmentId: inserted.appointmentId, depositCents };
   });
 
