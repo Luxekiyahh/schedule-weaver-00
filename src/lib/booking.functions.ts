@@ -589,45 +589,18 @@ export const confirmSquareDepositBooking = createServerFn({ method: "POST" })
 
     const { data: creds } = await supabaseAdmin
       .from("workspace_payment_credentials")
-      .select("square_access_token, environment")
+      .select("square_access_token, square_location_id, environment")
       .eq("workspace_id", appt.workspace_id)
       .maybeSingle();
     const token = creds?.square_access_token;
-    if (!token) throw new Error("Payment account unavailable.");
+    const locationId = creds?.square_location_id;
+    if (!token || !locationId) throw new Error("Payment account unavailable.");
 
     const base = squareApiBase(creds?.environment);
-    // Find the order for this appointment via its reference_id.
-    const searchRes = await fetch(`${base}/v2/orders/search`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "Square-Version": SQUARE_VERSION,
-      },
-      body: JSON.stringify({
-        location_ids: creds && "square_location_id" in creds ? undefined : undefined,
-        query: {
-          filter: {
-            state_filter: { states: ["COMPLETED", "OPEN"] },
-          },
-        },
-      }),
-    }).catch(() => null);
-    void searchRes;
-
-    // Reliable check: read the location's orders is heavy; instead re-read the
-    // order directly. Square doesn't expose lookup-by-reference without a
-    // location list, so we query orders search scoped to this workspace's
-    // location.
-    const { data: locCreds } = await supabaseAdmin
-      .from("workspace_payment_credentials")
-      .select("square_location_id")
-      .eq("workspace_id", appt.workspace_id)
-      .maybeSingle();
-    const locationId = locCreds?.square_location_id;
-    if (!locationId) throw new Error("Payment account unavailable.");
-
+    // Square has no lookup-by-reference_id, so search this location's recent
+    // orders and match on the reference_id we set when creating the link.
     const res = await fetch(`${base}/v2/orders/search`, {
+
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
