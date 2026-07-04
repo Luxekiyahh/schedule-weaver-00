@@ -198,8 +198,11 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          no_show_count: number
           notes: string | null
           phone: string | null
+          prepay_overridden_by: string | null
+          require_prepay: boolean
           updated_at: string
           user_id: string | null
           workspace_id: string
@@ -209,8 +212,11 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          no_show_count?: number
           notes?: string | null
           phone?: string | null
+          prepay_overridden_by?: string | null
+          require_prepay?: boolean
           updated_at?: string
           user_id?: string | null
           workspace_id: string
@@ -220,8 +226,11 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          no_show_count?: number
           notes?: string | null
           phone?: string | null
+          prepay_overridden_by?: string | null
+          require_prepay?: boolean
           updated_at?: string
           user_id?: string | null
           workspace_id?: string
@@ -865,6 +874,79 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_entries: {
+        Row: {
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          desired_date: string | null
+          desired_from: string | null
+          desired_to: string | null
+          id: string
+          notified_at: string | null
+          provider_id: string | null
+          service_id: string | null
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          desired_date?: string | null
+          desired_from?: string | null
+          desired_to?: string | null
+          id?: string
+          notified_at?: string | null
+          provider_id?: string | null
+          service_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          desired_date?: string | null
+          desired_from?: string | null
+          desired_to?: string | null
+          id?: string
+          notified_at?: string | null
+          provider_id?: string | null
+          service_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_entries_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_entries_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_entries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_branding: {
         Row: {
           accent_hex: string
@@ -1009,6 +1091,7 @@ export type Database = {
           deposit_percent: number
           deposit_type: string
           id: string
+          no_show_prepay_threshold: number
           platform_fee_percent: number
           provider: string
           provider_account_id: string | null
@@ -1024,6 +1107,7 @@ export type Database = {
           deposit_percent?: number
           deposit_type?: string
           id?: string
+          no_show_prepay_threshold?: number
           platform_fee_percent?: number
           provider?: string
           provider_account_id?: string | null
@@ -1039,6 +1123,7 @@ export type Database = {
           deposit_percent?: number
           deposit_type?: string
           id?: string
+          no_show_prepay_threshold?: number
           platform_fee_percent?: number
           provider?: string
           provider_account_id?: string | null
