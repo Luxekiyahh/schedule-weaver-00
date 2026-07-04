@@ -823,6 +823,12 @@ function ApptDialog({ appt, onClose, onStatus, onDelete }: { appt: Appointment |
                   </SelectContent>
                 </Select>
               </div>
+              <div className="border-t pt-3">
+                <Button variant="outline" onClick={onDelete}
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Delete appointment
+                </Button>
+              </div>
             </div>
           </>
         )}
