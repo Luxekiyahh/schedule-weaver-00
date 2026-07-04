@@ -185,14 +185,20 @@ export const completeOnboarding = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
-      .select("id, slug")
+      .select("id, slug, onboarded_at")
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     if (wsErr) throw new Error(wsErr.message);
     if (!ws) throw new Error("No workspace found for this account.");
+    if (ws.onboarded_at) {
+      throw new Error(
+        "This account is already set up. Onboarding can only be completed once — manage your site from the dashboard.",
+      );
+    }
     const workspaceId = ws.id;
+
 
     const slug = await uniqueSlug(slugify(data.businessName), workspaceId);
 
