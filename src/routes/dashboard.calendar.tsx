@@ -458,11 +458,23 @@ function Dashboard() {
               </div>
             </div>
 
+            <div className="mt-2 flex justify-end">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-500">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 rounded border-slate-300"
+                  checked={showCancelled}
+                  onChange={(e) => setShowCancelled(e.target.checked)}
+                />
+                Show cancelled
+              </label>
+            </div>
+
             {view === "month"
-              ? <MonthView cursor={cursor} appointments={appointments} onSelect={setSelectedAppt} />
+              ? <MonthView cursor={cursor} appointments={visibleAppointments} onSelect={setSelectedAppt} />
               : <TimeGridView
                   view={view} rangeStart={rangeStart}
-                  appointments={appointments} onSelect={setSelectedAppt}
+                  appointments={visibleAppointments} onSelect={setSelectedAppt}
                 />}
           </section>
         </div>
