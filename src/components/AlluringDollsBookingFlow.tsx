@@ -244,9 +244,10 @@ export function AlluringDollsBookingFlow({
           >
             Book Online
           </div>
-          <h1 className="ad-display text-3xl sm:text-4xl mt-3" style={{ color: "var(--ad-gold)" }}>
+          <h1 className="ad-display ad-chrome text-4xl sm:text-5xl mt-4">
             {workspaceName}
           </h1>
+
         </header>
 
         {/* Stepper */}
