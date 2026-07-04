@@ -208,6 +208,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .update({
         name: data.businessName,
         slug,
+        onboarded_at: new Date().toISOString(),
         theme_id: data.themeId,
         primary_color: data.primaryColor,
         secondary_color: data.secondaryColor,
