@@ -52,6 +52,7 @@ export type Database = {
           notes: string | null
           provider_id: string
           service_id: string
+          square_order_id: string | null
           start_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
@@ -71,6 +72,7 @@ export type Database = {
           notes?: string | null
           provider_id: string
           service_id: string
+          square_order_id?: string | null
           start_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
@@ -90,6 +92,7 @@ export type Database = {
           notes?: string | null
           provider_id?: string
           service_id?: string
+          square_order_id?: string | null
           start_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
