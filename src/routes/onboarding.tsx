@@ -154,6 +154,12 @@ function OnboardingWizard() {
       if (!data.session) return; // brand-new visitor → start at the Account step
       getCtx()
         .then((ctx) => {
+          // Already set up? The wizard would overwrite the existing site,
+          // so send them to the dashboard instead.
+          if (ctx.onboarded) {
+            navigate({ to: "/dashboard" });
+            return;
+          }
           setWorkspaceId(ctx.workspaceId);
           setHasAccount(true);
           setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));

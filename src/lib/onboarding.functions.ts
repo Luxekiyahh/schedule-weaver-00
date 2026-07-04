@@ -35,14 +35,19 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data: ws, error } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug")
+      .select("id, name, slug, onboarded_at")
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!ws) throw new Error("No workspace found for this account.");
-    return { workspaceId: ws.id, slug: ws.slug, name: ws.name };
+    return {
+      workspaceId: ws.id,
+      slug: ws.slug,
+      name: ws.name,
+      onboarded: Boolean(ws.onboarded_at),
+    };
   });
 
 function slugify(input: string): string {
@@ -180,14 +185,20 @@ export const completeOnboarding = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
-      .select("id, slug")
+      .select("id, slug, onboarded_at")
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     if (wsErr) throw new Error(wsErr.message);
     if (!ws) throw new Error("No workspace found for this account.");
+    if (ws.onboarded_at) {
+      throw new Error(
+        "This account is already set up. Onboarding can only be completed once — manage your site from the dashboard.",
+      );
+    }
     const workspaceId = ws.id;
+
 
     const slug = await uniqueSlug(slugify(data.businessName), workspaceId);
 
@@ -197,6 +208,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .update({
         name: data.businessName,
         slug,
+        onboarded_at: new Date().toISOString(),
         theme_id: data.themeId,
         primary_color: data.primaryColor,
         secondary_color: data.secondaryColor,
