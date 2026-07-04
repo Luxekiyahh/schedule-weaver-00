@@ -32,7 +32,7 @@ export const Route = createFileRoute("/dashboard/calendar")({
 
 type ViewMode = "day" | "week" | "month";
 type Role = "owner" | "admin" | "staff" | "client";
-type Status = "pending" | "confirmed" | "cancelled" | "completed";
+type Status = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
 
 type Member = {
   id: string;
