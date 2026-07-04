@@ -228,6 +228,8 @@ function ServiceDialog({
   const [duration, setDuration] = useState("30");
   const [price, setPrice] = useState("0.00");
   const [active, setActive] = useState(true);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -237,8 +239,36 @@ function ServiceDialog({
       setDuration(String(editing?.duration_minutes ?? 30));
       setPrice(editing ? (editing.price_cents / 100).toFixed(2) : "0.00");
       setActive(editing?.is_active ?? true);
+      setImageUrl(editing?.image_url ?? null);
     }
   }, [open, editing]);
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Please choose an image file");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${ctx.workspaceId}/services/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("branding").upload(path, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("branding").getPublicUrl(path);
+      setImageUrl(data.publicUrl);
+      toast.success("Image uploaded");
+    } catch (err: any) {
+      toast.error(err.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   const save = async () => {
     if (!name.trim()) return toast.error("Name is required");
