@@ -42,6 +42,7 @@ type Service = {
 };
 type Category = { id: string; name: string; description?: string | null; image_url?: string | null };
 type LengthOption = { id: string; name: string; price_cents: number; duration_min: number };
+type HairColor = { id: string; code: string; label: string | null; swatch_hex: string | null };
 type Provider = { member_id: string; name: string };
 type Slot = { time: string; member_id: string };
 
