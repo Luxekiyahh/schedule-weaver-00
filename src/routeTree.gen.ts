@@ -36,6 +36,7 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicHooksWaitlistNotifyRouteImport } from './routes/api/public/hooks/waitlist-notify'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
@@ -178,6 +179,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksWaitlistNotifyRoute =
+  ApiPublicHooksWaitlistNotifyRouteImport.update({
+    id: '/api/public/hooks/waitlist-notify',
+    path: '/api/public/hooks/waitlist-notify',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/waitlist-notify': typeof ApiPublicHooksWaitlistNotifyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -232,6 +240,7 @@ export interface FileRoutesByTo {
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/waitlist-notify': typeof ApiPublicHooksWaitlistNotifyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -262,6 +271,7 @@ export interface FileRoutesById {
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/waitlist-notify': typeof ApiPublicHooksWaitlistNotifyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/waitlist-notify'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/waitlist-notify'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -351,6 +363,7 @@ export interface FileRouteTypes {
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/waitlist-notify'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -373,6 +386,7 @@ export interface RootRouteChildren {
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
   ApiPublicGenerateBrandingRoute: typeof ApiPublicGenerateBrandingRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksWaitlistNotifyRoute: typeof ApiPublicHooksWaitlistNotifyRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -570,6 +584,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/waitlist-notify': {
+      id: '/api/public/hooks/waitlist-notify'
+      path: '/api/public/hooks/waitlist-notify'
+      fullPath: '/api/public/hooks/waitlist-notify'
+      preLoaderRoute: typeof ApiPublicHooksWaitlistNotifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -615,6 +636,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
   ApiPublicGenerateBrandingRoute: ApiPublicGenerateBrandingRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksWaitlistNotifyRoute: ApiPublicHooksWaitlistNotifyRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
