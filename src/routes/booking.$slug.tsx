@@ -64,6 +64,8 @@ function BookingPage() {
   const loadWs = useServerFn(getBookingWorkspace);
   const loadSlots = useServerFn(getBookingSlots);
   const submit = useServerFn(createBooking);
+  const startDeposit = useServerFn(createDepositCheckout);
+  const confirmDeposit = useServerFn(confirmDepositBooking);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Awaited<ReturnType<typeof getBookingWorkspace>> | null>(null);
@@ -76,9 +78,11 @@ function BookingPage() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slots, setSlots] = useState<{ time: string; member_id: string }[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<{ time: string; member_id: string } | null>(null);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
 
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmingDeposit, setConfirmingDeposit] = useState(false);
   const [done, setDone] = useState<{ start_at: string } | null>(null);
 
   useEffect(() => {
