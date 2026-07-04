@@ -343,43 +343,17 @@ function BookingPage() {
                 {data.services.length === 0 ? (
                   <p className="mt-6 text-sm text-slate-500">No services available yet.</p>
                 ) : (
-                  <div className="mt-5 space-y-3">
-                    {data.services.map((s) => {
-                      const active = serviceId === s.id;
-                      return (
-                        <button
-                          key={s.id}
-                          onClick={() => { setServiceId(s.id); setProviderId(ANY); }}
-                          className={`group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition ${
-                            active
-                              ? "border-slate-900 bg-slate-900/[0.02] shadow-sm"
-                              : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                              <h3 className="font-medium text-slate-900">{s.name}</h3>
-                              <span className="text-base font-semibold text-slate-900">
-                                {money(s.price_cents, s.currency)}
-                              </span>
-                            </div>
-                            {s.description && (
-                              <p className="mt-1 text-sm text-slate-500 line-clamp-2">{s.description}</p>
-                            )}
-                            <div className="mt-2 inline-flex items-center gap-1 text-xs text-slate-500">
-                              <Clock className="h-3 w-3" /> {s.duration_minutes} min
-                            </div>
-                          </div>
-                          <div
-                            className={`mt-1 grid h-5 w-5 place-items-center rounded-full ring-1 transition ${
-                              active ? "bg-slate-900 ring-slate-900" : "ring-slate-300 group-hover:ring-slate-400"
-                            }`}
-                          >
-                            {active && <Check className="h-3 w-3 text-white" />}
-                          </div>
-                        </button>
-                      );
-                    })}
+                  <div className="mt-5">
+                    <CategoryAccordion
+                      services={data.services}
+                      categories={data.categories}
+                      selectedId={serviceId}
+                      onSelect={(id) => {
+                        setServiceId(id);
+                        setProviderId(ANY);
+                      }}
+                      primary={primary}
+                    />
                   </div>
                 )}
                 <div className="mt-6 flex justify-end">
