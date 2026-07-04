@@ -392,7 +392,7 @@ export const createDepositCheckout = createServerFn({ method: "POST" })
     const inserted = await prepareAndInsertAppointment(data, "pending");
     const currency = (settings.currency || inserted.service.currency || "USD").toLowerCase();
     const depositCents = computeDepositCents(inserted.basePriceCents, {
-      depositType: settings.deposit_type,
+      depositType: inserted.requirePrepay ? "full" : settings.deposit_type,
       depositAmountCents: Number(settings.deposit_amount_cents ?? 0),
       depositPercent: Number(settings.deposit_percent ?? 0),
     });
