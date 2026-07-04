@@ -327,6 +327,9 @@ export function initialWizard(): WizardState {
     hours: defaultHours(),
     locationType: "studio",
     address: "",
+    businessPhone: "",
+    businessEmail: "",
+    businessWebsite: "",
     policies: {
       deposit: "50",
       cancellation: "24 hours",
