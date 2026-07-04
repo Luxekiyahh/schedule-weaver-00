@@ -462,6 +462,41 @@ export function AlluringDollsBookingFlow({
                     </div>
                   </div>
 
+                  {/* Add-ons (ticker buttons) */}
+                  {lengthOptions.length > 0 && (
+                    <div className="mt-6">
+                      <div className="ad-label">Add-ons (optional)</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {lengthOptions.map((o) => {
+                          const on = selectedAddOns.includes(o.id);
+                          return (
+                            <button
+                              key={o.id}
+                              type="button"
+                              onClick={() =>
+                                setSelectedAddOns((prev) =>
+                                  prev.includes(o.id)
+                                    ? prev.filter((x) => x !== o.id)
+                                    : [...prev, o.id],
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition"
+                              style={{
+                                backgroundColor: on ? "var(--ad-gold)" : "transparent",
+                                color: on ? "#1a1108" : "var(--ad-ivory)",
+                                border: `1px solid ${on ? "var(--ad-gold)" : "var(--ad-border)"}`,
+                              }}
+                            >
+                              {on && <Check className="h-3.5 w-3.5" />}
+                              {o.name}
+                              {o.price_cents > 0 && ` +${money(o.price_cents, service?.currency)}`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Summary */}
                   <div className="ad-card mt-6 p-4 text-sm">
                     <div className="flex justify-between">
@@ -485,15 +520,16 @@ export function AlluringDollsBookingFlow({
                     <div className="mt-1 flex justify-between font-medium">
                       <span style={{ color: "var(--ad-smoke)" }}>Total</span>
                       <span style={{ color: "var(--ad-gold)" }}>
-                        {service && money(service.price_cents, service.currency)}
+                        {service && money(service.price_cents + addOnTotalCents, service.currency)}
                       </span>
                     </div>
                     <div
                       className="mt-3 border-t pt-3 text-xs leading-relaxed"
                       style={{ borderColor: "var(--ad-border)", color: "var(--ad-smoke)" }}
                     >
-                      A $25 non-refundable deposit is required to hold this appointment; remaining
-                      balance is cash only.
+                      {depositRequired
+                        ? "A deposit is required now to hold this appointment; the remaining balance is due at your visit."
+                        : "A $25 non-refundable deposit is required to hold this appointment; remaining balance is cash only."}
                     </div>
                   </div>
 
@@ -523,7 +559,7 @@ export function AlluringDollsBookingFlow({
                       ) : (
                         <Check className="h-4 w-4" />
                       )}
-                      Confirm Booking
+                      {depositRequired ? "Continue to Deposit" : "Confirm Booking"}
                     </Button>
                   </div>
                 </motion.div>
