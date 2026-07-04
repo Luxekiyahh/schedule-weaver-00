@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { Clock, ArrowRight, MapPin, MessageCircle, CalendarClock, ImageIcon } from "lucide-react";
+import { Clock, ArrowRight, MapPin, MessageCircle, CalendarClock } from "lucide-react";
 
 /**
  * ALLURING DOLLS — bespoke luxury storefront skin.
@@ -455,7 +455,7 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
           <div className="ad-rule" />
           <p className="ad-display ad-chrome text-4xl mt-8">{ws.name || "Alluring Dolls"}</p>
           <p className="mt-5 inline-flex items-center gap-1.5 text-xs text-[color:var(--ad-smoke)]">
-            <MapPin className="w-3.5 h-3.5" /> 33 W Ave A, Apt 3A · Belle Glade, FL
+            <MapPin className="w-3.5 h-3.5" /> Belle Glade, FL
           </p>
           <p className="mt-1.5 text-xs text-[color:var(--ad-smoke)]">
             Text only · (561) 975-8519 · Open Mon–Sat, 10am–6pm
@@ -489,28 +489,15 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
 }
 
 function AdStoreImage({ url, size }: { url?: string | null; size: number }) {
+  if (!url) return null;
   const style = { width: size, height: size };
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt=""
-        style={style}
-        className="rounded-2xl object-cover shrink-0 shadow-[0_10px_28px_-12px_rgba(0,0,0,.85)]"
-      />
-    );
-  }
   return (
-    <div
-      className="grid place-items-center rounded-2xl shrink-0"
-      style={{
-        ...style,
-        border: "1px solid var(--ad-border)",
-        color: "var(--ad-smoke)",
-        background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
-      }}
-    >
-      <ImageIcon style={{ width: size * 0.4, height: size * 0.4 }} />
-    </div>
+    <img
+      src={url}
+      alt=""
+      style={style}
+      className="rounded-2xl object-cover shrink-0 shadow-[0_10px_28px_-12px_rgba(0,0,0,.85)]"
+    />
   );
 }
+

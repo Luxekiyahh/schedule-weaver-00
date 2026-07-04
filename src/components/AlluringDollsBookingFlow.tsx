@@ -9,7 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  ImageIcon,
+  
   Loader2,
   User,
   Users,
@@ -163,7 +163,7 @@ export function AlluringDollsBookingFlow({
             radial-gradient(140% 120% at 50% 50%, transparent 55%, rgba(0,0,0,.65) 100%);
         }
         .ad-leopard {
-          position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: .18;
+          position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: .34;
           filter: blur(1.5px) contrast(1.05);
           background-image:
             radial-gradient(38px 30px at 12% 18%, rgba(30,26,22,.9), rgba(30,26,22,0) 70%),
@@ -927,22 +927,10 @@ function AdCategoryAccordion({
 }
 
 function AdImage({ url }: { url?: string | null }) {
-  if (url) {
-    return <img src={url} alt="" className="h-11 w-11 rounded object-cover" />;
-  }
-  return (
-    <div
-      className="grid h-11 w-11 place-items-center rounded"
-      style={{
-        border: "1px solid var(--ad-border)",
-        color: "var(--ad-smoke)",
-        background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
-      }}
-    >
-      <ImageIcon className="h-5 w-5" />
-    </div>
-  );
+  if (!url) return null;
+  return <img src={url} alt="" className="h-11 w-11 rounded object-cover" />;
 }
+
 
 function AdServiceRow({
   s,

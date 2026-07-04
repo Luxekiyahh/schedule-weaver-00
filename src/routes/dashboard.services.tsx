@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Briefcase, Plus, Pencil, Trash2, Clock, DollarSign, Loader2, ChevronLeft, Link2,
-
+  ImagePlus, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,9 @@ type Service = {
   price_cents: number;
   currency: string;
   is_active: boolean;
+  image_url: string | null;
 };
+
 
 type Ctx = { workspaceId: string; memberId: string; role: Role };
 
@@ -226,6 +228,8 @@ function ServiceDialog({
   const [duration, setDuration] = useState("30");
   const [price, setPrice] = useState("0.00");
   const [active, setActive] = useState(true);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -235,8 +239,36 @@ function ServiceDialog({
       setDuration(String(editing?.duration_minutes ?? 30));
       setPrice(editing ? (editing.price_cents / 100).toFixed(2) : "0.00");
       setActive(editing?.is_active ?? true);
+      setImageUrl(editing?.image_url ?? null);
     }
   }, [open, editing]);
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Please choose an image file");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${ctx.workspaceId}/services/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("branding").upload(path, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("branding").getPublicUrl(path);
+      setImageUrl(data.publicUrl);
+      toast.success("Image uploaded");
+    } catch (err: any) {
+      toast.error(err.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   const save = async () => {
     if (!name.trim()) return toast.error("Name is required");
@@ -248,24 +280,27 @@ function ServiceDialog({
 
     setSaving(true);
     try {
+      const trimmedName = name.trim();
       if (editing) {
         const { error } = await supabase.from("services").update({
-          name: name.trim(),
+          name: trimmedName,
           description: description.trim() || null,
           duration_minutes: mins,
           price_cents: cents,
           is_active: active,
+          image_url: imageUrl,
         }).eq("id", editing.id);
         if (error) throw error;
         toast.success("Service updated");
       } else {
         const { data: inserted, error } = await supabase.from("services").insert({
           workspace_id: ctx.workspaceId,
-          name: name.trim(),
+          name: trimmedName,
           description: description.trim() || null,
           duration_minutes: mins,
           price_cents: cents,
           is_active: active,
+          image_url: imageUrl,
         }).select("id").single();
         if (error) throw error;
         // Auto-link current admin as a provider for the new service
@@ -281,6 +316,13 @@ function ServiceDialog({
           toast.success("Service created");
         }
       }
+      // Mirror the image onto the matching storefront catalog row (service_variants),
+      // which is what the public booking page actually reads.
+      await supabase.from("service_variants")
+        .update({ image_url: imageUrl })
+        .eq("workspace_id", ctx.workspaceId)
+        .eq("name", trimmedName);
+
       onSaved();
     } catch (e: any) {
       toast.error(e.message ?? "Failed to save");
@@ -307,6 +349,43 @@ function ServiceDialog({
             <Label htmlFor="svc-desc">Description</Label>
             <Textarea id="svc-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="What's included…" />
           </div>
+          <div className="space-y-2">
+            <Label>Image</Label>
+            <div className="flex items-center gap-3">
+              {imageUrl ? (
+                <div className="relative">
+                  <img src={imageUrl} alt="" className="h-16 w-16 rounded-lg border object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl(null)}
+                    className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full bg-slate-900 text-white shadow"
+                    aria-label="Remove image"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="grid h-16 w-16 place-items-center rounded-lg border border-dashed text-slate-400">
+                  <ImagePlus className="h-5 w-5" />
+                </div>
+              )}
+              <div>
+                <input id="svc-image" type="file" accept="image/*" className="hidden" onChange={onPickImage} disabled={uploading} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => document.getElementById("svc-image")?.click()}
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                  {imageUrl ? "Replace image" : "Add image"}
+                </Button>
+                <p className="mt-1 text-xs text-slate-500">Shown on your booking page. PNG or JPG, up to 5MB.</p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="svc-dur">Duration (minutes)</Label>
