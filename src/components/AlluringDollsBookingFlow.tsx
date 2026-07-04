@@ -71,6 +71,12 @@ const STEP_LABELS = ["Service", "Provider", "Time", "Details"];
 export function AlluringDollsBookingFlow({
   workspaceName,
   services,
+  categories,
+  lengthOptions,
+  selectedAddOns,
+  setSelectedAddOns,
+  addOnTotalCents,
+  depositRequired,
   eligibleProviders,
   step,
   setStep,
@@ -94,6 +100,12 @@ export function AlluringDollsBookingFlow({
 }: {
   workspaceName: string;
   services: Service[];
+  categories: Category[];
+  lengthOptions: LengthOption[];
+  selectedAddOns: string[];
+  setSelectedAddOns: (updater: (prev: string[]) => string[]) => void;
+  addOnTotalCents: number;
+  depositRequired: boolean;
   eligibleProviders: Provider[];
   step: number;
   setStep: (n: number) => void;
@@ -116,6 +128,7 @@ export function AlluringDollsBookingFlow({
   onSubmit: () => void;
 }) {
   const service = services.find((s) => s.id === serviceId) ?? null;
+
 
   return (
     <div className="ad-root min-h-screen">
