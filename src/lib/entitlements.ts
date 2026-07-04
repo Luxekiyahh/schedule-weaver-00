@@ -4,16 +4,27 @@ export type BillingPeriod = "monthly" | "yearly";
 
 export type Feature =
   | "booking"
-  | "workflow_automations"
-  | "sms_marketing"
-  | "no_show_automation";
+  | "service_lifecycle_automation"
+  | "review_redirect"
+  | "client_profiles"
+  | "vip_tiering"
+  | "no_show_prepay"
+  | "waitlist_bidding";
 
 // Single source of truth for which plan unlocks which feature.
 // Mirrors the SQL helper public.workspace_has_feature.
 export const PLAN_FEATURES: Record<PlanTier, Feature[]> = {
   basic: ["booking"],
-  pro: ["booking", "workflow_automations", "sms_marketing"],
-  enterprise: ["booking", "workflow_automations", "sms_marketing", "no_show_automation"],
+  pro: ["booking", "service_lifecycle_automation", "review_redirect", "client_profiles"],
+  enterprise: [
+    "booking",
+    "service_lifecycle_automation",
+    "review_redirect",
+    "client_profiles",
+    "vip_tiering",
+    "no_show_prepay",
+    "waitlist_bidding",
+  ],
 };
 
 export const PLAN_RANK: Record<PlanTier, number> = {
