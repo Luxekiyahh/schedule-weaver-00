@@ -1,25 +1,25 @@
 ## Goal
-In preview, tenants whose only subscription lives in the **live** environment (which is every real subscriber, since checkout runs against live) currently read as inactive and get bounced back to `/pricing`. Add a preview-only fallback so gating recognizes a live subscription when no sandbox row exists.
+Run the full 4-step booking + Square deposit payment flow for Alluring Dolls in preview, as client `takiyah472@gmail.com`, and verify the appointment confirms and the confirmation email fires. Use the provided Square **sandbox** credentials so a real charge isn't required (the token only authenticates against Square sandbox; production returns 401).
 
-## Root cause
-- `getStripeEnvironment()` returns `"sandbox"` in preview.
-- `useSubscription` queries `subscriptions` filtered by `environment = "sandbox"` → empty for Alluring Dolls (their only row is `environment = "live"`, pro/active).
-- `src/routes/dashboard.tsx` redirects to `/pricing` when `!sub.isActive`, so preview users can never leave `/pricing`.
+## Key facts discovered
+- Alluring Dolls (`workspace_id 5542a2d5-...`) uses **Square**, `connected`, deposit `$25.00` (2500 cents).
+- Stored `workspace_payment_credentials` are **live** (token + location `K2SAFHS72K75Z`, `environment=live`). The deposit checkout reads this row and picks the Square host from `creds.environment`.
+- Provided token is Square **sandbox**, location `LDZX8HJEN7AHM`.
+- To exercise the real payment code path without real money, the credentials row must temporarily point at sandbox, then be restored to the original live values afterward.
 
-## Change
-Edit **`src/hooks/useSubscription.ts`** only:
+## Steps
+1. **Back up live credentials safely.** Dump the current Alluring Dolls `workspace_payment_credentials` row to a local `/tmp` restore SQL file via psql (value not printed to console), so the live Square token can be restored exactly.
+2. **Swap to sandbox (migration/data change).** Update that row to `square_access_token=<provided sandbox token>`, `square_location_id=LDZX8HJEN7AHM`, `environment=sandbox`. Leave `workspace_payment_settings` (provider/deposit) unchanged.
+3. **Drive the booking with Playwright** against the live preview at `/booking/alluringdolls`:
+   - Select a service/category and any add-on, pick date + time, enter client details for `takiyah472@gmail.com`, advance through all 4 steps.
+   - Follow the redirect to Square's hosted sandbox checkout and pay the $25 deposit with test card `4111 1111 1111 1111`, future expiry, any CVV/ZIP.
+   - Return to the app and confirm the return handler flips the appointment to `confirmed`.
+   - Screenshot each step for evidence.
+4. **Verify results** in the database: a new `appointments` row for the client is `confirmed` with the deposit recorded, and check `email_send_log` for the confirmation/alert emails to `takiyah472@gmail.com`.
+5. **Restore live credentials** from the `/tmp` backup file, re-confirm the row matches the original (`environment=live`, location `K2SAFHS72K75Z`), then shred the temp file.
+6. **Report** the observed outcome (booking status, payment result, email send status) with screenshots.
 
-1. Query the subscription for the resolved environment (`getStripeEnvironment()`) as today.
-2. If that returns no row **and** the environment is `"sandbox"` (i.e. preview/dev), run a second query for the same workspace filtered by `environment = "live"`, ordered by `created_at desc`, `limit(1)`, `maybeSingle()`, and use that row for gating.
-3. Never do the reverse (live never falls back to sandbox), so the published site is completely unaffected.
-4. Keep the existing `isActive` / grace-period logic unchanged.
-
-This is a read-only gating fallback in preview; no schema or data changes, and checkout still targets the correct environment.
-
-## Verification
-- In preview as Alluring Dolls (`courttayicousfoster@gmail.com`), confirm `/dashboard/*` loads instead of redirecting to `/pricing`.
-- Confirm the published site behavior is unchanged (live env still reads the live row directly).
-
-## Technical notes
-- Only `src/hooks/useSubscription.ts` changes.
-- The fallback branch is guarded by `getStripeEnvironment() === "sandbox"` so it cannot leak into production gating.
+## Notes / risks
+- This temporarily repoints Alluring Dolls' payment credentials to sandbox; live checkout is effectively disabled for the brief test window and restored immediately after. Best run when no real customer is booking.
+- The confirmation email to `takiyah472@gmail.com` is a real send (email infra is live), which is intended as part of the test.
+- No application code changes are expected; this is a verification run. If the flow reveals a bug, I'll report it and propose a follow-up fix rather than editing code mid-test.
