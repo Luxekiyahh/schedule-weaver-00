@@ -1,19 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { Clock, ArrowRight, MapPin, MessageCircle, CalendarClock, ImageIcon } from "lucide-react";
 
 /**
- * ALLURING DOLLS — bespoke storefront skin.
+ * ALLURING DOLLS — bespoke luxury storefront skin.
  *
  * Scoped to the "alluringdolls" slug only (see the branch in $slug.tsx).
  * Reads real, live catalog data (categories/variants/length options/hair
- * colors) from getStorefront, the same data pipeline every other tenant's
- * page uses — only the presentation here is one-off.
+ * colors) from getStorefront — the same data pipeline every other tenant's
+ * page uses. Only the presentation here is one-off.
  *
- * Design direction: a dark vanity-mirror editorial — near-black + deep
- * bordeaux backdrop, antique champagne-gold accents, a wide-tracked
- * display face for the name with a slow light-sweep "glint" (not a hue
- * shimmer) as the signature move.
+ * Design direction: an editorial luxury beauty house — near-black leather
+ * backdrop with a CSS-only monochrome leopard emboss, layered ambient
+ * lighting, brushed champagne-chrome display type (Cinzel / Cormorant),
+ * capsule buttons and oversized rounded editorial cards.
  */
 
 function formatPrice(cents: number) {
@@ -63,50 +63,104 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
   const hairColors = data.hairColors ?? [];
   const handle = ws.slug;
 
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+  // Leopard leather emboss becomes more present as the page is explored.
+  const leopardOpacity = useTransform(scrollYProgress, [0, 0.35, 1], [0.12, 0.32, 0.5]);
+
   return (
-    <div className="ad-root min-h-screen">
+    <div className="ad-root relative min-h-screen overflow-clip">
+      <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+      />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
       />
       <style>{`
         .ad-root {
-          --ad-bg: #0b0a0d;
-          --ad-bg2: #161116;
-          --ad-wine: #3a0d18;
-          --ad-gold: #cba35c;
-          --ad-gold-bright: #f3e0ad;
-          --ad-ivory: #f3ede2;
-          --ad-smoke: #a8978a;
-          --ad-border: color-mix(in oklab, var(--ad-gold) 22%, transparent);
+          --ad-bg: #090809;
+          --ad-bg2: #151214;
+          --ad-gold: #CDA45B;
+          --ad-gold-2: #B98B47;
+          --ad-gold-bright: #F3E0AD;
+          --ad-ivory: #F8F5EF;
+          --ad-smoke: #C8B7A0;
+          --ad-border: rgba(205,164,91,.25);
+          --ad-glow: rgba(205,164,91,.18);
           background-color: var(--ad-bg);
           color: var(--ad-ivory);
-          font-family: 'Jost', system-ui, sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
+          isolation: isolate;
+        }
+
+        /* ---- Layered luxury lighting (fixed, behind content) ---- */
+        .ad-lighting {
+          position: fixed; inset: 0; z-index: -2; pointer-events: none;
+          background:
+            radial-gradient(120% 55% at 50% -8%, rgba(205,164,91,.14), transparent 60%),
+            radial-gradient(90% 60% at 92% 8%, rgba(185,139,71,.10), transparent 55%),
+            radial-gradient(90% 70% at 8% 100%, rgba(205,164,91,.08), transparent 60%),
+            radial-gradient(140% 120% at 50% 50%, transparent 55%, rgba(0,0,0,.65) 100%);
+        }
+        /* ---- CSS-only monochrome leopard leather emboss ---- */
+        .ad-leopard {
+          position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+          filter: blur(1.5px) contrast(1.05);
+          background-color: transparent;
           background-image:
-            radial-gradient(ellipse 60% 40% at 50% 0%, color-mix(in oklab, var(--ad-wine) 55%, transparent), transparent 70%),
-            radial-gradient(ellipse 50% 30% at 85% 100%, color-mix(in oklab, var(--ad-wine) 35%, transparent), transparent 70%);
+            radial-gradient(38px 30px at 12% 18%, rgba(30,26,22,.9), rgba(30,26,22,0) 70%),
+            radial-gradient(20px 16px at 12% 18%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(44px 34px at 42% 34%, rgba(34,29,24,.85), rgba(34,29,24,0) 70%),
+            radial-gradient(22px 18px at 42% 34%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(40px 32px at 74% 22%, rgba(30,26,22,.85), rgba(30,26,22,0) 70%),
+            radial-gradient(20px 16px at 74% 22%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(48px 36px at 88% 56%, rgba(34,29,24,.82), rgba(34,29,24,0) 70%),
+            radial-gradient(24px 18px at 88% 56%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(42px 34px at 24% 62%, rgba(30,26,22,.85), rgba(30,26,22,0) 70%),
+            radial-gradient(21px 17px at 24% 62%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(46px 36px at 58% 78%, rgba(34,29,24,.82), rgba(34,29,24,0) 70%),
+            radial-gradient(23px 18px at 58% 78%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(40px 32px at 8% 90%, rgba(30,26,22,.8), rgba(30,26,22,0) 70%),
+            radial-gradient(20px 16px at 8% 90%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(44px 34px at 92% 92%, rgba(34,29,24,.8), rgba(34,29,24,0) 70%),
+            radial-gradient(22px 18px at 92% 92%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%);
+          background-size: 420px 420px;
+          background-repeat: repeat;
         }
+
+        /* ---- Type ---- */
         .ad-display {
-          font-family: 'Italiana', serif;
+          font-family: 'Cinzel', serif;
           text-transform: uppercase;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.14em;
         }
-        .ad-glint {
+        .ad-serif { font-family: 'Cormorant Garamond', serif; }
+
+        /* ---- Brushed champagne chrome ---- */
+        .ad-chrome {
           position: relative;
           display: inline-block;
           background: linear-gradient(
             100deg,
-            var(--ad-gold) 0%,
-            var(--ad-gold) 40%,
+            var(--ad-gold-2) 0%,
+            var(--ad-gold) 34%,
             var(--ad-gold-bright) 50%,
-            var(--ad-gold) 60%,
-            var(--ad-gold) 100%
+            var(--ad-gold) 66%,
+            var(--ad-gold-2) 100%
           );
           background-size: 280% 100%;
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
-          animation: ad-sweep 5.5s ease-in-out infinite;
+          text-shadow: 0 1px 0 rgba(0,0,0,.5), 0 0 24px rgba(205,164,91,.18);
+          animation: ad-sweep 6s ease-in-out infinite;
         }
         @keyframes ad-sweep {
           0% { background-position: 100% 0; }
@@ -114,96 +168,126 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
           100% { background-position: 100% 0; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .ad-glint { animation: none; background-position: 0% 0; }
+          .ad-chrome { animation: none; background-position: 0% 0; }
         }
+
         .ad-eyebrow {
-          font-family: 'Jost', sans-serif;
+          font-family: 'Inter', sans-serif;
           text-transform: uppercase;
-          letter-spacing: 0.38em;
+          letter-spacing: 0.42em;
           font-size: 10.5px;
           color: var(--ad-smoke);
         }
         .ad-rule {
           height: 1px;
-          background: linear-gradient(90deg, transparent, var(--ad-border) 25%, var(--ad-border) 75%, transparent);
+          background: linear-gradient(90deg, transparent, var(--ad-border) 20%, color-mix(in oklab, var(--ad-gold) 45%, transparent) 50%, var(--ad-border) 80%, transparent);
         }
+
+        /* ---- Cards ---- */
         .ad-card {
-          background: color-mix(in oklab, var(--ad-bg2) 92%, var(--ad-wine) 8%);
+          position: relative;
+          background:
+            linear-gradient(160deg, rgba(255,255,255,.03), transparent 40%),
+            linear-gradient(180deg, var(--ad-bg2), color-mix(in oklab, var(--ad-bg2) 88%, #000 12%));
           border: 1px solid var(--ad-border);
-          border-radius: 4px;
-          transition: border-color .3s ease, transform .3s ease;
+          border-radius: 22px;
+          box-shadow: 0 24px 60px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
+          transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease;
         }
-        .ad-card:hover {
-          border-color: color-mix(in oklab, var(--ad-gold) 55%, transparent);
-          transform: translateY(-2px);
+        .ad-product {
+          position: relative;
+          background:
+            linear-gradient(160deg, rgba(255,255,255,.035), transparent 45%),
+            linear-gradient(180deg, var(--ad-bg2), color-mix(in oklab, var(--ad-bg2) 86%, #000 14%));
+          border: 1px solid var(--ad-border);
+          border-radius: 18px;
+          box-shadow: 0 18px 44px -28px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
+          transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease;
         }
+        .ad-product:hover {
+          border-color: color-mix(in oklab, var(--ad-gold) 65%, transparent);
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 30px 60px -26px rgba(0,0,0,.95), 0 0 40px -12px var(--ad-glow), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+
+        /* ---- Pills ---- */
         .ad-pill {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          padding: 0.5rem 1.3rem; border-radius: 999px;
+          display: inline-flex; align-items: center; gap: 0.5rem;
+          padding: 0.55rem 1.4rem; border-radius: 999px;
           border: 1px solid var(--ad-border);
+          background: linear-gradient(180deg, rgba(205,164,91,.06), transparent);
           color: var(--ad-gold);
-          text-transform: uppercase; letter-spacing: 0.3em; font-size: 10.5px;
+          text-transform: uppercase; letter-spacing: 0.34em; font-size: 10.5px;
         }
+
+        /* ---- Capsule buttons ---- */
         .ad-cta {
           display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
-          width: 100%; padding: 1.05rem 1.5rem; border-radius: 2px;
-          background: var(--ad-gold);
+          width: 100%; padding: 1.15rem 1.6rem; border-radius: 999px;
+          background: linear-gradient(180deg, var(--ad-gold-bright), var(--ad-gold) 45%, var(--ad-gold-2));
           color: #1a1108;
           text-transform: uppercase; letter-spacing: 0.28em; font-size: 12px; font-weight: 600;
-          transition: transform .25s ease, box-shadow .25s ease;
+          box-shadow: 0 14px 34px -14px rgba(205,164,91,.55), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.25);
+          transition: transform .3s ease, box-shadow .3s ease, filter .3s ease;
         }
-        .ad-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 30px -8px color-mix(in oklab, var(--ad-gold) 60%, transparent); }
+        .ad-cta:hover {
+          transform: translateY(-2px) scale(1.01);
+          filter: brightness(1.04);
+          box-shadow: 0 20px 48px -14px rgba(205,164,91,.7), 0 0 48px -10px var(--ad-glow), inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.25);
+        }
+
         .ad-swatch {
-          width: 34px; height: 34px; border-radius: 999px;
+          width: 36px; height: 36px; border-radius: 999px;
           border: 1px solid var(--ad-border);
-          box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-gold) 8%, transparent);
+          box-shadow: 0 0 0 3px rgba(205,164,91,.1), 0 6px 14px -6px rgba(0,0,0,.8);
         }
       `}</style>
 
+      <div className="ad-lighting" aria-hidden />
+      <motion.div className="ad-leopard" aria-hidden style={reduce ? { opacity: 0.16 } : { opacity: leopardOpacity }} />
+
       {/* Hero */}
-      <header className="relative px-5 pt-16 pb-12 sm:pt-24 sm:pb-16 text-center overflow-hidden">
+      <header className="relative px-5 pt-20 pb-16 sm:pt-28 sm:pb-20 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.8 }}
         >
           <div className="ad-eyebrow">Belle Glade, FL</div>
-          <h1 className="ad-display ad-glint text-5xl sm:text-7xl mt-5 leading-[0.95]">
+          <h1 className="ad-display ad-chrome text-[3.25rem] sm:text-8xl mt-6 leading-[0.92]">
             {ws.name || "Alluring Dolls"}
           </h1>
-          {data.branding?.hero_subhead && (
-            <p className="mt-6 text-sm sm:text-base text-[color:var(--ad-smoke)] max-w-md mx-auto leading-relaxed">
-              {data.branding.hero_subhead}
-            </p>
-          )}
-          <div className="mt-9 flex items-center justify-center gap-5 text-[11px]">
+          <p className="ad-serif mt-5 text-lg sm:text-xl italic text-[color:var(--ad-smoke)] max-w-md mx-auto leading-relaxed">
+            {data.branding?.hero_subhead || "An intimate luxury beauty studio — bespoke installs, quiet glamour."}
+          </p>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-[11px]">
             <a
               href="tel:5619758519"
-              className="inline-flex items-center gap-1.5 text-[color:var(--ad-gold)] hover:opacity-80 transition uppercase tracking-[0.2em]"
+              className="inline-flex items-center gap-1.5 text-[color:var(--ad-gold)] hover:opacity-80 transition uppercase tracking-[0.22em]"
             >
               <MessageCircle className="w-3.5 h-3.5" /> Text (561) 975-8519
             </a>
             <span className="text-[color:var(--ad-border)]">✦</span>
-            <span className="inline-flex items-center gap-1.5 text-[color:var(--ad-smoke)] uppercase tracking-[0.2em]">
+            <span className="inline-flex items-center gap-1.5 text-[color:var(--ad-smoke)] uppercase tracking-[0.22em]">
               <CalendarClock className="w-3.5 h-3.5" /> Mon–Sat, 10–6
             </span>
           </div>
         </motion.div>
       </header>
 
-      <div className="mx-auto max-w-[600px] px-5 pb-24">
+      <div className="relative mx-auto max-w-[640px] px-5 pb-28">
         {/* Menu heading */}
         <div className="text-center">
           <div className="ad-rule" />
-          <div className="mt-6 flex items-center justify-center">
+          <div className="mt-7 flex items-center justify-center">
             <span className="ad-pill">The Menu</span>
           </div>
         </div>
 
         {/* Categories */}
-        <div className="mt-10 space-y-14">
+        <div className="mt-12 space-y-16">
           {categories.length === 0 && (
-            <p className="text-center text-sm text-[color:var(--ad-smoke)] italic">
+            <p className="ad-serif text-center text-base text-[color:var(--ad-smoke)] italic">
               Services coming soon.
             </p>
           )}
@@ -213,57 +297,48 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
             return (
               <motion.section
                 key={cat.id}
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.5, delay: Math.min(i, 3) * 0.05 }}
+                transition={{ duration: 0.55, delay: Math.min(i, 3) * 0.05 }}
               >
-                <div className="flex flex-col items-center gap-3">
-                  <AdStoreImage url={cat.image_url} size={64} />
-                  <h2
-                    className="ad-display text-2xl sm:text-3xl text-center"
-                    style={{ color: "var(--ad-gold)" }}
-                  >
+                <div className="flex flex-col items-center gap-4">
+                  <AdStoreImage url={cat.image_url} size={72} />
+                  <h2 className="ad-display ad-chrome text-3xl sm:text-4xl text-center">
                     {cat.name}
                   </h2>
                 </div>
                 {cat.description && (
-                  <p className="mt-2 text-center text-xs text-[color:var(--ad-smoke)] italic">
+                  <p className="ad-serif mt-3 text-center text-base text-[color:var(--ad-smoke)] italic">
                     {cat.description}
                   </p>
                 )}
-                <div className="mt-6 space-y-3">
+                <div className="mt-8 space-y-4">
                   {catVariants.map((v: any) => {
                     const dur = formatDuration(v.duration_min);
                     return (
-                      <div key={v.id} className="ad-card p-4 sm:p-5">
+                      <div key={v.id} className="ad-product p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-3 flex-1">
-                            <AdStoreImage url={v.image_url} size={44} />
-                            <div className="flex-1">
-                              <h3
-                                className="text-sm font-medium tracking-wide"
-                                style={{ color: "var(--ad-ivory)" }}
-                              >
+                          <div className="flex items-start gap-4 flex-1 min-w-0">
+                            <AdStoreImage url={v.image_url} size={52} />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-[15px] font-medium tracking-wide text-[color:var(--ad-ivory)]">
                                 {v.name}
                               </h3>
                               {v.description && (
-                                <p className="mt-1.5 text-xs text-[color:var(--ad-smoke)] leading-relaxed">
+                                <p className="mt-2 text-[13px] text-[color:var(--ad-smoke)] leading-relaxed">
                                   {v.description}
                                 </p>
                               )}
                               {dur && (
-                                <div className="mt-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[color:var(--ad-smoke)]">
+                                <div className="mt-3 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-[color:var(--ad-smoke)]">
                                   <Clock className="w-3 h-3" />
                                   <span>{dur}</span>
                                 </div>
                               )}
                             </div>
                           </div>
-                          <div
-                            className="text-base font-medium"
-                            style={{ color: "var(--ad-gold)" }}
-                          >
+                          <div className="shrink-0 text-lg font-medium ad-chrome ad-serif">
                             {formatPrice(v.price_cents)}
                           </div>
                         </div>
@@ -278,38 +353,48 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
 
         {/* Length add-ons */}
         {lengthOptions.length > 0 && (
-          <section className="mt-14">
+          <motion.section
+            className="mt-16"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55 }}
+          >
             <div className="text-center">
               <span className="ad-pill">Extra Length</span>
             </div>
-            <div className="mt-6 ad-card p-5">
+            <div className="mt-7 ad-card p-6 sm:p-7">
               <ul className="divide-y" style={{ borderColor: "var(--ad-border)" }}>
                 {lengthOptions.map((l: any) => (
                   <li
                     key={l.id}
-                    className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0"
+                    className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0"
                   >
-                    <span className="text-sm" style={{ color: "var(--ad-ivory)" }}>
-                      {l.name}
-                    </span>
-                    <span className="text-sm font-medium" style={{ color: "var(--ad-gold)" }}>
+                    <span className="text-sm text-[color:var(--ad-ivory)]">{l.name}</span>
+                    <span className="ad-serif text-base font-medium text-[color:var(--ad-gold)]">
                       +{formatPrice(l.price_cents)}
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* Hair colors */}
         {hairColors.length > 0 && (
-          <section className="mt-14">
+          <motion.section
+            className="mt-16"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55 }}
+          >
             <div className="text-center">
               <span className="ad-pill">Hair Colors</span>
             </div>
-            <div className="mt-6 ad-card p-5">
-              <div className="flex flex-wrap gap-5 justify-center">
+            <div className="mt-7 ad-card p-6 sm:p-7">
+              <div className="flex flex-wrap gap-6 justify-center">
                 {hairColors.map((c: any) => (
                   <div key={c.id} className="flex flex-col items-center gap-2">
                     <div
@@ -317,63 +402,65 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
                       style={{ backgroundColor: c.swatch_hex }}
                       title={c.label}
                     />
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--ad-smoke)]">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--ad-smoke)]">
                       {c.code}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* Primary CTA */}
-        <div className="mt-14">
+        <div className="mt-16">
           <Link to="/booking/$slug" params={{ slug: handle }} className="ad-cta">
             {data.branding?.cta_label ?? "Reserve Your Look"} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
         {/* Good to know / policies */}
-        <section className="mt-16">
+        <motion.section
+          className="mt-20"
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.55 }}
+        >
           <div className="text-center">
             <span className="ad-pill">Good to Know</span>
           </div>
-          <div className="mt-6 ad-card p-5 sm:p-6">
-            <dl className="space-y-4">
-              {POLICIES.map((p) => (
+          <div className="mt-7 ad-card p-7 sm:p-9">
+            <dl className="space-y-6">
+              {POLICIES.map((p, idx) => (
                 <div key={p.label}>
-                  <dt className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--ad-gold)]">
+                  <dt className="text-[10px] uppercase tracking-[0.26em] text-[color:var(--ad-gold)]">
                     {p.label}
                   </dt>
-                  <dd className="mt-1 text-sm text-[color:var(--ad-smoke)] leading-relaxed">
+                  <dd className="mt-2 text-sm text-[color:var(--ad-smoke)] leading-relaxed">
                     {p.detail}
                   </dd>
+                  {idx < POLICIES.length - 1 && <div className="ad-rule mt-6 opacity-60" />}
                 </div>
               ))}
             </dl>
           </div>
-          <div className="mt-5 text-center">
-            <p
-              className="ad-display text-lg tracking-[0.2em]"
-              style={{ color: "var(--ad-gold-bright)" }}
-            >
-              No Kids Allowed
-            </p>
+          <div className="mt-7 text-center">
+            <p className="ad-display ad-chrome text-xl tracking-[0.24em]">No Kids Allowed</p>
           </div>
-        </section>
+        </motion.section>
 
         {/* Footer / contact */}
-        <footer className="mt-16 text-center">
+        <footer className="mt-20 text-center">
           <div className="ad-rule" />
-          <p className="ad-display ad-glint text-3xl mt-6">{ws.name || "Alluring Dolls"}</p>
-          <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-[color:var(--ad-smoke)]">
+          <p className="ad-display ad-chrome text-4xl mt-8">{ws.name || "Alluring Dolls"}</p>
+          <p className="mt-5 inline-flex items-center gap-1.5 text-xs text-[color:var(--ad-smoke)]">
             <MapPin className="w-3.5 h-3.5" /> 33 W Ave A, Apt 3A · Belle Glade, FL
           </p>
-          <p className="mt-1 text-xs text-[color:var(--ad-smoke)]">
+          <p className="mt-1.5 text-xs text-[color:var(--ad-smoke)]">
             Text only · (561) 975-8519 · Open Mon–Sat, 10am–6pm
           </p>
-          <p className="mt-7 text-[10px] uppercase tracking-[0.2em] text-[color:var(--ad-smoke)]">
+          <p className="mt-8 text-[10px] uppercase tracking-[0.22em] text-[color:var(--ad-smoke)]">
             Powered by{" "}
             <Link
               to="/onboarding"
@@ -389,7 +476,7 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
       <div
         className="fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-md px-4 py-3 sm:hidden"
         style={{
-          backgroundColor: "color-mix(in oklab, var(--ad-bg) 88%, transparent)",
+          backgroundColor: "color-mix(in oklab, var(--ad-bg) 82%, transparent)",
           borderColor: "var(--ad-border)",
         }}
       >
@@ -404,11 +491,18 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
 function AdStoreImage({ url, size }: { url?: string | null; size: number }) {
   const style = { width: size, height: size };
   if (url) {
-    return <img src={url} alt="" style={style} className="rounded object-cover" />;
+    return (
+      <img
+        src={url}
+        alt=""
+        style={style}
+        className="rounded-2xl object-cover shrink-0 shadow-[0_10px_28px_-12px_rgba(0,0,0,.85)]"
+      />
+    );
   }
   return (
     <div
-      className="grid place-items-center rounded shrink-0"
+      className="grid place-items-center rounded-2xl shrink-0"
       style={{
         ...style,
         border: "1px solid var(--ad-border)",
@@ -416,7 +510,7 @@ function AdStoreImage({ url, size }: { url?: string | null; size: number }) {
         background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
       }}
     >
-      <ImageIcon style={{ width: size * 0.42, height: size * 0.42 }} />
+      <ImageIcon style={{ width: size * 0.4, height: size * 0.4 }} />
     </div>
   );
 }

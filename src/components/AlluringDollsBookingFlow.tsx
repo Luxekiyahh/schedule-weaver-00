@@ -131,39 +131,104 @@ export function AlluringDollsBookingFlow({
 
 
   return (
-    <div className="ad-root min-h-screen">
+    <div className="ad-root relative min-h-screen overflow-clip">
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
       />
       <style>{`
         .ad-root {
-          --ad-bg: #0b0a0d;
-          --ad-bg2: #161116;
-          --ad-wine: #3a0d18;
-          --ad-gold: #cba35c;
-          --ad-gold-bright: #f3e0ad;
-          --ad-ivory: #f3ede2;
-          --ad-smoke: #a8978a;
-          --ad-border: color-mix(in oklab, var(--ad-gold) 22%, transparent);
+          --ad-bg: #090809;
+          --ad-bg2: #151214;
+          --ad-gold: #CDA45B;
+          --ad-gold-2: #B98B47;
+          --ad-gold-bright: #F3E0AD;
+          --ad-ivory: #F8F5EF;
+          --ad-smoke: #C8B7A0;
+          --ad-border: rgba(205,164,91,.25);
+          --ad-glow: rgba(205,164,91,.18);
           background-color: var(--ad-bg);
           color: var(--ad-ivory);
-          font-family: 'Jost', system-ui, sans-serif;
-          background-image: radial-gradient(ellipse 60% 35% at 50% 0%, color-mix(in oklab, var(--ad-wine) 50%, transparent), transparent 70%);
+          font-family: 'Inter', system-ui, sans-serif;
+          isolation: isolate;
         }
-        .ad-display { font-family: 'Italiana', serif; text-transform: uppercase; letter-spacing: 0.1em; }
-        .ad-card { background: color-mix(in oklab, var(--ad-bg2) 92%, var(--ad-wine) 8%); border: 1px solid var(--ad-border); border-radius: 4px; }
-        .ad-row { background: color-mix(in oklab, var(--ad-bg2) 92%, var(--ad-wine) 8%); border: 1px solid var(--ad-border); border-radius: 4px; transition: border-color .25s ease, transform .2s ease; }
-        .ad-row:hover { border-color: color-mix(in oklab, var(--ad-gold) 50%, transparent); }
-        .ad-row[data-active="true"] { border-color: var(--ad-gold); box-shadow: 0 0 0 1px color-mix(in oklab, var(--ad-gold) 35%, transparent); }
-        .ad-input { background: color-mix(in oklab, var(--ad-bg2) 90%, transparent) !important; border-color: var(--ad-border) !important; color: var(--ad-ivory) !important; }
+        .ad-lighting {
+          position: fixed; inset: 0; z-index: -2; pointer-events: none;
+          background:
+            radial-gradient(120% 55% at 50% -8%, rgba(205,164,91,.14), transparent 60%),
+            radial-gradient(90% 60% at 92% 8%, rgba(185,139,71,.10), transparent 55%),
+            radial-gradient(90% 70% at 8% 100%, rgba(205,164,91,.08), transparent 60%),
+            radial-gradient(140% 120% at 50% 50%, transparent 55%, rgba(0,0,0,.65) 100%);
+        }
+        .ad-leopard {
+          position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: .18;
+          filter: blur(1.5px) contrast(1.05);
+          background-image:
+            radial-gradient(38px 30px at 12% 18%, rgba(30,26,22,.9), rgba(30,26,22,0) 70%),
+            radial-gradient(20px 16px at 12% 18%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(44px 34px at 42% 34%, rgba(34,29,24,.85), rgba(34,29,24,0) 70%),
+            radial-gradient(22px 18px at 42% 34%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(40px 32px at 74% 22%, rgba(30,26,22,.85), rgba(30,26,22,0) 70%),
+            radial-gradient(20px 16px at 74% 22%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(48px 36px at 88% 56%, rgba(34,29,24,.82), rgba(34,29,24,0) 70%),
+            radial-gradient(24px 18px at 88% 56%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(42px 34px at 24% 62%, rgba(30,26,22,.85), rgba(30,26,22,0) 70%),
+            radial-gradient(21px 17px at 24% 62%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
+            radial-gradient(46px 36px at 58% 78%, rgba(34,29,24,.82), rgba(34,29,24,0) 70%),
+            radial-gradient(23px 18px at 58% 78%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%);
+          background-size: 420px 420px;
+          background-repeat: repeat;
+        }
+        .ad-display { font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: 0.12em; }
+        .ad-serif { font-family: 'Cormorant Garamond', serif; }
+        .ad-chrome {
+          background: linear-gradient(100deg, var(--ad-gold-2) 0%, var(--ad-gold) 34%, var(--ad-gold-bright) 50%, var(--ad-gold) 66%, var(--ad-gold-2) 100%);
+          background-size: 280% 100%;
+          -webkit-background-clip: text; background-clip: text; color: transparent;
+          text-shadow: 0 1px 0 rgba(0,0,0,.5), 0 0 24px rgba(205,164,91,.18);
+          animation: ad-sweep 6s ease-in-out infinite;
+        }
+        @keyframes ad-sweep { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }
+        @media (prefers-reduced-motion: reduce) { .ad-chrome { animation: none; background-position: 0% 0; } }
+        .ad-card {
+          background: linear-gradient(160deg, rgba(255,255,255,.03), transparent 40%), linear-gradient(180deg, var(--ad-bg2), color-mix(in oklab, var(--ad-bg2) 88%, #000 12%));
+          border: 1px solid var(--ad-border); border-radius: 22px;
+          box-shadow: 0 24px 60px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
+        }
+        .ad-row {
+          background: linear-gradient(160deg, rgba(255,255,255,.03), transparent 45%), linear-gradient(180deg, var(--ad-bg2), color-mix(in oklab, var(--ad-bg2) 86%, #000 14%));
+          border: 1px solid var(--ad-border); border-radius: 16px;
+          transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease;
+        }
+        .ad-row:hover { border-color: color-mix(in oklab, var(--ad-gold) 60%, transparent); transform: translateY(-2px); box-shadow: 0 20px 44px -26px rgba(0,0,0,.9), 0 0 32px -14px var(--ad-glow); }
+        .ad-row[data-active="true"] { border-color: var(--ad-gold); box-shadow: 0 0 0 1px color-mix(in oklab, var(--ad-gold) 40%, transparent), 0 0 34px -12px var(--ad-glow); }
+        .ad-input {
+          background: color-mix(in oklab, var(--ad-bg2) 90%, transparent) !important;
+          border-color: var(--ad-border) !important; color: var(--ad-ivory) !important;
+          border-radius: 12px !important; transition: border-color .25s ease, box-shadow .25s ease !important;
+        }
         .ad-input::placeholder { color: var(--ad-smoke); }
+        .ad-input:focus, .ad-input:focus-visible {
+          border-color: var(--ad-gold) !important;
+          box-shadow: 0 0 0 3px rgba(205,164,91,.18) !important; outline: none !important;
+        }
         .ad-label { text-transform: uppercase; letter-spacing: 0.22em; font-size: 10.5px; color: var(--ad-smoke); }
-        .ad-cta-btn { background: var(--ad-gold) !important; color: #1a1108 !important; border: none !important; }
-        .ad-cta-btn:hover { opacity: 0.92; }
-        .ad-ghost-btn { color: var(--ad-smoke) !important; }
+        .ad-cta-btn {
+          background: linear-gradient(180deg, var(--ad-gold-bright), var(--ad-gold) 45%, var(--ad-gold-2)) !important;
+          color: #1a1108 !important; border: none !important; border-radius: 999px !important;
+          box-shadow: 0 14px 34px -14px rgba(205,164,91,.55), inset 0 1px 0 rgba(255,255,255,.5) !important;
+          transition: transform .3s ease, box-shadow .3s ease, filter .3s ease !important;
+        }
+        .ad-cta-btn:hover { transform: translateY(-2px); filter: brightness(1.04); box-shadow: 0 20px 48px -14px rgba(205,164,91,.7), 0 0 48px -10px var(--ad-glow), inset 0 1px 0 rgba(255,255,255,.6) !important; }
+        .ad-ghost-btn { color: var(--ad-smoke) !important; border-radius: 999px !important; }
         .ad-ghost-btn:hover { color: var(--ad-ivory) !important; background: transparent !important; }
       `}</style>
+
+      <div className="ad-lighting" aria-hidden />
+      <div className="ad-leopard" aria-hidden />
+
 
       <div className="mx-auto max-w-2xl px-6 py-12 sm:py-16">
         {/* Header */}
@@ -179,9 +244,10 @@ export function AlluringDollsBookingFlow({
           >
             Book Online
           </div>
-          <h1 className="ad-display text-3xl sm:text-4xl mt-3" style={{ color: "var(--ad-gold)" }}>
+          <h1 className="ad-display ad-chrome text-4xl sm:text-5xl mt-4">
             {workspaceName}
           </h1>
+
         </header>
 
         {/* Stepper */}
