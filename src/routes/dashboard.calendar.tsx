@@ -106,6 +106,7 @@ function Dashboard() {
   const [cursor, setCursor] = useState<Date>(startOfDay(new Date()));
   const [selectedProvider, setSelectedProvider] = useState<string>("all"); // member id or "all"
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
+  const [showCancelled, setShowCancelled] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -294,6 +295,22 @@ function Dashboard() {
     setSelectedAppt((p) => (p && p.id === id ? { ...p, status } : p));
   };
 
+  const deleteAppointment = async (id: string) => {
+    if (!confirm("Delete this appointment permanently? This cannot be undone.")) return;
+    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Appointment deleted");
+    setAppointments((prev) => prev.filter((a) => a.id !== id));
+    setSelectedAppt(null);
+  };
+
+  // Cancelled appointments are hidden from the grid by default so cancelling
+  // visibly removes them; the "Show cancelled" toggle brings them back.
+  const visibleAppointments = useMemo(
+    () => (showCancelled ? appointments : appointments.filter((a) => a.status !== "cancelled")),
+    [appointments, showCancelled],
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen grid place-items-center bg-slate-50">
@@ -441,11 +458,23 @@ function Dashboard() {
               </div>
             </div>
 
+            <div className="mt-2 flex justify-end">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-500">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 rounded border-slate-300"
+                  checked={showCancelled}
+                  onChange={(e) => setShowCancelled(e.target.checked)}
+                />
+                Show cancelled
+              </label>
+            </div>
+
             {view === "month"
-              ? <MonthView cursor={cursor} appointments={appointments} onSelect={setSelectedAppt} />
+              ? <MonthView cursor={cursor} appointments={visibleAppointments} onSelect={setSelectedAppt} />
               : <TimeGridView
                   view={view} rangeStart={rangeStart}
-                  appointments={appointments} onSelect={setSelectedAppt}
+                  appointments={visibleAppointments} onSelect={setSelectedAppt}
                 />}
           </section>
         </div>
@@ -456,6 +485,7 @@ function Dashboard() {
         appt={selectedAppt}
         onClose={() => setSelectedAppt(null)}
         onStatus={(s) => selectedAppt && updateStatus(selectedAppt.id, s)}
+        onDelete={() => selectedAppt && deleteAppointment(selectedAppt.id)}
       />
 
       {/* New appointment */}
@@ -761,7 +791,7 @@ function MonthView({ cursor, appointments, onSelect }: { cursor: Date; appointme
   );
 }
 
-function ApptDialog({ appt, onClose, onStatus }: { appt: Appointment | null; onClose: () => void; onStatus: (s: Status) => void; }) {
+function ApptDialog({ appt, onClose, onStatus, onDelete }: { appt: Appointment | null; onClose: () => void; onStatus: (s: Status) => void; onDelete: () => void; }) {
   return (
     <Dialog open={!!appt} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
@@ -792,6 +822,12 @@ function ApptDialog({ appt, onClose, onStatus }: { appt: Appointment | null; onC
                     <SelectItem value="no_show">No-show</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="border-t pt-3">
+                <Button variant="outline" onClick={onDelete}
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Delete appointment
+                </Button>
               </div>
             </div>
           </>
