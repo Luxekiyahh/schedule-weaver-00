@@ -38,13 +38,18 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
     // 2. Find the workspace auto-created by the handle_new_user trigger.
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
-      .select("id, slug")
+      .select("id, slug, onboarded_at")
       .eq("owner_id", userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     if (wsErr) throw new Error(wsErr.message);
     if (!ws) throw new Error("Workspace not initialized. Please sign in again.");
+    if (ws.onboarded_at) {
+      throw new Error(
+        "This account is already set up. You can manage your site from the dashboard.",
+      );
+    }
 
     // 3. Rename + reslug it (and set NY timezone for Dolliimarie).
     const isDolliimarie = data.slug === "dolliimarie";
