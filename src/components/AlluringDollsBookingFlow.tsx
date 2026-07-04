@@ -927,22 +927,10 @@ function AdCategoryAccordion({
 }
 
 function AdImage({ url }: { url?: string | null }) {
-  if (url) {
-    return <img src={url} alt="" className="h-11 w-11 rounded object-cover" />;
-  }
-  return (
-    <div
-      className="grid h-11 w-11 place-items-center rounded"
-      style={{
-        border: "1px solid var(--ad-border)",
-        color: "var(--ad-smoke)",
-        background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
-      }}
-    >
-      <ImageIcon className="h-5 w-5" />
-    </div>
-  );
+  if (!url) return null;
+  return <img src={url} alt="" className="h-11 w-11 rounded object-cover" />;
 }
+
 
 function AdServiceRow({
   s,
