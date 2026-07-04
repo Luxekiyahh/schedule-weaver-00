@@ -280,24 +280,27 @@ function ServiceDialog({
 
     setSaving(true);
     try {
+      const trimmedName = name.trim();
       if (editing) {
         const { error } = await supabase.from("services").update({
-          name: name.trim(),
+          name: trimmedName,
           description: description.trim() || null,
           duration_minutes: mins,
           price_cents: cents,
           is_active: active,
+          image_url: imageUrl,
         }).eq("id", editing.id);
         if (error) throw error;
         toast.success("Service updated");
       } else {
         const { data: inserted, error } = await supabase.from("services").insert({
           workspace_id: ctx.workspaceId,
-          name: name.trim(),
+          name: trimmedName,
           description: description.trim() || null,
           duration_minutes: mins,
           price_cents: cents,
           is_active: active,
+          image_url: imageUrl,
         }).select("id").single();
         if (error) throw error;
         // Auto-link current admin as a provider for the new service
@@ -313,6 +316,13 @@ function ServiceDialog({
           toast.success("Service created");
         }
       }
+      // Mirror the image onto the matching storefront catalog row (service_variants),
+      // which is what the public booking page actually reads.
+      await supabase.from("service_variants")
+        .update({ image_url: imageUrl })
+        .eq("workspace_id", ctx.workspaceId)
+        .eq("name", trimmedName);
+
       onSaved();
     } catch (e: any) {
       toast.error(e.message ?? "Failed to save");
