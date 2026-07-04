@@ -1,12 +1,15 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, MessageSquare, Bell } from "lucide-react";
 import { toast } from "sonner";
+import { sendTestSms } from "@/lib/sms/sms.functions";
 
 export const Route = createFileRoute("/dashboard/notifications")({
   component: NotificationsPage,
@@ -31,6 +34,23 @@ function NotificationsPage() {
   const [initial, setInitial] = useState<Settings>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [testing, setTesting] = useState(false);
+  const sendTest = useServerFn(sendTestSms);
+
+  async function onTestSms() {
+    if (!testPhone.trim()) return;
+    setTesting(true);
+    try {
+      const res = await sendTest({ data: { phone: testPhone.trim() } });
+      if (res.ok) toast.success("Test SMS sent", { description: `Message ${res.sid} is on its way.` });
+      else toast.error("Could not send test SMS", { description: res.error });
+    } catch (err) {
+      toast.error("Could not send test SMS", { description: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setTesting(false);
+    }
+  }
 
   useEffect(() => {
     (async () => {
@@ -140,6 +160,22 @@ function NotificationsPage() {
             checked={settings.client_sms}
             onChange={(v) => setSettings((s) => ({ ...s, client_sms: v }))}
           />
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <Label htmlFor="test_sms" className="text-sm font-medium">Send a test SMS</Label>
+            <p className="text-sm text-muted-foreground">Verify Twilio delivery by texting your own phone.</p>
+            <div className="flex gap-2">
+              <Input
+                id="test_sms"
+                type="tel"
+                placeholder="+1 555 123 4567"
+                value={testPhone}
+                onChange={(e) => setTestPhone(e.target.value)}
+              />
+              <Button onClick={onTestSms} disabled={testing || !testPhone.trim()}>
+                {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send test"}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

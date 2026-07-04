@@ -40,6 +40,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
 
   const prefs = {
     client_email: true,
+    client_sms: false,
     provider_email: true,
     ...((workspace.notification_settings as Record<string, boolean>) ?? {}),
   };
@@ -120,6 +121,25 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
           primary,
         },
       }),
+    );
+  }
+
+  if (prefs.client_sms && customer.phone) {
+    tasks.push(
+      (async () => {
+        try {
+          const { sendSms } = await import("@/lib/sms/twilio.server");
+          const changeContact = workspace.business_phone
+            ? ` Call ${workspace.business_phone} to make changes.`
+            : "";
+          await sendSms({
+            to: customer.phone!,
+            body: `${workspace.name}: Your ${service.name} is confirmed for ${dateLabel} at ${timeLabel}.${changeContact}`,
+          });
+        } catch (err) {
+          console.error("[appointment-emails] SMS send failed", err);
+        }
+      })(),
     );
   }
 
