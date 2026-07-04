@@ -1,37 +1,39 @@
-## Goal
-Four focused fixes to the Alluring Dolls experience — no changes to booking logic, scheduling, or data flow.
+# Alluring Dolls booking page — colors, add-ons, wig install, leopard
 
-## 1. Leopard pattern missing on the booking page
-`/booking/alluringdolls` (`AlluringDollsBookingFlow.tsx`) already includes the `.ad-leopard` layer, but at `opacity: .18` on a short, narrow page it reads as flat black. The storefront looks textured only because its leopard opacity ramps up to 0.5 on scroll.
+Four changes, mirroring how the Dolliimarie booking page presents colors and add-ons, while leaving the shared booking engine untouched for every other tenant.
 
-**Fix:** Make the booking-page leopard clearly visible — raise its opacity (~0.3–0.35), and verify the fixed layer paints correctly behind the centered card (stacking context is already isolated). Match the storefront's texture density so both pages feel consistent.
+## 1. Hair color options (1B, 1, 2, 4)
 
-## 2. Remove street address on the storefront footer
-In `AlluringDollsStorefront.tsx` the footer line reads:
-`33 W Ave A, Apt 3A · Belle Glade, FL`
+The booking page currently doesn't show colors at all (only the storefront does). I'll wire colors into the booking flow, Alluring-Dolls-only in presentation.
 
-**Fix:** Drop the street/apt (residential privacy) → show just `Belle Glade, FL`. Keep the map pin icon.
+- **Data:** add 4 rows to the hair-colors table for the Alluring Dolls workspace:
+  - `1B` (off/soft black), `1` (jet black), `2` (dark brown), `4` (medium brown), each with a dark swatch color and sort order.
+- **Backend:** `getBookingWorkspace` (`src/lib/booking.functions.ts`) will also fetch active hair colors and return them as `hairColors`. Harmless empty array for tenants with none.
+- **UI:** a new "Hair Color" section of gold swatch pills in `AlluringDollsBookingFlow.tsx` (matches the existing gold aesthetic), shown on the Details step. Selected color is displayed in the summary.
+- **Recording the choice:** the picked color is appended to the appointment notes on submit (e.g. `Hair color: 1B`). This avoids changing the shared booking payload/engine.
 
-## 3. Hide the image placeholder when a service has no image
-Currently empty images render a bordered box with a placeholder icon on both surfaces:
-- `AlluringDollsStorefront.tsx` → `AdStoreImage` (service cards + category headers)
-- `AlluringDollsBookingFlow.tsx` → `AdImage` (service selection rows)
+## 2. Curls or Crimps → add-on (instead of a service)
 
-**Fix:** When `url` is empty, render nothing (return `null`) instead of the placeholder box, and adjust the row/card layout so the text sits flush with no empty gap. Applies to service items (and category headers for consistency).
+Today "Curls or Crimps Styling Add-on" ($45 / 45 min) exists as a bookable **service** under Sew-ins.
 
-## 4. Add an "Add image" button to the Edit Service popup
-The edit popup lives in `dashboard.services.tsx` → `ServiceDialog`, which edits the `services` table. Important data-model note: the live Alluring Dolls page reads images from the **`service_variants`** table (parallel rows matched by name), not `services`. Both tables already have an `image_url` column and a public `branding` storage bucket exists.
+- **Data:** create it as an **add-on** (length-option/add-on row: name "Curls or Crimps", $45, 45 min) for the workspace, and deactivate the standalone service so it no longer appears in the service list.
+- **UI:** the Alluring Dolls flow already renders add-ons as gold toggle pills on the Details step, so it will appear there automatically and add to the total.
 
-**Fix:**
-- Add an image upload control to `ServiceDialog` (thumbnail preview + "Add image" / "Replace" / "Remove" buttons), wired to the `Service` type/state (add `image_url`).
-- Upload the file to the existing public `branding` bucket under a `services/{workspaceId}/…` path and get its public URL.
-- On save, write `image_url` to the `services` row **and** mirror it onto the matching `service_variants` row (same `workspace_id` + `name`) so the image actually appears on the storefront and booking flow. On new-service creation, set it on both if a name match exists.
-- Confirm the `branding` bucket has an insert/update policy allowing the authenticated workspace owner to upload; add one via migration if missing.
+## 3. Missing "Wig Install" category + services
 
-## Verification
-- Screenshot `/alluringdolls` and `/booking/alluringdolls` (desktop + mobile): leopard visible on both, footer shows only "Belle Glade, FL", no placeholder boxes on imageless services.
-- In the dashboard, edit a service, upload an image, save, and confirm it renders on the storefront service card and the booking selection row.
-- Typecheck clean; booking flow and all existing functionality untouched.
+- **Data:** add a `Wig Install` service category, and two active services linked to the existing provider:
+  - **Frontal wig install** — $130, 90 min
+  - **Closure wig install** — $100, 90 min
 
-## Not changing
-Booking/slot/deposit logic, routes, other tenants' themes, service pricing/duration data.
+## 4. Leopard texture not visible
+
+The leopard layer *is* rendering (fixed, opacity .34) but its spots are near-black on a near-black background, so it reads as flat. I'll raise its contrast so it's actually visible: lighten the spot tones toward warm taupe/gold-brown, bump opacity, and reduce the blur slightly — keeping it subtle and on-brand. I'll re-screenshot to confirm it now reads on the booking page.
+
+---
+
+## Technical notes
+
+- Files: `src/lib/booking.functions.ts` (add `hairColors` fetch/return), `src/routes/booking.$slug.tsx` (color state + pass-through + append to notes), `src/components/AlluringDollsBookingFlow.tsx` (color selector, summary line, leopard CSS).
+- Data changes go through the insert/migration tools: hair-color rows, add-on row, service deactivation, new category + 2 services + provider links — all scoped to the Alluring Dolls workspace only.
+- No changes to the shared booking flow used by other tenants; color UI and payload additions are gated to the `alluringdolls` slug / custom component.
+- Verification: screenshot the booking page to confirm colors, the curls/crimps add-on, the Wig Install category, and a visible leopard texture.

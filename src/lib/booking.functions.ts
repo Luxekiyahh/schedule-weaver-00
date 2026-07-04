@@ -19,6 +19,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
         serviceProviders: [],
         categories: [],
         lengthOptions: [],
+        hairColors: [],
         payment: null,
       };
 
@@ -28,6 +29,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       { data: links },
       { data: categories },
       { data: lengthOptions },
+      { data: hairColors },
       { data: paySettings },
     ] = await Promise.all([
       supabaseAdmin
@@ -56,6 +58,12 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("service_length_options")
         .select("id, name, duration_min, price_cents, sort_order")
+        .eq("workspace_id", ws.id)
+        .eq("active", true)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("service_hair_colors")
+        .select("id, code, label, swatch_hex, sort_order")
         .eq("workspace_id", ws.id)
         .eq("active", true)
         .order("sort_order", { ascending: true }),
@@ -112,6 +120,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       serviceProviders: links ?? [],
       categories: categories ?? [],
       lengthOptions: lengthOptions ?? [],
+      hairColors: hairColors ?? [],
       payment,
     };
   });

@@ -85,6 +85,7 @@ function BookingPage() {
   const [slots, setSlots] = useState<{ time: string; member_id: string }[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<{ time: string; member_id: string } | null>(null);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
 
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -194,6 +195,12 @@ function BookingPage() {
     if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
     setSubmitting(true);
     try {
+      const chosenColor = (data.hairColors ?? []).find((c: any) => c.id === selectedColorId);
+      const notes = chosenColor
+        ? [`Hair color: ${chosenColor.code}${chosenColor.label ? ` (${chosenColor.label})` : ""}`, form.notes]
+            .filter(Boolean)
+            .join("\n")
+        : form.notes;
       const common = {
         workspaceId: data.workspace.id,
         serviceId: service.id,
@@ -203,7 +210,7 @@ function BookingPage() {
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
-        notes: form.notes,
+        notes,
         addOns: addOnsPayload,
       };
       if (depositRequired && data.payment?.provider === "stripe") {
@@ -279,6 +286,8 @@ function BookingPage() {
         services={data.services}
         categories={data.categories}
         lengthOptions={data.lengthOptions}
+        hairColors={data.hairColors ?? []}
+        selectedColorId={selectedColorId} setSelectedColorId={setSelectedColorId}
         selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns}
         addOnTotalCents={addOnTotalCents}
         depositRequired={depositRequired}

@@ -42,6 +42,7 @@ type Service = {
 };
 type Category = { id: string; name: string; description?: string | null; image_url?: string | null };
 type LengthOption = { id: string; name: string; price_cents: number; duration_min: number };
+type HairColor = { id: string; code: string; label: string | null; swatch_hex: string | null };
 type Provider = { member_id: string; name: string };
 type Slot = { time: string; member_id: string };
 
@@ -73,6 +74,9 @@ export function AlluringDollsBookingFlow({
   services,
   categories,
   lengthOptions,
+  hairColors,
+  selectedColorId,
+  setSelectedColorId,
   selectedAddOns,
   setSelectedAddOns,
   addOnTotalCents,
@@ -102,6 +106,9 @@ export function AlluringDollsBookingFlow({
   services: Service[];
   categories: Category[];
   lengthOptions: LengthOption[];
+  hairColors: HairColor[];
+  selectedColorId: string | null;
+  setSelectedColorId: (id: string | null) => void;
   selectedAddOns: string[];
   setSelectedAddOns: (updater: (prev: string[]) => string[]) => void;
   addOnTotalCents: number;
@@ -163,21 +170,21 @@ export function AlluringDollsBookingFlow({
             radial-gradient(140% 120% at 50% 50%, transparent 55%, rgba(0,0,0,.65) 100%);
         }
         .ad-leopard {
-          position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: .34;
-          filter: blur(1.5px) contrast(1.05);
+          position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: .5;
+          filter: blur(0.8px) contrast(1.15);
           background-image:
-            radial-gradient(38px 30px at 12% 18%, rgba(30,26,22,.9), rgba(30,26,22,0) 70%),
-            radial-gradient(20px 16px at 12% 18%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
-            radial-gradient(44px 34px at 42% 34%, rgba(34,29,24,.85), rgba(34,29,24,0) 70%),
-            radial-gradient(22px 18px at 42% 34%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
-            radial-gradient(40px 32px at 74% 22%, rgba(30,26,22,.85), rgba(30,26,22,0) 70%),
-            radial-gradient(20px 16px at 74% 22%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
-            radial-gradient(48px 36px at 88% 56%, rgba(34,29,24,.82), rgba(34,29,24,0) 70%),
-            radial-gradient(24px 18px at 88% 56%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
-            radial-gradient(42px 34px at 24% 62%, rgba(30,26,22,.85), rgba(30,26,22,0) 70%),
-            radial-gradient(21px 17px at 24% 62%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%),
-            radial-gradient(46px 36px at 58% 78%, rgba(34,29,24,.82), rgba(34,29,24,0) 70%),
-            radial-gradient(23px 18px at 58% 78%, rgba(9,8,9,.95), rgba(9,8,9,0) 72%);
+            radial-gradient(38px 30px at 12% 18%, rgba(120,92,54,.55), rgba(120,92,54,0) 70%),
+            radial-gradient(20px 16px at 12% 18%, rgba(20,16,12,.95), rgba(20,16,12,0) 72%),
+            radial-gradient(44px 34px at 42% 34%, rgba(132,102,60,.5), rgba(132,102,60,0) 70%),
+            radial-gradient(22px 18px at 42% 34%, rgba(20,16,12,.95), rgba(20,16,12,0) 72%),
+            radial-gradient(40px 32px at 74% 22%, rgba(120,92,54,.5), rgba(120,92,54,0) 70%),
+            radial-gradient(20px 16px at 74% 22%, rgba(20,16,12,.95), rgba(20,16,12,0) 72%),
+            radial-gradient(48px 36px at 88% 56%, rgba(132,102,60,.48), rgba(132,102,60,0) 70%),
+            radial-gradient(24px 18px at 88% 56%, rgba(20,16,12,.95), rgba(20,16,12,0) 72%),
+            radial-gradient(42px 34px at 24% 62%, rgba(120,92,54,.5), rgba(120,92,54,0) 70%),
+            radial-gradient(21px 17px at 24% 62%, rgba(20,16,12,.95), rgba(20,16,12,0) 72%),
+            radial-gradient(46px 36px at 58% 78%, rgba(132,102,60,.48), rgba(132,102,60,0) 70%),
+            radial-gradient(23px 18px at 58% 78%, rgba(20,16,12,.95), rgba(20,16,12,0) 72%);
           background-size: 420px 420px;
           background-repeat: repeat;
         }
@@ -563,12 +570,55 @@ export function AlluringDollsBookingFlow({
                     </div>
                   )}
 
+                  {/* Hair color */}
+                  {hairColors.length > 0 && (
+                    <div className="mt-6">
+                      <div className="ad-label">Hair Color (optional)</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {hairColors.map((c) => {
+                          const on = selectedColorId === c.id;
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => setSelectedColorId(on ? null : c.id)}
+                              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition"
+                              style={{
+                                backgroundColor: on ? "var(--ad-gold)" : "transparent",
+                                color: on ? "#1a1108" : "var(--ad-ivory)",
+                                border: `1px solid ${on ? "var(--ad-gold)" : "var(--ad-border)"}`,
+                              }}
+                            >
+                              <span
+                                className="inline-block h-3.5 w-3.5 rounded-full"
+                                style={{
+                                  background: c.swatch_hex ?? "#000",
+                                  border: "1px solid rgba(205,164,91,.5)",
+                                }}
+                              />
+                              {c.code}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Summary */}
+
                   <div className="ad-card mt-6 p-4 text-sm">
                     <div className="flex justify-between">
                       <span style={{ color: "var(--ad-smoke)" }}>Service</span>
                       <span style={{ color: "var(--ad-ivory)" }}>{service?.name}</span>
                     </div>
+                    {selectedColorId && (
+                      <div className="mt-1 flex justify-between">
+                        <span style={{ color: "var(--ad-smoke)" }}>Color</span>
+                        <span style={{ color: "var(--ad-ivory)" }}>
+                          {hairColors.find((c) => c.id === selectedColorId)?.code}
+                        </span>
+                      </div>
+                    )}
                     <div className="mt-1 flex justify-between">
                       <span style={{ color: "var(--ad-smoke)" }}>When</span>
                       <span style={{ color: "var(--ad-ivory)" }}>
