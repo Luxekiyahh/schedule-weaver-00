@@ -203,13 +203,22 @@ function BookingPage() {
     }
   };
 
-  if (loading) {
+  if (loading || confirmingDeposit) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
         <div className="mx-auto max-w-2xl px-6 py-16 space-y-4">
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-64 w-full rounded-2xl" />
+          {confirmingDeposit ? (
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-500">Confirming your deposit…</p>
+            </div>
+          ) : (
+            <>
+              <Skeleton className="h-8 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-64 w-full rounded-2xl" />
+            </>
+          )}
         </div>
       </div>
     );
