@@ -5,10 +5,12 @@ import {
   getBookingWorkspace,
   getBookingSlots,
   createBooking,
+  createDepositCheckout,
+  confirmDepositBooking,
 } from "@/lib/booking.functions";
 import {
-  ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronLeft, ChevronRight,
-  Clock, Loader2, MapPin, Sparkles, User, Users,
+  ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight,
+  Clock, ImageIcon, Loader2, MapPin, Sparkles, User, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +64,8 @@ function BookingPage() {
   const loadWs = useServerFn(getBookingWorkspace);
   const loadSlots = useServerFn(getBookingSlots);
   const submit = useServerFn(createBooking);
+  const startDeposit = useServerFn(createDepositCheckout);
+  const confirmDeposit = useServerFn(confirmDepositBooking);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Awaited<ReturnType<typeof getBookingWorkspace>> | null>(null);
@@ -74,9 +78,11 @@ function BookingPage() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slots, setSlots] = useState<{ time: string; member_id: string }[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<{ time: string; member_id: string } | null>(null);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
 
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmingDeposit, setConfirmingDeposit] = useState(false);
   const [done, setDone] = useState<{ start_at: string } | null>(null);
 
   useEffect(() => {
@@ -128,23 +134,67 @@ function BookingPage() {
       .finally(() => setSlotsLoading(false));
   }, [selectedDate, service?.id, providerId]);
 
+  // Selected add-on option objects (length options act as add-ons).
+  const addOns = useMemo(
+    () => (data?.lengthOptions ?? []).filter((o: any) => selectedAddOns.includes(o.id)),
+    [data, selectedAddOns],
+  );
+  const addOnsPayload = useMemo(
+    () => addOns.map((o: any) => ({ name: o.name, priceCents: o.price_cents })),
+    [addOns],
+  );
+  const addOnTotalCents = useMemo(
+    () => addOns.reduce((s: number, o: any) => s + (o.price_cents ?? 0), 0),
+    [addOns],
+  );
+  const depositRequired = !!data?.payment;
+
+  // Handle return from the tenant's Stripe deposit checkout.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const appt = params.get("appt");
+    const sessionId = params.get("session_id");
+    if (params.get("deposit") === "cancelled") {
+      toast.error("Deposit not completed. Your slot was released — please try again.");
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    if (!appt || !sessionId) return;
+    setConfirmingDeposit(true);
+    confirmDeposit({ data: { appointmentId: appt, sessionId } })
+      .then((res) => {
+        setDone({ start_at: res.start_at });
+        window.history.replaceState({}, "", window.location.pathname);
+      })
+      .catch((e: any) => toast.error(e.message ?? "Could not verify your deposit"))
+      .finally(() => setConfirmingDeposit(false));
+  }, []);
+
   const handleSubmit = async () => {
     if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
     setSubmitting(true);
     try {
-      const res = await submit({
-        data: {
-          workspaceId: data.workspace.id,
-          serviceId: service.id,
-          providerMemberId: selectedSlot.member_id,
-          date: selectedDate,
-          time: selectedSlot.time,
-          firstName: form.firstName,
-          lastName: form.lastName,
-          email: form.email,
-          notes: form.notes,
-        },
-      });
+      const common = {
+        workspaceId: data.workspace.id,
+        serviceId: service.id,
+        providerMemberId: selectedSlot.member_id,
+        date: selectedDate,
+        time: selectedSlot.time,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        notes: form.notes,
+        addOns: addOnsPayload,
+      };
+      if (depositRequired && data.payment?.provider === "stripe") {
+        const res = await startDeposit({
+          data: { ...common, origin: window.location.origin, slug },
+        });
+        window.location.href = res.url;
+        return;
+      }
+      const res = await submit({ data: common });
       setDone({ start_at: res.start_at });
     } catch (e: any) {
       toast.error(e.message ?? "Could not complete booking");
@@ -153,13 +203,22 @@ function BookingPage() {
     }
   };
 
-  if (loading) {
+  if (loading || confirmingDeposit) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
         <div className="mx-auto max-w-2xl px-6 py-16 space-y-4">
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-64 w-full rounded-2xl" />
+          {confirmingDeposit ? (
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-500">Confirming your deposit…</p>
+            </div>
+          ) : (
+            <>
+              <Skeleton className="h-8 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-64 w-full rounded-2xl" />
+            </>
+          )}
         </div>
       </div>
     );
@@ -191,6 +250,11 @@ function BookingPage() {
       <AlluringDollsBookingFlow
         workspaceName={ws.name}
         services={data.services}
+        categories={data.categories}
+        lengthOptions={data.lengthOptions}
+        selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns}
+        addOnTotalCents={addOnTotalCents}
+        depositRequired={depositRequired}
         eligibleProviders={eligibleProviders}
         step={step} setStep={setStep}
         serviceId={serviceId} setServiceId={setServiceId}
@@ -279,43 +343,17 @@ function BookingPage() {
                 {data.services.length === 0 ? (
                   <p className="mt-6 text-sm text-slate-500">No services available yet.</p>
                 ) : (
-                  <div className="mt-5 space-y-3">
-                    {data.services.map((s) => {
-                      const active = serviceId === s.id;
-                      return (
-                        <button
-                          key={s.id}
-                          onClick={() => { setServiceId(s.id); setProviderId(ANY); }}
-                          className={`group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition ${
-                            active
-                              ? "border-slate-900 bg-slate-900/[0.02] shadow-sm"
-                              : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                              <h3 className="font-medium text-slate-900">{s.name}</h3>
-                              <span className="text-base font-semibold text-slate-900">
-                                {money(s.price_cents, s.currency)}
-                              </span>
-                            </div>
-                            {s.description && (
-                              <p className="mt-1 text-sm text-slate-500 line-clamp-2">{s.description}</p>
-                            )}
-                            <div className="mt-2 inline-flex items-center gap-1 text-xs text-slate-500">
-                              <Clock className="h-3 w-3" /> {s.duration_minutes} min
-                            </div>
-                          </div>
-                          <div
-                            className={`mt-1 grid h-5 w-5 place-items-center rounded-full ring-1 transition ${
-                              active ? "bg-slate-900 ring-slate-900" : "ring-slate-300 group-hover:ring-slate-400"
-                            }`}
-                          >
-                            {active && <Check className="h-3 w-3 text-white" />}
-                          </div>
-                        </button>
-                      );
-                    })}
+                  <div className="mt-5">
+                    <CategoryAccordion
+                      services={data.services}
+                      categories={data.categories}
+                      selectedId={serviceId}
+                      onSelect={(id) => {
+                        setServiceId(id);
+                        setProviderId(ANY);
+                      }}
+                      primary={primary}
+                    />
                   </div>
                 )}
                 <div className="mt-6 flex justify-end">
@@ -434,11 +472,59 @@ function BookingPage() {
                   </div>
                 </div>
 
+                {/* Add-ons (ticker buttons) */}
+                {data.lengthOptions.length > 0 && (
+                  <div className="mt-6">
+                    <Label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                      Add-ons (optional)
+                    </Label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {data.lengthOptions.map((o: any) => {
+                        const on = selectedAddOns.includes(o.id);
+                        return (
+                          <button
+                            key={o.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedAddOns((prev) =>
+                                prev.includes(o.id) ? prev.filter((x) => x !== o.id) : [...prev, o.id],
+                              )
+                            }
+                            style={on ? { backgroundColor: primary, borderColor: primary } : undefined}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${
+                              on ? "text-white" : "border-slate-200 text-slate-700 hover:border-slate-300"
+                            }`}
+                          >
+                            {on && <Check className="h-3.5 w-3.5" />}
+                            {o.name}
+                            {o.price_cents > 0 && ` +${money(o.price_cents, service?.currency)}`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Summary */}
                 <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200">
                   <div className="flex justify-between"><span className="text-slate-500">Service</span><span className="font-medium text-slate-900">{service?.name}</span></div>
                   <div className="mt-1 flex justify-between"><span className="text-slate-500">When</span><span className="font-medium text-slate-900">{selectedDate && selectedSlot && new Date(`${selectedDate}T${selectedSlot.time}`).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div>
-                  <div className="mt-1 flex justify-between"><span className="text-slate-500">Total</span><span className="font-semibold text-slate-900">{service && money(service.price_cents, service.currency)}</span></div>
+                  {addOns.length > 0 && (
+                    <div className="mt-1 flex justify-between"><span className="text-slate-500">Add-ons</span><span className="font-medium text-slate-900">{addOns.map((a: any) => a.name).join(", ")}</span></div>
+                  )}
+                  <div className="mt-1 flex justify-between"><span className="text-slate-500">Total</span><span className="font-semibold text-slate-900">{service && money(service.price_cents + addOnTotalCents, service.currency)}</span></div>
+                  {depositRequired && data.payment && (
+                    <div className="mt-2 border-t border-slate-200 pt-2 flex justify-between">
+                      <span className="text-slate-500">Due now (deposit)</span>
+                      <span className="font-semibold text-slate-900">
+                        {data.payment.depositType === "full"
+                          ? money(service ? service.price_cents + addOnTotalCents : 0, service?.currency)
+                          : data.payment.depositAmountCents > 0
+                          ? money(data.payment.depositAmountCents, data.payment.currency)
+                          : `${data.payment.depositPercent}%`}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
@@ -452,7 +538,7 @@ function BookingPage() {
                     onClick={handleSubmit}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    Confirm booking
+                    {depositRequired ? "Continue to deposit" : "Confirm booking"}
                   </Button>
                 </div>
               </div>
@@ -574,5 +660,160 @@ function MonthCalendar({
         })}
       </div>
     </div>
+  );
+}
+
+type CatSvc = {
+  id: string;
+  name: string;
+  description: string | null;
+  duration_minutes: number;
+  price_cents: number;
+  currency: string;
+  category_id: string | null;
+  image_url: string | null;
+};
+type Cat = { id: string; name: string; image_url?: string | null };
+
+// Groups services into collapsible category dropdowns with an optional image
+// (placeholder when none set) on both the category header and each service row.
+function CategoryAccordion({
+  services,
+  categories,
+  selectedId,
+  onSelect,
+  primary,
+}: {
+  services: CatSvc[];
+  categories: Cat[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  primary: string;
+}) {
+  const groups = useMemo(() => {
+    const byCat = new Map<string, CatSvc[]>();
+    for (const s of services) {
+      const key = s.category_id ?? "__uncat__";
+      if (!byCat.has(key)) byCat.set(key, []);
+      byCat.get(key)!.push(s);
+    }
+    const ordered: { cat: Cat; items: CatSvc[] }[] = [];
+    for (const c of categories) {
+      const items = byCat.get(c.id);
+      if (items && items.length) ordered.push({ cat: c, items });
+    }
+    const uncat = byCat.get("__uncat__");
+    if (uncat && uncat.length) ordered.push({ cat: { id: "__uncat__", name: "Services" }, items: uncat });
+    return ordered;
+  }, [services, categories]);
+
+  const initialOpen = useMemo(() => {
+    const sel = services.find((s) => s.id === selectedId);
+    const key = sel?.category_id ?? groups[0]?.cat.id;
+    return key ? new Set([key]) : new Set<string>();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [open, setOpen] = useState<Set<string>>(initialOpen);
+  const toggle = (id: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  if (groups.length === 1 && groups[0].cat.id === "__uncat__") {
+    return (
+      <div className="space-y-3">
+        {groups[0].items.map((s) => (
+          <ServiceRow key={s.id} s={s} active={selectedId === s.id} onSelect={onSelect} primary={primary} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {groups.map(({ cat, items }) => {
+        const isOpen = open.has(cat.id);
+        return (
+          <div key={cat.id} className="overflow-hidden rounded-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => toggle(cat.id)}
+              className="flex w-full items-center gap-3 bg-slate-50/60 px-4 py-3 text-left transition hover:bg-slate-100"
+            >
+              <CatImage url={cat.image_url} />
+              <div className="flex-1">
+                <div className="font-semibold text-slate-900">{cat.name}</div>
+                <div className="text-xs text-slate-500">{items.length} option{items.length > 1 ? "s" : ""}</div>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            {isOpen && (
+              <div className="space-y-3 border-t border-slate-100 p-3">
+                {items.map((s) => (
+                  <ServiceRow key={s.id} s={s} active={selectedId === s.id} onSelect={onSelect} primary={primary} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CatImage({ url }: { url?: string | null }) {
+  if (url) {
+    return <img src={url} alt="" className="h-11 w-11 rounded-lg object-cover" />;
+  }
+  return (
+    <div className="grid h-11 w-11 place-items-center rounded-lg bg-slate-100 text-slate-300">
+      <ImageIcon className="h-5 w-5" />
+    </div>
+  );
+}
+
+function ServiceRow({
+  s,
+  active,
+  onSelect,
+  primary,
+}: {
+  s: CatSvc;
+  active: boolean;
+  onSelect: (id: string) => void;
+  primary?: string;
+}) {
+  return (
+    <button
+      onClick={() => onSelect(s.id)}
+      style={active ? { borderColor: primary } : undefined}
+      className={`group flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
+        active ? "bg-slate-900/[0.02] shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+      }`}
+    >
+      <CatImage url={s.image_url} />
+      <div className="flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-medium text-slate-900">{s.name}</h3>
+          <span className="text-base font-semibold text-slate-900">{money(s.price_cents, s.currency)}</span>
+        </div>
+        {s.description && <p className="mt-1 text-sm text-slate-500 line-clamp-2">{s.description}</p>}
+        <div className="mt-1.5 inline-flex items-center gap-1 text-xs text-slate-500">
+          <Clock className="h-3 w-3" /> {s.duration_minutes} min
+        </div>
+      </div>
+      <div
+        className={`mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full ring-1 transition ${
+          active ? "bg-slate-900 ring-slate-900" : "ring-slate-300 group-hover:ring-slate-400"
+        }`}
+      >
+        {active && <Check className="h-3 w-3 text-white" />}
+      </div>
+    </button>
   );
 }

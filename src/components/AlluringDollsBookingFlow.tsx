@@ -1,12 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Calendar as CalendarIcon,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
+  ImageIcon,
   Loader2,
   User,
   Users,
@@ -34,7 +37,11 @@ type Service = {
   duration_minutes: number;
   price_cents: number;
   currency: string;
+  category_id: string | null;
+  image_url: string | null;
 };
+type Category = { id: string; name: string; description?: string | null; image_url?: string | null };
+type LengthOption = { id: string; name: string; price_cents: number; duration_min: number };
 type Provider = { member_id: string; name: string };
 type Slot = { time: string; member_id: string };
 
@@ -64,6 +71,12 @@ const STEP_LABELS = ["Service", "Provider", "Time", "Details"];
 export function AlluringDollsBookingFlow({
   workspaceName,
   services,
+  categories,
+  lengthOptions,
+  selectedAddOns,
+  setSelectedAddOns,
+  addOnTotalCents,
+  depositRequired,
   eligibleProviders,
   step,
   setStep,
@@ -87,6 +100,12 @@ export function AlluringDollsBookingFlow({
 }: {
   workspaceName: string;
   services: Service[];
+  categories: Category[];
+  lengthOptions: LengthOption[];
+  selectedAddOns: string[];
+  setSelectedAddOns: (updater: (prev: string[]) => string[]) => void;
+  addOnTotalCents: number;
+  depositRequired: boolean;
   eligibleProviders: Provider[];
   step: number;
   setStep: (n: number) => void;
@@ -109,6 +128,7 @@ export function AlluringDollsBookingFlow({
   onSubmit: () => void;
 }) {
   const service = services.find((s) => s.id === serviceId) ?? null;
+
 
   return (
     <div className="ad-root min-h-screen">
@@ -260,61 +280,16 @@ export function AlluringDollsBookingFlow({
                       No services available yet.
                     </p>
                   ) : (
-                    <div className="mt-5 space-y-3">
-                      {services.map((s) => {
-                        const active = serviceId === s.id;
-                        return (
-                          <button
-                            key={s.id}
-                            onClick={() => {
-                              setServiceId(s.id);
-                              setProviderId(ANY);
-                            }}
-                            data-active={active}
-                            className="ad-row group flex w-full items-start gap-4 p-4 text-left"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between gap-3">
-                                <h3
-                                  className="text-sm font-medium"
-                                  style={{ color: "var(--ad-ivory)" }}
-                                >
-                                  {s.name}
-                                </h3>
-                                <span
-                                  className="text-base font-medium"
-                                  style={{ color: "var(--ad-gold)" }}
-                                >
-                                  {money(s.price_cents, s.currency)}
-                                </span>
-                              </div>
-                              {s.description && (
-                                <p
-                                  className="mt-1 text-xs line-clamp-2"
-                                  style={{ color: "var(--ad-smoke)" }}
-                                >
-                                  {s.description}
-                                </p>
-                              )}
-                              <div
-                                className="mt-2 inline-flex items-center gap-1 text-[11px] uppercase tracking-wider"
-                                style={{ color: "var(--ad-smoke)" }}
-                              >
-                                <Clock className="h-3 w-3" /> {s.duration_minutes} min
-                              </div>
-                            </div>
-                            <div
-                              className="mt-1 grid h-5 w-5 place-items-center rounded-full transition"
-                              style={{
-                                border: `1px solid ${active ? "var(--ad-gold)" : "var(--ad-border)"}`,
-                                backgroundColor: active ? "var(--ad-gold)" : "transparent",
-                              }}
-                            >
-                              {active && <Check className="h-3 w-3" style={{ color: "#1a1108" }} />}
-                            </div>
-                          </button>
-                        );
-                      })}
+                    <div className="mt-5">
+                      <AdCategoryAccordion
+                        services={services}
+                        categories={categories}
+                        selectedId={serviceId}
+                        onSelect={(id) => {
+                          setServiceId(id);
+                          setProviderId(ANY);
+                        }}
+                      />
                     </div>
                   )}
                   <div className="mt-6 flex justify-end">
@@ -487,6 +462,41 @@ export function AlluringDollsBookingFlow({
                     </div>
                   </div>
 
+                  {/* Add-ons (ticker buttons) */}
+                  {lengthOptions.length > 0 && (
+                    <div className="mt-6">
+                      <div className="ad-label">Add-ons (optional)</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {lengthOptions.map((o) => {
+                          const on = selectedAddOns.includes(o.id);
+                          return (
+                            <button
+                              key={o.id}
+                              type="button"
+                              onClick={() =>
+                                setSelectedAddOns((prev) =>
+                                  prev.includes(o.id)
+                                    ? prev.filter((x) => x !== o.id)
+                                    : [...prev, o.id],
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition"
+                              style={{
+                                backgroundColor: on ? "var(--ad-gold)" : "transparent",
+                                color: on ? "#1a1108" : "var(--ad-ivory)",
+                                border: `1px solid ${on ? "var(--ad-gold)" : "var(--ad-border)"}`,
+                              }}
+                            >
+                              {on && <Check className="h-3.5 w-3.5" />}
+                              {o.name}
+                              {o.price_cents > 0 && ` +${money(o.price_cents, service?.currency)}`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Summary */}
                   <div className="ad-card mt-6 p-4 text-sm">
                     <div className="flex justify-between">
@@ -510,15 +520,16 @@ export function AlluringDollsBookingFlow({
                     <div className="mt-1 flex justify-between font-medium">
                       <span style={{ color: "var(--ad-smoke)" }}>Total</span>
                       <span style={{ color: "var(--ad-gold)" }}>
-                        {service && money(service.price_cents, service.currency)}
+                        {service && money(service.price_cents + addOnTotalCents, service.currency)}
                       </span>
                     </div>
                     <div
                       className="mt-3 border-t pt-3 text-xs leading-relaxed"
                       style={{ borderColor: "var(--ad-border)", color: "var(--ad-smoke)" }}
                     >
-                      A $25 non-refundable deposit is required to hold this appointment; remaining
-                      balance is cash only.
+                      {depositRequired
+                        ? "A deposit is required now to hold this appointment; the remaining balance is due at your visit."
+                        : "A $25 non-refundable deposit is required to hold this appointment; remaining balance is cash only."}
                     </div>
                   </div>
 
@@ -548,7 +559,7 @@ export function AlluringDollsBookingFlow({
                       ) : (
                         <Check className="h-4 w-4" />
                       )}
-                      Confirm Booking
+                      {depositRequired ? "Continue to Deposit" : "Confirm Booking"}
                     </Button>
                   </div>
                 </motion.div>
@@ -741,5 +752,178 @@ function AdMonthCalendar({
         })}
       </div>
     </div>
+  );
+}
+
+// Category dropdowns (Alluring Dolls skin) with optional image placeholders.
+function AdCategoryAccordion({
+  services,
+  categories,
+  selectedId,
+  onSelect,
+}: {
+  services: Service[];
+  categories: Category[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const groups = useMemo(() => {
+    const byCat = new Map<string, Service[]>();
+    for (const s of services) {
+      const key = s.category_id ?? "__uncat__";
+      if (!byCat.has(key)) byCat.set(key, []);
+      byCat.get(key)!.push(s);
+    }
+    const ordered: { cat: Category; items: Service[] }[] = [];
+    for (const c of categories) {
+      const items = byCat.get(c.id);
+      if (items && items.length) ordered.push({ cat: c, items });
+    }
+    const uncat = byCat.get("__uncat__");
+    if (uncat && uncat.length)
+      ordered.push({ cat: { id: "__uncat__", name: "Services" }, items: uncat });
+    return ordered;
+  }, [services, categories]);
+
+  const initialOpen = useMemo(() => {
+    const sel = services.find((s) => s.id === selectedId);
+    const key = sel?.category_id ?? groups[0]?.cat.id;
+    return key ? new Set([key]) : new Set<string>();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [open, setOpen] = useState<Set<string>>(initialOpen);
+  const toggle = (id: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const flat = groups.length === 1 && groups[0].cat.id === "__uncat__";
+  if (flat) {
+    return (
+      <div className="space-y-3">
+        {groups[0].items.map((s) => (
+          <AdServiceRow key={s.id} s={s} active={selectedId === s.id} onSelect={onSelect} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {groups.map(({ cat, items }) => {
+        const isOpen = open.has(cat.id);
+        return (
+          <div
+            key={cat.id}
+            className="overflow-hidden rounded"
+            style={{ border: "1px solid var(--ad-border)" }}
+          >
+            <button
+              type="button"
+              onClick={() => toggle(cat.id)}
+              className="flex w-full items-center gap-3 p-4 text-left"
+            >
+              <AdImage url={cat.image_url} />
+              <div className="flex-1">
+                <div
+                  className="ad-display text-base"
+                  style={{ color: "var(--ad-gold)", letterSpacing: "0.06em" }}
+                >
+                  {cat.name}
+                </div>
+                <div
+                  className="text-[11px] uppercase tracking-wider"
+                  style={{ color: "var(--ad-smoke)" }}
+                >
+                  {items.length} option{items.length > 1 ? "s" : ""}
+                </div>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                style={{ color: "var(--ad-smoke)" }}
+              />
+            </button>
+            {isOpen && (
+              <div className="space-y-3 p-3" style={{ borderTop: "1px solid var(--ad-border)" }}>
+                {items.map((s) => (
+                  <AdServiceRow key={s.id} s={s} active={selectedId === s.id} onSelect={onSelect} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AdImage({ url }: { url?: string | null }) {
+  if (url) {
+    return <img src={url} alt="" className="h-11 w-11 rounded object-cover" />;
+  }
+  return (
+    <div
+      className="grid h-11 w-11 place-items-center rounded"
+      style={{
+        border: "1px solid var(--ad-border)",
+        color: "var(--ad-smoke)",
+        background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
+      }}
+    >
+      <ImageIcon className="h-5 w-5" />
+    </div>
+  );
+}
+
+function AdServiceRow({
+  s,
+  active,
+  onSelect,
+}: {
+  s: Service;
+  active: boolean;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <button
+      onClick={() => onSelect(s.id)}
+      data-active={active}
+      className="ad-row group flex w-full items-start gap-3 p-4 text-left"
+    >
+      <AdImage url={s.image_url} />
+      <div className="flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-medium" style={{ color: "var(--ad-ivory)" }}>
+            {s.name}
+          </h3>
+          <span className="text-base font-medium" style={{ color: "var(--ad-gold)" }}>
+            {money(s.price_cents, s.currency)}
+          </span>
+        </div>
+        {s.description && (
+          <p className="mt-1 text-xs line-clamp-2" style={{ color: "var(--ad-smoke)" }}>
+            {s.description}
+          </p>
+        )}
+        <div
+          className="mt-2 inline-flex items-center gap-1 text-[11px] uppercase tracking-wider"
+          style={{ color: "var(--ad-smoke)" }}
+        >
+          <Clock className="h-3 w-3" /> {s.duration_minutes} min
+        </div>
+      </div>
+      <div
+        className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full transition"
+        style={{
+          border: `1px solid ${active ? "var(--ad-gold)" : "var(--ad-border)"}`,
+          backgroundColor: active ? "var(--ad-gold)" : "transparent",
+        }}
+      >
+        {active && <Check className="h-3 w-3" style={{ color: "#1a1108" }} />}
+      </div>
+    </button>
   );
 }

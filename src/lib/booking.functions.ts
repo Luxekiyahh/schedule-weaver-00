@@ -11,12 +11,30 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!ws) return { workspace: null, services: [], providers: [], serviceProviders: [] };
+    if (!ws)
+      return {
+        workspace: null,
+        services: [],
+        providers: [],
+        serviceProviders: [],
+        categories: [],
+        lengthOptions: [],
+        payment: null,
+      };
 
-    const [{ data: services }, { data: members }, { data: links }] = await Promise.all([
+    const [
+      { data: services },
+      { data: members },
+      { data: links },
+      { data: categories },
+      { data: lengthOptions },
+      { data: paySettings },
+    ] = await Promise.all([
       supabaseAdmin
         .from("services")
-        .select("id, name, description, duration_minutes, price_cents, currency")
+        .select(
+          "id, name, description, duration_minutes, price_cents, currency, category_id, image_url",
+        )
         .eq("workspace_id", ws.id)
         .eq("is_active", true)
         .order("created_at", { ascending: true }),
@@ -29,6 +47,23 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
         .from("service_providers")
         .select("service_id, member_id")
         .eq("workspace_id", ws.id),
+      supabaseAdmin
+        .from("service_categories")
+        .select("id, name, description, sort_order, image_url")
+        .eq("workspace_id", ws.id)
+        .eq("active", true)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("service_length_options")
+        .select("id, name, duration_min, price_cents, sort_order")
+        .eq("workspace_id", ws.id)
+        .eq("active", true)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("workspace_payment_settings")
+        .select("provider, connection_status, deposit_type, deposit_amount_cents, deposit_percent, currency")
+        .eq("workspace_id", ws.id)
+        .maybeSingle(),
     ]);
 
     const userIds = (members ?? []).map((m) => m.user_id);
@@ -42,11 +77,42 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       name: profMap.get(m.user_id) ?? "Team member",
     }));
 
+    // Only expose a deposit requirement when a provider is actually connected
+    // and the tenant configured a non-zero deposit.
+    const ps = paySettings as
+      | {
+          provider: string;
+          connection_status: string;
+          deposit_type: string;
+          deposit_amount_cents: number;
+          deposit_percent: number;
+          currency: string | null;
+        }
+      | null;
+    const payment =
+      ps &&
+      ps.provider &&
+      ps.provider !== "none" &&
+      ps.connection_status === "connected" &&
+      ps.deposit_type &&
+      ps.deposit_type !== "none"
+        ? {
+            provider: ps.provider,
+            depositType: ps.deposit_type,
+            depositAmountCents: Number(ps.deposit_amount_cents ?? 0),
+            depositPercent: Number(ps.deposit_percent ?? 0),
+            currency: ps.currency ?? "USD",
+          }
+        : null;
+
     return {
       workspace: ws,
       services: services ?? [],
       providers,
       serviceProviders: links ?? [],
+      categories: categories ?? [],
+      lengthOptions: lengthOptions ?? [],
+      payment,
     };
   });
 
@@ -128,101 +194,282 @@ export const getBookingSlots = createServerFn({ method: "POST" })
     return { slots };
   });
 
-export const createBooking = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
-    z.object({
-      workspaceId: z.string().uuid(),
-      serviceId: z.string().uuid(),
-      providerMemberId: z.string().uuid(),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      time: z.string().regex(/^\d{2}:\d{2}$/),
-      firstName: z.string().trim().min(1).max(80),
-      lastName: z.string().trim().min(1).max(80),
-      email: z.string().trim().email().max(255),
-      notes: z.string().trim().max(1000).optional().default(""),
-    }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    // Get service for duration
-    const { data: svc, error: svcErr } = await supabaseAdmin
-      .from("services")
-      .select("id, duration_minutes, workspace_id, is_active")
-      .eq("id", data.serviceId)
-      .eq("workspace_id", data.workspaceId)
-      .maybeSingle();
-    if (svcErr) throw new Error(svcErr.message);
-    if (!svc || !svc.is_active) throw new Error("Service unavailable");
+const addOnSchema = z
+  .array(z.object({ name: z.string().max(120), priceCents: z.number().int().min(0) }))
+  .max(20)
+  .optional()
+  .default([]);
 
-    const startIso = new Date(`${data.date}T${data.time}:00`).toISOString();
-    const endIso = new Date(new Date(startIso).getTime() + svc.duration_minutes * 60000).toISOString();
+const bookingInput = z.object({
+  workspaceId: z.string().uuid(),
+  serviceId: z.string().uuid(),
+  providerMemberId: z.string().uuid(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  time: z.string().regex(/^\d{2}:\d{2}$/),
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
+  email: z.string().trim().email().max(255),
+  notes: z.string().trim().max(1000).optional().default(""),
+  addOns: addOnSchema,
+});
 
-    // Re-check owner time-off blocks (schedule_exceptions) for this date.
-    const { data: blocks } = await supabaseAdmin
-      .from("schedule_exceptions")
-      .select("start_time, end_time")
-      .eq("workspace_id", data.workspaceId)
-      .eq("block_date", data.date);
-    const toMin = (t: string) => {
-      const [h, m] = t.split(":").map(Number);
-      return h * 60 + m;
-    };
-    const slotStartMin = toMin(data.time);
-    const slotEndMin = slotStartMin + svc.duration_minutes;
-    const isBlocked = (blocks ?? []).some((b) => {
-      const bStart = b.start_time ? toMin(b.start_time) : 0;
-      const bEnd = b.end_time ? toMin(b.end_time) : 24 * 60;
-      return bStart < slotEndMin && bEnd > slotStartMin;
-    });
-    if (isBlocked) throw new Error("That time is no longer available. Please pick another slot.");
+type BookingInput = z.infer<typeof bookingInput>;
 
+// Validates availability, resolves the customer, and inserts the appointment
+// with the given status. Shared by the direct-confirm and deposit flows.
+async function prepareAndInsertAppointment(data: BookingInput, status: "confirmed" | "pending") {
+  const { data: svc, error: svcErr } = await supabaseAdmin
+    .from("services")
+    .select("id, name, duration_minutes, price_cents, currency, workspace_id, is_active")
+    .eq("id", data.serviceId)
+    .eq("workspace_id", data.workspaceId)
+    .maybeSingle();
+  if (svcErr) throw new Error(svcErr.message);
+  if (!svc || !svc.is_active) throw new Error("Service unavailable");
 
-    // Conflict re-check
-    const { data: conflict } = await supabaseAdmin
-      .from("appointments")
-      .select("id")
-      .eq("workspace_id", data.workspaceId)
-      .eq("provider_id", data.providerMemberId)
-      .neq("status", "cancelled")
-      .lt("start_at", endIso)
-      .gt("end_at", startIso)
-      .limit(1);
-    if (conflict && conflict.length) throw new Error("That time was just booked. Please pick another slot.");
+  const startIso = new Date(`${data.date}T${data.time}:00`).toISOString();
+  const endIso = new Date(new Date(startIso).getTime() + svc.duration_minutes * 60000).toISOString();
 
-    // Find or create customer (by email within workspace)
-    const fullName = `${data.firstName} ${data.lastName}`.trim();
-    const { data: existing } = await supabaseAdmin
+  const toMin = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  // Owner time-off blocks.
+  const { data: blocks } = await supabaseAdmin
+    .from("schedule_exceptions")
+    .select("start_time, end_time")
+    .eq("workspace_id", data.workspaceId)
+    .eq("block_date", data.date);
+  const slotStartMin = toMin(data.time);
+  const slotEndMin = slotStartMin + svc.duration_minutes;
+  const isBlocked = (blocks ?? []).some((b) => {
+    const bStart = b.start_time ? toMin(b.start_time) : 0;
+    const bEnd = b.end_time ? toMin(b.end_time) : 24 * 60;
+    return bStart < slotEndMin && bEnd > slotStartMin;
+  });
+  if (isBlocked) throw new Error("That time is no longer available. Please pick another slot.");
+
+  // Conflict re-check (ignore pending holds older than 20 min so abandoned
+  // deposit checkouts don't block the slot forever).
+  const { data: conflict } = await supabaseAdmin
+    .from("appointments")
+    .select("id, status, created_at")
+    .eq("workspace_id", data.workspaceId)
+    .eq("provider_id", data.providerMemberId)
+    .neq("status", "cancelled")
+    .lt("start_at", endIso)
+    .gt("end_at", startIso);
+  const active = (conflict ?? []).filter((c) => {
+    if (c.status !== "pending") return true;
+    return Date.now() - new Date(c.created_at as string).getTime() < 20 * 60 * 1000;
+  });
+  if (active.length) throw new Error("That time was just booked. Please pick another slot.");
+
+  // Find or create customer.
+  const fullName = `${data.firstName} ${data.lastName}`.trim();
+  const { data: existing } = await supabaseAdmin
+    .from("customers")
+    .select("id")
+    .eq("workspace_id", data.workspaceId)
+    .eq("email", data.email)
+    .maybeSingle();
+
+  let customerId = existing?.id as string | undefined;
+  if (!customerId) {
+    const { data: ins, error: insErr } = await supabaseAdmin
       .from("customers")
+      .insert({ workspace_id: data.workspaceId, full_name: fullName, email: data.email })
       .select("id")
-      .eq("workspace_id", data.workspaceId)
-      .eq("email", data.email)
-      .maybeSingle();
+      .single();
+    if (insErr) throw new Error(insErr.message);
+    customerId = ins.id;
+  }
 
-    let customerId = existing?.id as string | undefined;
-    if (!customerId) {
-      const { data: ins, error: insErr } = await supabaseAdmin
-        .from("customers")
-        .insert({
-          workspace_id: data.workspaceId,
-          full_name: fullName,
-          email: data.email,
-        })
-        .select("id")
-        .single();
-      if (insErr) throw new Error(insErr.message);
-      customerId = ins.id;
-    }
+  // Compose notes with add-ons so providers + emails can surface them.
+  const addOnLabel = (data.addOns ?? [])
+    .map((a) => (a.priceCents ? `${a.name} (+$${(a.priceCents / 100).toFixed(0)})` : a.name))
+    .join(", ");
+  const notes = [data.notes || null, addOnLabel ? `Add-ons: ${addOnLabel}` : null]
+    .filter(Boolean)
+    .join("\n") || null;
 
-    const { error: apptErr } = await supabaseAdmin.from("appointments").insert({
+  const { data: appt, error: apptErr } = await supabaseAdmin
+    .from("appointments")
+    .insert({
       workspace_id: data.workspaceId,
       service_id: data.serviceId,
       provider_id: data.providerMemberId,
       customer_id: customerId,
       start_at: startIso,
       end_at: endIso,
-      status: "confirmed",
-      notes: data.notes || null,
-    });
-    if (apptErr) throw new Error(apptErr.message);
+      status,
+      notes,
+    })
+    .select("id")
+    .single();
+  if (apptErr) throw new Error(apptErr.message);
 
-    return { ok: true, start_at: startIso, end_at: endIso };
+  const addOnTotal = (data.addOns ?? []).reduce((s, a) => s + a.priceCents, 0);
+  return {
+    appointmentId: appt.id as string,
+    startIso,
+    endIso,
+    service: svc,
+    basePriceCents: (svc.price_cents ?? 0) + addOnTotal,
+  };
+}
+
+export const createBooking = createServerFn({ method: "POST" })
+  .inputValidator((input) => bookingInput.parse(input))
+  .handler(async ({ data }) => {
+    const res = await prepareAndInsertAppointment(data, "confirmed");
+    // Confirmed inserts fire the appointment webhook, which queues the emails.
+    return { ok: true, start_at: res.startIso, end_at: res.endIso };
+  });
+
+function computeDepositCents(
+  basePriceCents: number,
+  settings: { depositType: string; depositAmountCents: number; depositPercent: number },
+): number {
+  if (settings.depositType === "full") return basePriceCents;
+  if (settings.depositType === "deposit") {
+    if (settings.depositAmountCents > 0) return settings.depositAmountCents;
+    if (settings.depositPercent > 0) return Math.round((basePriceCents * settings.depositPercent) / 100);
+  }
+  return 0;
+}
+
+// Creates a pending appointment and a Stripe Checkout Session on the TENANT's
+// own Stripe account (direct api.stripe.com call with their secret key).
+export const createDepositCheckout = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    bookingInput.extend({ origin: z.string().url().max(500), slug: z.string().min(1).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: settings } = await supabaseAdmin
+      .from("workspace_payment_settings")
+      .select("provider, connection_status, deposit_type, deposit_amount_cents, deposit_percent, currency")
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+    if (
+      !settings ||
+      settings.provider !== "stripe" ||
+      settings.connection_status !== "connected" ||
+      settings.deposit_type === "none"
+    ) {
+      throw new Error("This business isn't set up to collect deposits via card.");
+    }
+
+    const { data: creds } = await supabaseAdmin
+      .from("workspace_payment_credentials")
+      .select("stripe_secret_key")
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+    const secretKey = creds?.stripe_secret_key;
+    if (!secretKey) throw new Error("This business hasn't finished connecting its payment account.");
+
+    const inserted = await prepareAndInsertAppointment(data, "pending");
+    const currency = (settings.currency || inserted.service.currency || "USD").toLowerCase();
+    const depositCents = computeDepositCents(inserted.basePriceCents, {
+      depositType: settings.deposit_type,
+      depositAmountCents: Number(settings.deposit_amount_cents ?? 0),
+      depositPercent: Number(settings.deposit_percent ?? 0),
+    });
+    if (depositCents < 50) throw new Error("The configured deposit amount is too small to charge.");
+
+    const origin = data.origin.replace(/\/$/, "");
+    const successUrl = `${origin}/booking/${data.slug}?appt=${inserted.appointmentId}&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${origin}/booking/${data.slug}?appt=${inserted.appointmentId}&deposit=cancelled`;
+    const label =
+      settings.deposit_type === "full" ? `${inserted.service.name}` : `Deposit — ${inserted.service.name}`;
+
+    const params = new URLSearchParams();
+    params.set("mode", "payment");
+    params.set("success_url", successUrl);
+    params.set("cancel_url", cancelUrl);
+    params.set("customer_email", data.email);
+    params.set("line_items[0][quantity]", "1");
+    params.set("line_items[0][price_data][currency]", currency);
+    params.set("line_items[0][price_data][unit_amount]", String(depositCents));
+    params.set("line_items[0][price_data][product_data][name]", label);
+    params.set("payment_intent_data[description]", label);
+    params.set("metadata[appointment_id]", inserted.appointmentId);
+
+    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secretKey}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      url?: string;
+      error?: { message?: string };
+    };
+    if (!res.ok || !json.url) {
+      // Roll back the pending hold so the slot frees up.
+      await supabaseAdmin.from("appointments").delete().eq("id", inserted.appointmentId);
+      throw new Error(json.error?.message || "Could not start checkout. Please try again.");
+    }
+
+    return { url: json.url, appointmentId: inserted.appointmentId, depositCents };
+  });
+
+// Verifies a completed Checkout Session and confirms the pending appointment.
+export const confirmDepositBooking = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({ appointmentId: z.string().uuid(), sessionId: z.string().min(1).max(255) })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: appt } = await supabaseAdmin
+      .from("appointments")
+      .select("id, workspace_id, status, start_at, end_at")
+      .eq("id", data.appointmentId)
+      .maybeSingle();
+    if (!appt) throw new Error("Booking not found.");
+    if (appt.status === "confirmed") return { ok: true, start_at: appt.start_at, end_at: appt.end_at };
+
+    const { data: creds } = await supabaseAdmin
+      .from("workspace_payment_credentials")
+      .select("stripe_secret_key")
+      .eq("workspace_id", appt.workspace_id)
+      .maybeSingle();
+    const secretKey = creds?.stripe_secret_key;
+    if (!secretKey) throw new Error("Payment account unavailable.");
+
+    const res = await fetch(
+      `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(data.sessionId)}`,
+      { headers: { Authorization: `Bearer ${secretKey}` } },
+    );
+    const json = (await res.json().catch(() => ({}))) as {
+      payment_status?: string;
+      metadata?: { appointment_id?: string };
+      error?: { message?: string };
+    };
+    if (!res.ok) throw new Error(json.error?.message || "Could not verify payment.");
+    if (json.metadata?.appointment_id !== data.appointmentId) {
+      throw new Error("Payment does not match this booking.");
+    }
+    if (json.payment_status !== "paid") {
+      throw new Error("Your deposit hasn't been received yet. Please complete payment.");
+    }
+
+    const { error: updErr } = await supabaseAdmin
+      .from("appointments")
+      .update({ status: "confirmed" })
+      .eq("id", data.appointmentId);
+    if (updErr) throw new Error(updErr.message);
+
+    try {
+      const { sendAppointmentEmails } = await import("@/lib/email/appointment-emails.server");
+      await sendAppointmentEmails(data.appointmentId);
+    } catch (e) {
+      console.error("[confirmDepositBooking] email dispatch failed", e);
+    }
+
+    return { ok: true, start_at: appt.start_at, end_at: appt.end_at };
   });

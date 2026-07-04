@@ -487,6 +487,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           name: string
           sort_order: number
           updated_at: string
@@ -497,6 +498,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name: string
           sort_order?: number
           updated_at?: string
@@ -507,6 +509,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           sort_order?: number
           updated_at?: string
@@ -658,6 +661,7 @@ export type Database = {
           description: string | null
           duration_min: number
           id: string
+          image_url: string | null
           name: string
           price_cents: number
           sort_order: number
@@ -671,6 +675,7 @@ export type Database = {
           description?: string | null
           duration_min?: number
           id?: string
+          image_url?: string | null
           name: string
           price_cents?: number
           sort_order?: number
@@ -684,6 +689,7 @@ export type Database = {
           description?: string | null
           duration_min?: number
           id?: string
+          image_url?: string | null
           name?: string
           price_cents?: number
           sort_order?: number
@@ -709,12 +715,14 @@ export type Database = {
       }
       services: {
         Row: {
+          category_id: string | null
           color: string | null
           created_at: string
           currency: string
           description: string | null
           duration_minutes: number
           id: string
+          image_url: string | null
           is_active: boolean
           name: string
           options: Json
@@ -723,12 +731,14 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          category_id?: string | null
           color?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           duration_minutes: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name: string
           options?: Json
@@ -737,12 +747,14 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          category_id?: string | null
           color?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           duration_minutes?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name?: string
           options?: Json
@@ -751,6 +763,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "services_workspace_id_fkey"
             columns: ["workspace_id"]

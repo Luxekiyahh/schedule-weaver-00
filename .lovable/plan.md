@@ -1,60 +1,53 @@
-# Seed Alluring Dolls Catalog
+# Booking flow: categories, add-on tickers, deposit paywall & email fix
 
-## Context / what changed since your request
-Your premise was that no tenant/user exists yet — but the database already has:
-- **Workspace** `alluringdolls` → name **"AlluringDolls"**, owned by existing user `courttayicousfoster@gmail.com` (`b7651bae…`).
-- **1 branding row** already present, `theme_id = luxury-blush`.
-- **0** categories, **0** service_variants, **0** services.
+Three workstreams, all applied across every tenant (with the bespoke Alluring Dolls skin kept in sync).
 
-So there's no `owner_id` constraint to work around and **no need for a placeholder user, a new workspace, or a public seed button**. The earlier error was almost certainly a NULL `owner_id` being passed by an external script. I'll seed the catalog directly and securely via server-side data tools (your chosen option).
+## 1. Tidier catalog — dropdown categories + add-on tickers + image placeholders
 
-Important architecture note: the Alluring Dolls storefront and booking flow (`AlluringDollsStorefront`, `AlluringDollsBookingFlow`) render from **`service_variants`** joined to **`service_categories`** (via `getStorefront`) — *not* the `services` table. Per your choice, I'll seed **both**: `service_variants` so the live page renders, and `services` so the dashboard/calendar views also list them.
+**Problem:** The booking flow's Step 1 lists a flat `services` table, while the public storefront shows the richer `service_categories` / `service_variants` catalog. They're two different data sets, so the booking page looks untidy and uncategorized.
 
-## What I'll do (one data seed, run directly)
+**Changes**
+- **Schema (migration):** add an optional `image_url text` column to `service_categories` and `service_variants` (nullable, no data change). This backs the "optional image placeholder."
+- **Data:** extend `getBookingWorkspace` to also return `categories`, `variants`, and `lengthOptions` (the same pipeline the storefront uses), including the new `image_url`.
+- **Booking Step 1 (both the generic `booking.$slug.tsx` flow and the `AlluringDollsBookingFlow` skin):**
+  - Group services under **collapsible category dropdowns** (accordion). Each category header shows its name and an **image thumbnail** — a styled placeholder box when `image_url` is empty.
+  - Each service/variant row also gets a small **image placeholder** slot.
+  - Render length options / add-ons as **toggle "ticker" buttons** (multi-select pill buttons) instead of a plain list, so the selected add-ons feed into the booking total.
+- **Storefront (`AlluringDollsStorefront.tsx` + generic storefront):** mirror the placeholder image slot on categories and variants so the two surfaces stay consistent.
 
-### 1. Align workspace + branding
-- Update workspace name to **"Alluring Dolls"** (currently "AlluringDolls").
-- Set the dark-luxury look: `theme_id = 'dark-luxury'` on the workspace and update the existing `workspace_branding` row toward dark tones (near-black bg, champagne-gold accent). Note: the `/alluringdolls` route already hard-renders the bespoke dark Alluring Dolls skin regardless of `theme_id`, so this is mainly for consistency.
+## 2. Deposit payment wall (all tenants, using the tenant's own connected provider)
 
-### 2. Create 2 categories in `service_categories`
-- **Braids** (sort_order 1)
-- **Sew-ins** (sort_order 2)
+**Behavior:** After Step 4 (Details), if the tenant has a connected provider and a deposit configured (`workspace_payment_settings.provider != 'none'`, `connection_status = 'connected'`, `deposit_type != 'none'`), insert a new **Step 5 — Deposit** that must be paid before the appointment is confirmed. If no payment is configured, booking confirms directly as it does today.
 
-### 3. Seed `service_variants` (these power the live storefront)
-Braids (category = Braids):
+**Deposit amount** is derived per tenant from `workspace_payment_settings`:
+- `full` → service/variant price
+- `deposit` → `deposit_amount_cents`, or `deposit_percent` of the price
 
-| Name | Price | Duration |
-|---|---|---|
-| Braids by Size: XSmall | $300 | 10 hr |
-| Braids by Size: Small | $275 | 9 hr |
-| Braids by Size: Smedium | $225 | 8 hr |
-| Braids by Size: Medium | $175 | 7 hr |
-| Braids by Count: 2-4 | $70 | 1 hr |
-| Braids by Count: 6-8 | $90 | 2 hr |
-| Braids by Count: 10-14 | $150 | 3 hr |
-| Braids by Count: 20 | $185 | 4 hr |
-| Braids by Count: 25+ | $225 | 5 hr |
+**Flow (Stripe first):**
+- New server fn `createPendingBooking` inserts the appointment as `status = 'pending'` (does not fire the confirmation email yet) and returns its id.
+- New server fn `createDepositCheckout` reads the tenant's `stripe_secret_key` from `workspace_payment_credentials` and creates a Stripe **Checkout Session** (`mode: 'payment'`, deposit amount) **directly against `api.stripe.com`** using the tenant's key (matching the existing `payment-connect.functions.ts` pattern — tenant keys are not routed through the Lovable gateway). `success_url` returns to `/booking/$slug?appt=<id>&session_id={CHECKOUT_SESSION_ID}`.
+- On return, `confirmDepositBooking` retrieves the session with the tenant key; if `payment_status = 'paid'`, it flips the appointment to `confirmed` (which triggers the confirmation email) and records the deposit. Otherwise the slot stays pending and the user can retry.
+- This session-verify approach avoids configuring a separate Stripe webhook per tenant.
 
-Sew-ins (category = Sew-ins):
+**Provider scope:** implement the live charge for **Stripe** now (the connected provider Alluring Dolls will use). For tenants on PayPal/Square, Step 5 shows a deposit-required notice and confirms on continue, with a note that card capture for those providers is a follow-up. Confirm if you want PayPal/Square charging built now too.
 
-| Name | Price | Duration |
-|---|---|---|
-| Traditional Sew-in | $150 | 3 hr |
-| Frontal/Closure Sew-in | $170 | 3 hr |
-| Half Braids Half Sew-in | $200 | 3 hr |
-| Curls or Crimps Styling Add-on | $45 | 45 min |
+## 3. Fix confirmation emails (nobody is receiving them)
 
-### 4. Mirror the same 13 items into the `services` table
-For the dashboard/calendar (`dashboard.services`, `dashboard.calendar`). The `services` table has no category column, so the category will be encoded in each row's `name`/`description` (e.g. "Braids — ..." / "Sew-ins — ..."). All rows `is_active = true`, `currency = USD`.
+**Root cause:** the appointment webhook sends via Resend using `onboarding@resend.dev`. That sandbox sender only delivers to the Resend account's own address — so customers (and in practice the owner) get nothing. The DB trigger and webhook themselves are wired correctly.
 
-### 5. Idempotency
-The seed checks for existing categories on the workspace first and skips if already seeded, so it's safe to re-run and won't create duplicates.
+**Fix:** move confirmation + owner-alert emails onto Lovable's built-in, queued, logged email system sending from a verified project domain (`procschedule.com` is already attached to the project):
+- Set up email infrastructure and app-email templates (booking confirmation for the customer, new-booking alert for the owner).
+- Trigger the sends from the booking confirmation path (`createBooking` / `confirmDepositBooking`) via the queued send helper with an idempotency key per appointment — instead of the current direct Resend call in the DB-webhook route.
+- Retire the `onboarding@resend.dev` sends. Delivery becomes visible in the email log for debugging.
+- *Prerequisite:* this needs the sender domain confirmed/verified; if DNS isn't finished, emails queue and start flowing once verification completes.
 
-## Verification
-After seeding I'll query the workspace's categories/variants/services counts and confirm `/alluringdolls` renders the catalog.
+## Technical notes / files
+- Migration: `image_url` on `service_categories`, `service_variants`.
+- `src/lib/booking.functions.ts`: extend `getBookingWorkspace`; add `createPendingBooking`, `createDepositCheckout`, `confirmDepositBooking`; keep direct `createBooking` for no-payment tenants; move email trigger to confirmation path.
+- `src/routes/booking.$slug.tsx` + `src/components/AlluringDollsBookingFlow.tsx`: category accordions, add-on ticker buttons, image placeholders, new deposit step + return handling.
+- `src/components/AlluringDollsStorefront.tsx` + generic storefront: image placeholder slots.
+- Tenant Stripe calls reuse the direct-provider pattern from `src/utils/payment-connect.functions.ts` (not `stripe.server.ts`, which is the platform's own Stripe).
+- Email: Lovable email infra + templates; remove `onboarding@resend.dev` path in `src/routes/api/public/appointment-confirmation.ts`.
 
-## Technical notes
-- `service_variants` fields: `workspace_id, category_id, name, price_cents, duration_min, sort_order, active`.
-- `services` fields: `workspace_id, name, description, duration_minutes, price_cents, currency, is_active`.
-- Prices stored as cents; durations as minutes (size/count items use the hour values above).
-- No new UI, no public endpoint, no schema migration — pure data seeding executed server-side via the secure data tool.
+## Open question
+- Build live card capture for **PayPal/Square** deposits now, or Stripe-only with an info screen for the other two initially?

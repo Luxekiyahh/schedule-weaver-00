@@ -273,6 +273,13 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       }));
       const { error: varErr } = await supabaseAdmin.from("service_variants").insert(variantRows);
       if (varErr) throw new Error(varErr.message);
+
+      // Link the flat services to this category so the booking flow can group
+      // them into a collapsible category dropdown.
+      await supabaseAdmin
+        .from("services")
+        .update({ category_id: cat.id })
+        .eq("workspace_id", workspaceId);
     }
 
 

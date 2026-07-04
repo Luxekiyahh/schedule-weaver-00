@@ -183,13 +183,13 @@ export const getStorefront = createServerFn({ method: "POST" })
       supabaseAdmin.from("workspace_branding").select("*").eq("workspace_id", ws.id).maybeSingle(),
       supabaseAdmin
         .from("service_categories")
-        .select("id, name, description, sort_order")
+        .select("id, name, description, sort_order, image_url")
         .eq("workspace_id", ws.id)
         .eq("active", true)
         .order("sort_order", { ascending: true }),
       supabaseAdmin
         .from("service_variants")
-        .select("id, category_id, name, description, price_cents, duration_min, sort_order")
+        .select("id, category_id, name, description, price_cents, duration_min, sort_order, image_url")
         .eq("workspace_id", ws.id)
         .eq("active", true)
         .order("sort_order", { ascending: true }),
