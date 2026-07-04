@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Briefcase, Plus, Pencil, Trash2, Clock, DollarSign, Loader2, ChevronLeft, Link2,
-
+  ImagePlus, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
