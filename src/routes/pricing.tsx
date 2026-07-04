@@ -112,10 +112,10 @@ function PricingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-[#f8f7f4]">
       <div className="max-w-5xl mx-auto px-6 py-16">
         <header className="text-center max-w-2xl mx-auto space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight">Plans that pay for themselves</h1>
+          <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>Plans that pay for themselves</h1>
           <p className="text-lg text-muted-foreground">
             Our wizard builds your branded booking site automatically — included free with every plan. Pick the automation that keeps clients coming back.
           </p>
