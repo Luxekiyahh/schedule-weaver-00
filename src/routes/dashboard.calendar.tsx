@@ -791,7 +791,7 @@ function MonthView({ cursor, appointments, onSelect }: { cursor: Date; appointme
   );
 }
 
-function ApptDialog({ appt, onClose, onStatus }: { appt: Appointment | null; onClose: () => void; onStatus: (s: Status) => void; }) {
+function ApptDialog({ appt, onClose, onStatus, onDelete }: { appt: Appointment | null; onClose: () => void; onStatus: (s: Status) => void; onDelete: () => void; }) {
   return (
     <Dialog open={!!appt} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
