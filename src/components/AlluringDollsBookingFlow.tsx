@@ -612,10 +612,27 @@ export function AlluringDollsBookingFlow({
                       <span style={{ color: "var(--ad-ivory)" }}>{service?.name}</span>
                     </div>
                     {selectedColorId && (
-                      <div className="mt-1 flex justify-between">
-                        <span style={{ color: "var(--ad-smoke)" }}>Color</span>
-                        <span style={{ color: "var(--ad-ivory)" }}>
-                          {hairColors.find((c) => c.id === selectedColorId)?.code}
+                      <div className="mt-2 flex items-center justify-between">
+                        <span style={{ color: "var(--ad-smoke)" }}>Hair Color</span>
+                        <span className="inline-flex items-center gap-2" style={{ color: "var(--ad-ivory)" }}>
+                          {(() => {
+                            const c = hairColors.find((c) => c.id === selectedColorId);
+                            return (
+                              <>
+                                <span
+                                  className="inline-block h-4 w-4 rounded-full"
+                                  style={{
+                                    background: c?.swatch_hex ?? "#000",
+                                    border: "1px solid rgba(205,164,91,.5)",
+                                  }}
+                                />
+                                <span className="font-medium">{c?.code}</span>
+                                {c?.label && (
+                                  <span style={{ color: "var(--ad-smoke)" }}>({c.label})</span>
+                                )}
+                              </>
+                            );
+                          })()}
                         </span>
                       </div>
                     )}
