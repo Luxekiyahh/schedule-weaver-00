@@ -40,6 +40,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
 
   const prefs = {
     client_email: true,
+    client_sms: false,
     provider_email: true,
     ...((workspace.notification_settings as Record<string, boolean>) ?? {}),
   };
