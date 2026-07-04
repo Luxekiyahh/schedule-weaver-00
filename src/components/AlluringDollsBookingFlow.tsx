@@ -106,6 +106,9 @@ export function AlluringDollsBookingFlow({
   services: Service[];
   categories: Category[];
   lengthOptions: LengthOption[];
+  hairColors: HairColor[];
+  selectedColorId: string | null;
+  setSelectedColorId: (id: string | null) => void;
   selectedAddOns: string[];
   setSelectedAddOns: (updater: (prev: string[]) => string[]) => void;
   addOnTotalCents: number;
