@@ -69,6 +69,9 @@ function BookingPage() {
   const submit = useServerFn(createBooking);
   const startDeposit = useServerFn(createDepositCheckout);
   const confirmDeposit = useServerFn(confirmDepositBooking);
+  const startSquareDeposit = useServerFn(createSquareDepositCheckout);
+  const confirmSquareDeposit = useServerFn(confirmSquareDepositBooking);
+
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Awaited<ReturnType<typeof getBookingWorkspace>> | null>(null);
