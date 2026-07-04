@@ -124,5 +124,24 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
     );
   }
 
+  if (prefs.client_sms && customer.phone) {
+    tasks.push(
+      (async () => {
+        try {
+          const { sendSms } = await import("@/lib/sms/twilio.server");
+          const changeContact = workspace.business_phone
+            ? ` Call ${workspace.business_phone} to make changes.`
+            : "";
+          await sendSms({
+            to: customer.phone!,
+            body: `${workspace.name}: Your ${service.name} is confirmed for ${dateLabel} at ${timeLabel}.${changeContact}`,
+          });
+        } catch (err) {
+          console.error("[appointment-emails] SMS send failed", err);
+        }
+      })(),
+    );
+  }
+
   await Promise.allSettled(tasks);
 }
