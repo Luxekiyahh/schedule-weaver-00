@@ -1,13 +1,15 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, Check, Copy, DollarSign, Sparkles, Clock, Users, Briefcase,
   Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2, Bell,
-  ExternalLink, Wand2, Wallet,
+  ExternalLink, Wand2, Wallet, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTenantUrl } from "@/lib/subdomain";
+import { getBusinessInfo, saveBusinessInfo } from "@/lib/tenant.functions";
 
 export const Route = createFileRoute("/dashboard/home")({
   component: HomePage,
@@ -331,9 +333,124 @@ function HomePage() {
               </p>
             </div>
           </section>
+
+          {/* Business info (shown on confirmation emails) */}
+          {ctx && <BusinessInfoCard workspaceId={ctx.workspaceId} />}
         </div>
       </div>
     </div>
+  );
+}
+
+function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
+  const load = useServerFn(getBusinessInfo);
+  const save = useServerFn(saveBusinessInfo);
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    load({ data: { workspaceId } })
+      .then((r) => {
+        if (!active) return;
+        setAddress(r.businessAddress);
+        setPhone(r.businessPhone);
+        setEmail(r.businessEmail);
+        setWebsite(r.businessWebsite);
+      })
+      .catch(() => {})
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [workspaceId, load]);
+
+  const onSave = async () => {
+    setSaving(true);
+    try {
+      await save({
+        data: {
+          workspaceId,
+          businessAddress: address,
+          businessPhone: phone,
+          businessEmail: email,
+          businessWebsite: website,
+        },
+      });
+      toast.success("Business info saved — it'll appear on booking confirmation emails.");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't save business info");
+    }
+    setSaving(false);
+  };
+
+  return (
+    <section className="mt-4 rounded-2xl border bg-white p-5 shadow-sm">
+      <div className="mb-1 flex items-center gap-2 text-base font-semibold text-slate-900">
+        <MapPin className="h-4 w-4 text-indigo-600" /> Business info
+      </div>
+      <p className="mb-4 text-sm text-slate-500">
+        Shown to clients on their booking confirmation email so they know where to go and how to reach you.
+      </p>
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="sm:col-span-2 block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Address</span>
+            <input
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="123 Main St, Suite 4, City, ST 00000"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Phone</span>
+            <input
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="(555) 123-4567"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Contact email</span>
+            <input
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="hello@yourbusiness.com"
+            />
+          </label>
+          <label className="sm:col-span-2 block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Website</span>
+            <input
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="www.yourbusiness.com"
+            />
+          </label>
+          <div className="sm:col-span-2">
+            <button
+              onClick={onSave}
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save business info
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

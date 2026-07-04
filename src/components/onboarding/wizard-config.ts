@@ -276,6 +276,9 @@ export type WizardState = {
   hours: DayHours[];
   locationType: LocationType;
   address: string;
+  businessPhone: string;
+  businessEmail: string;
+  businessWebsite: string;
   policies: Policies;
   intake: IntakeQuestion[];
 };
@@ -324,6 +327,9 @@ export function initialWizard(): WizardState {
     hours: defaultHours(),
     locationType: "studio",
     address: "",
+    businessPhone: "",
+    businessEmail: "",
+    businessWebsite: "",
     policies: {
       deposit: "50",
       cancellation: "24 hours",

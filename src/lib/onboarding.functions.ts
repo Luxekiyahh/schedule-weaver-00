@@ -149,6 +149,9 @@ const completeSchema = z.object({
     type: z.enum(["studio", "mobile", "home"]),
     address: z.string().trim().max(300).optional().default(""),
   }),
+  businessPhone: z.string().trim().max(60).optional().default(""),
+  businessEmail: z.string().trim().max(160).optional().default(""),
+  businessWebsite: z.string().trim().max(200).optional().default(""),
   policies: z.object({
     deposit: z.number().min(0).max(1_000_000),
     cancellation: z.string().max(40),
@@ -198,6 +201,10 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         primary_color: data.primaryColor,
         secondary_color: data.secondaryColor,
         logo_url: data.logoUrl ?? null,
+        business_address: data.location.address || null,
+        business_phone: data.businessPhone || null,
+        business_email: data.businessEmail || null,
+        business_website: data.businessWebsite || null,
       })
       .eq("id", workspaceId);
     if (updErr) throw new Error(updErr.message);

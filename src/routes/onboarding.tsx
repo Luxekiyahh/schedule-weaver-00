@@ -608,6 +608,43 @@ function StepIdentity({
           <p className="mt-1 text-right text-xs text-muted-foreground">{wizard.bio.length}/160</p>
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="biz-phone">Business phone</Label>
+            <Input
+              id="biz-phone"
+              value={wizard.businessPhone}
+              onChange={(e) => patch({ businessPhone: e.target.value })}
+              placeholder="(555) 123-4567"
+              className="mt-1.5"
+            />
+          </div>
+          <div>
+            <Label htmlFor="biz-email">Contact email</Label>
+            <Input
+              id="biz-email"
+              value={wizard.businessEmail}
+              onChange={(e) => patch({ businessEmail: e.target.value })}
+              placeholder="hello@yourbusiness.com"
+              className="mt-1.5"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="biz-website">Website</Label>
+            <Input
+              id="biz-website"
+              value={wizard.businessWebsite}
+              onChange={(e) => patch({ businessWebsite: e.target.value })}
+              placeholder="www.yourbusiness.com"
+              className="mt-1.5"
+            />
+          </div>
+          <p className="sm:col-span-2 -mt-1 text-xs text-muted-foreground">
+            Shown to clients on their booking confirmation email.
+          </p>
+        </div>
+
+
         <div>
           <Label>Logo</Label>
           <input
@@ -1245,6 +1282,9 @@ function StepPreview({
           })),
         hours: wizard.hours.map((h) => ({ dow: h.dow, open: h.open, start: h.start, end: h.end })),
         location: { type: wizard.locationType, address: wizard.address.trim() },
+        businessPhone: wizard.businessPhone.trim(),
+        businessEmail: wizard.businessEmail.trim(),
+        businessWebsite: wizard.businessWebsite.trim(),
         policies: {
           deposit: parseFloat(wizard.policies.deposit) || 0,
           cancellation: wizard.policies.cancellation,

@@ -86,6 +86,67 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
     return { workspaceId: ws.id, slug: data.slug };
   });
 
+/** Confirm the caller is an active member of the workspace. */
+async function assertMember(userId: string, workspaceId: string) {
+  const { data } = await supabaseAdmin
+    .from("workspace_members")
+    .select("workspace_id")
+    .eq("user_id", userId)
+    .eq("workspace_id", workspaceId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!data) throw new Error("You don't have access to this workspace.");
+}
+
+const businessInfoSchema = z.object({
+  businessAddress: z.string().trim().max(300).optional().default(""),
+  businessPhone: z.string().trim().max(60).optional().default(""),
+  businessEmail: z.string().trim().max(160).optional().default(""),
+  businessWebsite: z.string().trim().max(200).optional().default(""),
+});
+
+/** Read a workspace's business contact info for editing. */
+export const getBusinessInfo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertMember(context.userId, data.workspaceId);
+    const { data: ws } = await supabaseAdmin
+      .from("workspaces")
+      .select("business_address, business_phone, business_email, business_website")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    return {
+      businessAddress: ws?.business_address ?? "",
+      businessPhone: ws?.business_phone ?? "",
+      businessEmail: ws?.business_email ?? "",
+      businessWebsite: ws?.business_website ?? "",
+    };
+  });
+
+/** Save a workspace's business address + contact info (shown on emails). */
+export const saveBusinessInfo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid() }).merge(businessInfoSchema).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.userId, data.workspaceId);
+    const { error } = await supabaseAdmin
+      .from("workspaces")
+      .update({
+        business_address: data.businessAddress || null,
+        business_phone: data.businessPhone || null,
+        business_email: data.businessEmail || null,
+        business_website: data.businessWebsite || null,
+      })
+      .eq("id", data.workspaceId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
+
 async function seedDolliimarie(workspaceId: string, userId: string) {
   // Skip if already seeded.
   const { count } = await supabaseAdmin

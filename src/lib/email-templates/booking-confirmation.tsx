@@ -22,6 +22,10 @@ interface Props {
   addOns?: string;
   notes?: string;
   primary?: string;
+  businessAddress?: string;
+  businessPhone?: string;
+  businessEmail?: string;
+  businessWebsite?: string;
 }
 
 const Email = ({
@@ -34,6 +38,10 @@ const Email = ({
   addOns = "",
   notes = "",
   primary = "#4f46e5",
+  businessAddress = "",
+  businessPhone = "",
+  businessEmail = "",
+  businessWebsite = "",
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -61,10 +69,24 @@ const Email = ({
               <strong>Notes:</strong> {notes}
             </Text>
           ) : null}
-          <Hr style={hr} />
-          <Text style={muted}>
-            Need to make a change? Just reply to this email and we'll take care of it.
-          </Text>
+
+          {businessAddress ? (
+            <>
+              <Hr style={hr} />
+              <Text style={sectionLabel}>Location</Text>
+              <Text style={contactLine}>{businessAddress}</Text>
+            </>
+          ) : null}
+
+          {businessPhone || businessEmail || businessWebsite ? (
+            <>
+              <Hr style={hr} />
+              <Text style={sectionLabel}>Contact</Text>
+              {businessPhone ? <Text style={contactLine}>Phone: {businessPhone}</Text> : null}
+              {businessEmail ? <Text style={contactLine}>Email: {businessEmail}</Text> : null}
+              {businessWebsite ? <Text style={contactLine}>Web: {businessWebsite}</Text> : null}
+            </>
+          ) : null}
         </Section>
       </Container>
     </Body>
@@ -95,6 +117,10 @@ export const template = {
     addOns: "Extra Length (+$25)",
     notes: "Please arrive with hair blown out.",
     primary: "#cba35c",
+    businessAddress: "123 Glam Ave, Suite 4, Atlanta, GA 30303",
+    businessPhone: "(404) 555-0148",
+    businessEmail: "hello@alluringdolls.com",
+    businessWebsite: "www.alluringdolls.com",
   },
 } satisfies TemplateEntry;
 
@@ -117,4 +143,5 @@ const rowStyle = { borderBottom: "1px solid #eef2f6", padding: "10px 0" };
 const rowLabel = { margin: 0, fontSize: "11px", textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "#64748b" };
 const rowValue = { margin: "2px 0 0", fontSize: "15px", fontWeight: 600, color: "#0f172a" };
 const hr = { borderColor: "#e2e8f0", margin: "18px 0" };
-const muted = { margin: 0, fontSize: "13px", color: "#64748b" };
+const sectionLabel = { margin: "0 0 6px", fontSize: "11px", textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "#64748b", fontWeight: 700 };
+const contactLine = { margin: "0 0 4px", fontSize: "14px", lineHeight: "1.5", color: "#334155" };
