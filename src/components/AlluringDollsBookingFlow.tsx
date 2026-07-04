@@ -37,7 +37,11 @@ type Service = {
   duration_minutes: number;
   price_cents: number;
   currency: string;
+  category_id: string | null;
+  image_url: string | null;
 };
+type Category = { id: string; name: string; description?: string | null; image_url?: string | null };
+type LengthOption = { id: string; name: string; price_cents: number; duration_min: number };
 type Provider = { member_id: string; name: string };
 type Slot = { time: string; member_id: string };
 
