@@ -160,6 +160,22 @@ function NotificationsPage() {
             checked={settings.client_sms}
             onChange={(v) => setSettings((s) => ({ ...s, client_sms: v }))}
           />
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <Label htmlFor="test_sms" className="text-sm font-medium">Send a test SMS</Label>
+            <p className="text-sm text-muted-foreground">Verify Twilio delivery by texting your own phone.</p>
+            <div className="flex gap-2">
+              <Input
+                id="test_sms"
+                type="tel"
+                placeholder="+1 555 123 4567"
+                value={testPhone}
+                onChange={(e) => setTestPhone(e.target.value)}
+              />
+              <Button onClick={onTestSms} disabled={testing || !testPhone.trim()}>
+                {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send test"}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
