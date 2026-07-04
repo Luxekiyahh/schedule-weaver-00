@@ -754,3 +754,176 @@ function AdMonthCalendar({
     </div>
   );
 }
+
+// Category dropdowns (Alluring Dolls skin) with optional image placeholders.
+function AdCategoryAccordion({
+  services,
+  categories,
+  selectedId,
+  onSelect,
+}: {
+  services: Service[];
+  categories: Category[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const groups = useMemo(() => {
+    const byCat = new Map<string, Service[]>();
+    for (const s of services) {
+      const key = s.category_id ?? "__uncat__";
+      if (!byCat.has(key)) byCat.set(key, []);
+      byCat.get(key)!.push(s);
+    }
+    const ordered: { cat: Category; items: Service[] }[] = [];
+    for (const c of categories) {
+      const items = byCat.get(c.id);
+      if (items && items.length) ordered.push({ cat: c, items });
+    }
+    const uncat = byCat.get("__uncat__");
+    if (uncat && uncat.length)
+      ordered.push({ cat: { id: "__uncat__", name: "Services" }, items: uncat });
+    return ordered;
+  }, [services, categories]);
+
+  const initialOpen = useMemo(() => {
+    const sel = services.find((s) => s.id === selectedId);
+    const key = sel?.category_id ?? groups[0]?.cat.id;
+    return key ? new Set([key]) : new Set<string>();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [open, setOpen] = useState<Set<string>>(initialOpen);
+  const toggle = (id: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const flat = groups.length === 1 && groups[0].cat.id === "__uncat__";
+  if (flat) {
+    return (
+      <div className="space-y-3">
+        {groups[0].items.map((s) => (
+          <AdServiceRow key={s.id} s={s} active={selectedId === s.id} onSelect={onSelect} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {groups.map(({ cat, items }) => {
+        const isOpen = open.has(cat.id);
+        return (
+          <div
+            key={cat.id}
+            className="overflow-hidden rounded"
+            style={{ border: "1px solid var(--ad-border)" }}
+          >
+            <button
+              type="button"
+              onClick={() => toggle(cat.id)}
+              className="flex w-full items-center gap-3 p-4 text-left"
+            >
+              <AdImage url={cat.image_url} />
+              <div className="flex-1">
+                <div
+                  className="ad-display text-base"
+                  style={{ color: "var(--ad-gold)", letterSpacing: "0.06em" }}
+                >
+                  {cat.name}
+                </div>
+                <div
+                  className="text-[11px] uppercase tracking-wider"
+                  style={{ color: "var(--ad-smoke)" }}
+                >
+                  {items.length} option{items.length > 1 ? "s" : ""}
+                </div>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                style={{ color: "var(--ad-smoke)" }}
+              />
+            </button>
+            {isOpen && (
+              <div className="space-y-3 p-3" style={{ borderTop: "1px solid var(--ad-border)" }}>
+                {items.map((s) => (
+                  <AdServiceRow key={s.id} s={s} active={selectedId === s.id} onSelect={onSelect} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AdImage({ url }: { url?: string | null }) {
+  if (url) {
+    return <img src={url} alt="" className="h-11 w-11 rounded object-cover" />;
+  }
+  return (
+    <div
+      className="grid h-11 w-11 place-items-center rounded"
+      style={{
+        border: "1px solid var(--ad-border)",
+        color: "var(--ad-smoke)",
+        background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
+      }}
+    >
+      <ImageIcon className="h-5 w-5" />
+    </div>
+  );
+}
+
+function AdServiceRow({
+  s,
+  active,
+  onSelect,
+}: {
+  s: Service;
+  active: boolean;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <button
+      onClick={() => onSelect(s.id)}
+      data-active={active}
+      className="ad-row group flex w-full items-start gap-3 p-4 text-left"
+    >
+      <AdImage url={s.image_url} />
+      <div className="flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-medium" style={{ color: "var(--ad-ivory)" }}>
+            {s.name}
+          </h3>
+          <span className="text-base font-medium" style={{ color: "var(--ad-gold)" }}>
+            {money(s.price_cents, s.currency)}
+          </span>
+        </div>
+        {s.description && (
+          <p className="mt-1 text-xs line-clamp-2" style={{ color: "var(--ad-smoke)" }}>
+            {s.description}
+          </p>
+        )}
+        <div
+          className="mt-2 inline-flex items-center gap-1 text-[11px] uppercase tracking-wider"
+          style={{ color: "var(--ad-smoke)" }}
+        >
+          <Clock className="h-3 w-3" /> {s.duration_minutes} min
+        </div>
+      </div>
+      <div
+        className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full transition"
+        style={{
+          border: `1px solid ${active ? "var(--ad-gold)" : "var(--ad-border)"}`,
+          backgroundColor: active ? "var(--ad-gold)" : "transparent",
+        }}
+      >
+        {active && <Check className="h-3 w-3" style={{ color: "#1a1108" }} />}
+      </div>
+    </button>
+  );
+}
