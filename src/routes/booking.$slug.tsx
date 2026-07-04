@@ -472,11 +472,59 @@ function BookingPage() {
                   </div>
                 </div>
 
+                {/* Add-ons (ticker buttons) */}
+                {data.lengthOptions.length > 0 && (
+                  <div className="mt-6">
+                    <Label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                      Add-ons (optional)
+                    </Label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {data.lengthOptions.map((o: any) => {
+                        const on = selectedAddOns.includes(o.id);
+                        return (
+                          <button
+                            key={o.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedAddOns((prev) =>
+                                prev.includes(o.id) ? prev.filter((x) => x !== o.id) : [...prev, o.id],
+                              )
+                            }
+                            style={on ? { backgroundColor: primary, borderColor: primary } : undefined}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${
+                              on ? "text-white" : "border-slate-200 text-slate-700 hover:border-slate-300"
+                            }`}
+                          >
+                            {on && <Check className="h-3.5 w-3.5" />}
+                            {o.name}
+                            {o.price_cents > 0 && ` +${money(o.price_cents, service?.currency)}`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Summary */}
                 <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200">
                   <div className="flex justify-between"><span className="text-slate-500">Service</span><span className="font-medium text-slate-900">{service?.name}</span></div>
                   <div className="mt-1 flex justify-between"><span className="text-slate-500">When</span><span className="font-medium text-slate-900">{selectedDate && selectedSlot && new Date(`${selectedDate}T${selectedSlot.time}`).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div>
-                  <div className="mt-1 flex justify-between"><span className="text-slate-500">Total</span><span className="font-semibold text-slate-900">{service && money(service.price_cents, service.currency)}</span></div>
+                  {addOns.length > 0 && (
+                    <div className="mt-1 flex justify-between"><span className="text-slate-500">Add-ons</span><span className="font-medium text-slate-900">{addOns.map((a: any) => a.name).join(", ")}</span></div>
+                  )}
+                  <div className="mt-1 flex justify-between"><span className="text-slate-500">Total</span><span className="font-semibold text-slate-900">{service && money(service.price_cents + addOnTotalCents, service.currency)}</span></div>
+                  {depositRequired && data.payment && (
+                    <div className="mt-2 border-t border-slate-200 pt-2 flex justify-between">
+                      <span className="text-slate-500">Due now (deposit)</span>
+                      <span className="font-semibold text-slate-900">
+                        {data.payment.depositType === "full"
+                          ? money(service ? service.price_cents + addOnTotalCents : 0, service?.currency)
+                          : data.payment.depositAmountCents > 0
+                          ? money(data.payment.depositAmountCents, data.payment.currency)
+                          : `${data.payment.depositPercent}%`}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
@@ -490,7 +538,7 @@ function BookingPage() {
                     onClick={handleSubmit}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    Confirm booking
+                    {depositRequired ? "Continue to deposit" : "Confirm booking"}
                   </Button>
                 </div>
               </div>
