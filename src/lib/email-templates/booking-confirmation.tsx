@@ -143,4 +143,5 @@ const rowStyle = { borderBottom: "1px solid #eef2f6", padding: "10px 0" };
 const rowLabel = { margin: 0, fontSize: "11px", textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "#64748b" };
 const rowValue = { margin: "2px 0 0", fontSize: "15px", fontWeight: 600, color: "#0f172a" };
 const hr = { borderColor: "#e2e8f0", margin: "18px 0" };
-const muted = { margin: 0, fontSize: "13px", color: "#64748b" };
+const sectionLabel = { margin: "0 0 6px", fontSize: "11px", textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "#64748b", fontWeight: 700 };
+const contactLine = { margin: "0 0 4px", fontSize: "14px", lineHeight: "1.5", color: "#334155" };
