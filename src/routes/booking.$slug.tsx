@@ -5,10 +5,12 @@ import {
   getBookingWorkspace,
   getBookingSlots,
   createBooking,
+  createDepositCheckout,
+  confirmDepositBooking,
 } from "@/lib/booking.functions";
 import {
-  ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronLeft, ChevronRight,
-  Clock, Loader2, MapPin, Sparkles, User, Users,
+  ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight,
+  Clock, ImageIcon, Loader2, MapPin, Sparkles, User, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
