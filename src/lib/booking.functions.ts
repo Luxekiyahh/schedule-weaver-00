@@ -336,6 +336,7 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
     endIso,
     service: svc,
     basePriceCents: (svc.price_cents ?? 0) + addOnTotal,
+    requirePrepay,
   };
 }
 
