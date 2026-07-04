@@ -195,6 +195,12 @@ function BookingPage() {
     if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
     setSubmitting(true);
     try {
+      const chosenColor = (data.hairColors ?? []).find((c: any) => c.id === selectedColorId);
+      const notes = chosenColor
+        ? [`Hair color: ${chosenColor.code}${chosenColor.label ? ` (${chosenColor.label})` : ""}`, form.notes]
+            .filter(Boolean)
+            .join("\n")
+        : form.notes;
       const common = {
         workspaceId: data.workspace.id,
         serviceId: service.id,
@@ -204,7 +210,7 @@ function BookingPage() {
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
-        notes: form.notes,
+        notes,
         addOns: addOnsPayload,
       };
       if (depositRequired && data.payment?.provider === "stripe") {
