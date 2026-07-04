@@ -789,6 +789,7 @@ function ApptDialog({ appt, onClose, onStatus }: { appt: Appointment | null; onC
                     <SelectItem value="confirmed">Confirmed</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="no_show">No-show</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
