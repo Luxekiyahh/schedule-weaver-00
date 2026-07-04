@@ -185,7 +185,7 @@ function AvailabilityPage() {
           })}
         </div>
 
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border bg-indigo-50/40 p-4 text-sm text-indigo-900">
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border bg-[#141414]/5 p-4 text-sm text-[#141414]">
           <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
           <p>These hours repeat every week. Need to block a specific date or add extra hours? Use availability exceptions on the calendar.</p>
         </div>

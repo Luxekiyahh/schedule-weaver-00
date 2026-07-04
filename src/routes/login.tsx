@@ -78,7 +78,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#f8f7f4] flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -87,15 +87,15 @@ function LoginPage() {
       >
         {/* Brand */}
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 grid place-items-center shadow-lg shadow-indigo-500/20 mb-4">
-            <Calendar className="h-6 w-6 text-white" />
+          <div className="h-12 w-12 rounded-2xl bg-[#141414] grid place-items-center mb-4">
+            <Calendar className="h-6 w-6 text-[#f8f7f4]" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Welcome back</h1>
-          <p className="text-sm text-slate-500 mt-1.5">Sign in to access your business calendar</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#141414]" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>Welcome back</h1>
+          <p className="text-sm text-[#141414]/50 mt-1.5">Sign in to access your business calendar</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-900/[0.03] p-7">
+        <div className="bg-white border border-[#141414]/10 rounded-2xl shadow-sm shadow-[#141414]/[0.03] p-7">
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
@@ -122,7 +122,7 @@ function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@business.com"
                   disabled={loading}
-                  className="w-full h-11 pl-10 pr-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#141414] focus:ring-4 focus:ring-[#141414]/10 disabled:opacity-60"
                 />
               </div>
             </div>
@@ -140,7 +140,7 @@ function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   disabled={loading}
-                  className="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#141414] focus:ring-4 focus:ring-[#141414]/10 disabled:opacity-60"
                 />
                 <button
                   type="button"
@@ -157,7 +157,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+              className="w-full h-11 rounded-lg bg-[#141414] hover:bg-[#141414]/90 text-[#f8f7f4] text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
             >
               {loading ? (
                 <>
@@ -174,7 +174,7 @@ function LoginPage() {
         {/* Footer */}
         <p className="text-center text-sm text-slate-500 mt-6">
           Don't have an account?{" "}
-          <Link to="/onboarding" className="font-medium text-indigo-600 hover:text-indigo-700 transition">
+          <Link to="/onboarding" className="font-medium text-[#141414] hover:underline transition">
             Set up your business
           </Link>
         </p>

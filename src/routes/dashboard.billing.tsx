@@ -174,7 +174,7 @@ function BillingPage() {
               <CardTitle className="flex items-center gap-2">
                 Current plan
                 {currentTier ? (
-                  <Badge className="bg-indigo-600">{planByTier(currentTier).name}</Badge>
+                  <Badge className="bg-[#141414]">{planByTier(currentTier).name}</Badge>
                 ) : (
                   <Badge variant="secondary">No active plan</Badge>
                 )}
@@ -206,17 +206,17 @@ function BillingPage() {
             <button
               type="button"
               onClick={() => setPeriod("monthly")}
-              className={`rounded-full px-4 py-1.5 transition ${period === "monthly" ? "bg-indigo-600 text-white" : "text-slate-600"}`}
+              className={`rounded-full px-4 py-1.5 transition ${period === "monthly" ? "bg-[#141414] text-white" : "text-slate-600"}`}
             >
               Monthly
             </button>
             <button
               type="button"
               onClick={() => setPeriod("yearly")}
-              className={`rounded-full px-4 py-1.5 transition ${period === "yearly" ? "bg-indigo-600 text-white" : "text-slate-600"}`}
+              className={`rounded-full px-4 py-1.5 transition ${period === "yearly" ? "bg-[#141414] text-white" : "text-slate-600"}`}
             >
               Annual
-              <span className={`ml-1.5 text-xs ${period === "yearly" ? "text-indigo-100" : "text-emerald-600"}`}>2 months free</span>
+              <span className={`ml-1.5 text-xs ${period === "yearly" ? "text-[#f8f7f4]/60" : "text-emerald-600"}`}>2 months free</span>
             </button>
           </div>
         </div>
@@ -230,7 +230,7 @@ function BillingPage() {
             const busy = checkoutLoading && pendingTier === plan.tier;
             const cents = centsFor(plan.tier, period);
             return (
-              <Card key={plan.tier} className={isCurrent ? "border-indigo-500 ring-1 ring-indigo-500" : plan.tier === "pro" ? "border-indigo-200" : ""}>
+              <Card key={plan.tier} className={isCurrent ? "border-[#141414] ring-1 ring-[#141414]" : plan.tier === "pro" ? "border-[#141414]/20" : ""}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>{plan.name}</CardTitle>
@@ -251,7 +251,7 @@ function BillingPage() {
                   <ul className="space-y-2 text-sm">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-indigo-600 mt-0.5 shrink-0" />
+                        <Check className="h-4 w-4 text-[#141414] mt-0.5 shrink-0" />
                         <span>{f}</span>
                       </li>
                     ))}
@@ -282,10 +282,10 @@ function BillingPage() {
 
         {/* Optional Done-For-You Design upsell */}
         {!sub.setupFeePaid && (
-          <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+          <Card className="border-[#141414]/20 bg-[#141414]/[0.04]">
             <CardContent className="pt-6 md:flex md:items-center md:justify-between md:gap-6">
               <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-indigo-600 p-2.5 text-white shrink-0">
+                <div className="rounded-xl bg-[#141414] p-2.5 text-white shrink-0">
                   <Wand2 className="h-5 w-5" />
                 </div>
                 <div>
