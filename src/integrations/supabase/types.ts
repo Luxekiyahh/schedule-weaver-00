@@ -1156,6 +1156,7 @@ export type Database = {
           logo_url: string | null
           name: string
           notification_settings: Json
+          onboarded_at: string | null
           owner_id: string
           primary_color: string
           secondary_color: string
@@ -1179,6 +1180,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           notification_settings?: Json
+          onboarded_at?: string | null
           owner_id: string
           primary_color?: string
           secondary_color?: string
@@ -1202,6 +1204,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           notification_settings?: Json
+          onboarded_at?: string | null
           owner_id?: string
           primary_color?: string
           secondary_color?: string
