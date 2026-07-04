@@ -69,10 +69,24 @@ const Email = ({
               <strong>Notes:</strong> {notes}
             </Text>
           ) : null}
-          <Hr style={hr} />
-          <Text style={muted}>
-            Need to make a change? Just reply to this email and we'll take care of it.
-          </Text>
+
+          {businessAddress ? (
+            <>
+              <Hr style={hr} />
+              <Text style={sectionLabel}>Location</Text>
+              <Text style={contactLine}>{businessAddress}</Text>
+            </>
+          ) : null}
+
+          {businessPhone || businessEmail || businessWebsite ? (
+            <>
+              <Hr style={hr} />
+              <Text style={sectionLabel}>Contact</Text>
+              {businessPhone ? <Text style={contactLine}>Phone: {businessPhone}</Text> : null}
+              {businessEmail ? <Text style={contactLine}>Email: {businessEmail}</Text> : null}
+              {businessWebsite ? <Text style={contactLine}>Web: {businessWebsite}</Text> : null}
+            </>
+          ) : null}
         </Section>
       </Container>
     </Body>
