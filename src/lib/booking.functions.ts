@@ -19,6 +19,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
         serviceProviders: [],
         categories: [],
         lengthOptions: [],
+        hairColors: [],
         payment: null,
       };
 
@@ -28,6 +29,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       { data: links },
       { data: categories },
       { data: lengthOptions },
+      { data: hairColors },
       { data: paySettings },
     ] = await Promise.all([
       supabaseAdmin
