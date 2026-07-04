@@ -10,6 +10,7 @@ import {
   createSquareDepositCheckout,
   confirmSquareDepositBooking,
 } from "@/lib/booking.functions";
+import { joinWaitlist } from "@/lib/waitlist.functions";
 
 import {
   ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight,
@@ -71,6 +72,11 @@ function BookingPage() {
   const confirmDeposit = useServerFn(confirmDepositBooking);
   const startSquareDeposit = useServerFn(createSquareDepositCheckout);
   const confirmSquareDeposit = useServerFn(confirmSquareDepositBooking);
+  const submitWaitlist = useServerFn(joinWaitlist);
+
+  const [waitlistJoined, setWaitlistJoined] = useState(false);
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistPhone, setWaitlistPhone] = useState("");
 
 
   const [loading, setLoading] = useState(true);
@@ -453,7 +459,78 @@ function BookingPage() {
                       {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-9" />)}
                     </div>
                   ) : slots.length === 0 ? (
-                    <p className="text-sm text-slate-500">No open times that day. Try another date.</p>
+                    <div className="space-y-3">
+                      <p className="text-sm text-slate-500">No open times that day. Try another date.</p>
+                      {data?.waitlistEnabled && (
+                        waitlistJoined ? (
+                          <p className="text-sm font-medium text-emerald-600">
+                            You're on the waitlist — we'll text you the moment a spot opens.
+                          </p>
+                        ) : (
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p className="text-sm font-medium text-slate-700">Fully booked? Join the waitlist.</p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              We'll text you instantly when a slot for this day frees up.
+                            </p>
+                            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                              <Input
+                                placeholder="First name"
+                                value={form.firstName}
+                                onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                              />
+                              <Input
+                                placeholder="Email"
+                                type="email"
+                                value={form.email}
+                                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                              />
+                            </div>
+                            <Input
+                              className="mt-2"
+                              placeholder="Mobile number (for the text alert)"
+                              value={waitlistPhone}
+                              onChange={(e) => setWaitlistPhone(e.target.value)}
+                            />
+                            <Button
+                              className="mt-3 w-full"
+                              style={{ backgroundColor: primary }}
+                              disabled={waitlistSubmitting || !form.firstName || !form.email || !waitlistPhone}
+                              onClick={async () => {
+                                if (!data?.workspace) return;
+                                setWaitlistSubmitting(true);
+                                try {
+                                  const res = await submitWaitlist({
+                                    data: {
+                                      workspaceId: data.workspace.id,
+                                      serviceId: serviceId ?? null,
+                                      providerMemberId: providerId === ANY ? null : providerId,
+                                      firstName: form.firstName,
+                                      lastName: form.lastName,
+                                      email: form.email,
+                                      phone: waitlistPhone,
+                                      desiredDate: selectedDate,
+                                    },
+                                  });
+                                  if ("error" in res && res.error) {
+                                    toast.error(res.error);
+                                  } else {
+                                    setWaitlistJoined(true);
+                                    toast.success("You're on the waitlist!");
+                                  }
+                                } catch (e: any) {
+                                  toast.error(e.message);
+                                } finally {
+                                  setWaitlistSubmitting(false);
+                                }
+                              }}
+                            >
+                              {waitlistSubmitting ? "Joining…" : "Join the waitlist"}
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+
                   ) : (
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                       {slots.map((s) => {

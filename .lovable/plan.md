@@ -1,39 +1,75 @@
-# Alluring Dolls booking page — colors, add-ons, wig install, leopard
+## Overview
 
-Four changes, mirroring how the Dolliimarie booking page presents colors and add-ons, while leaving the shared booking engine untouched for every other tenant.
+Two parts: (1) update all three plans' prices + marketing copy and the underlying feature-gating map, and (2) build the first new capability set — **No-Show Prepay + Automated Waitlist** (Enterprise tier). The remaining Pro/Enterprise features (review redirect, visual client profiles, VIP tiering & hidden calendars) are scoped as follow-up phases.
 
-## 1. Hair color options (1B, 1, 2, 4)
+## Part 1 — Pricing & plan copy
 
-The booking page currently doesn't show colors at all (only the storefront does). I'll wire colors into the booking flow, Alluring-Dolls-only in presentation.
+New monthly prices: **Basic $25**, **Pro $45**, **Enterprise $65**. Yearly keeps the "2 months free" pattern (10× monthly): $250 / $450 / $650. The $100 **Done-For-You setup fee stays a one-time add-on available on all tiers** (unchanged behavior, just clarified in copy).
 
-- **Data:** add 4 rows to the hair-colors table for the Alluring Dolls workspace:
-  - `1B` (off/soft black), `1` (jet black), `2` (dark brown), `4` (medium brown), each with a dark swatch color and sort order.
-- **Backend:** `getBookingWorkspace` (`src/lib/booking.functions.ts`) will also fetch active hair colors and return them as `hairColors`. Harmless empty array for tenants with none.
-- **UI:** a new "Hair Color" section of gold swatch pills in `AlluringDollsBookingFlow.tsx` (matches the existing gold aesthetic), shown on the Details step. Selected color is displayed in the summary.
-- **Recording the choice:** the picked color is appended to the appointment notes on submit (e.g. `Hair color: 1B`). This avoids changing the shared booking payload/engine.
+`src/lib/entitlements.ts`:
+- Update `monthlyCents`/`yearlyCents` for each tier (2500/25000, 4500/45000, 6500/65000).
+- Rename display names/taglines to match: Basic "The Foundation", Pro "The Retention Engine", Enterprise "The VIP & Protection Tier".
+- Rewrite each tier's `features` bullet list to the new copy.
+- Expand the `Feature` union and `PLAN_FEATURES` map to the new flags:
+  - basic: `booking`
+  - pro: + `service_lifecycle_automation`, `review_redirect`, `client_profiles`
+  - enterprise: + `vip_tiering`, `no_show_prepay`, `waitlist_bidding`
 
-## 2. Curls or Crimps → add-on (instead of a service)
+New Stripe prices are needed because amounts changed — create/replace prices via the payments tool for the six lookup keys (`basic_monthly`, `basic_yearly`, `pro_monthly`, `pro_yearly`, `enterprise_monthly`, `enterprise_yearly`). Lookup keys stay stable so checkout code is unaffected.
 
-Today "Curls or Crimps Styling Add-on" ($45 / 45 min) exists as a bookable **service** under Sew-ins.
+DB gating helper `public.workspace_has_feature` will be updated (migration) so the new feature strings resolve to the right tiers, keeping server-side checks aligned with `entitlements.ts`.
 
-- **Data:** create it as an **add-on** (length-option/add-on row: name "Curls or Crimps", $45, 45 min) for the workspace, and deactivate the standalone service so it no longer appears in the service list.
-- **UI:** the Alluring Dolls flow already renders add-ons as gold toggle pills on the Details step, so it will appear there automatically and add to the total.
+`src/routes/pricing.tsx` already renders from `PLANS`, so copy/price changes flow through automatically. Only minor wording on the setup-fee card is adjusted to say "available on any plan".
 
-## 3. Missing "Wig Install" category + services
+## Part 2 — No-Show Prepay + Waitlist (Enterprise)
 
-- **Data:** add a `Wig Install` service category, and two active services linked to the existing provider:
-  - **Frontal wig install** — $130, 90 min
-  - **Closure wig install** — $100, 90 min
+### A. No-Show Prepay ("Burn Book")
 
-## 4. Leopard texture not visible
+Goal: clients with a history of no-shows are automatically forced to pay 100% up front.
 
-The leopard layer *is* rendering (fixed, opacity .34) but its spots are near-black on a near-black background, so it reads as flat. I'll raise its contrast so it's actually visible: lighten the spot tones toward warm taupe/gold-brown, bump opacity, and reduce the blur slightly — keeping it subtle and on-brand. I'll re-screenshot to confirm it now reads on the booking page.
+Schema (migration):
+- Add to `customers`: `no_show_count int not null default 0`, `require_prepay boolean not null default false`, `prepay_overridden_by uuid` (manual override).
+- Add to `workspace_payment_settings`: `no_show_prepay_threshold int not null default 2` (how many no-shows before auto-flag).
+- Trigger on `appointments`: when `status` changes to `no_show`, increment the customer's `no_show_count` and set `require_prepay = true` once the workspace threshold is met.
 
----
+Booking logic (`src/lib/booking.functions.ts`):
+- When resolving/creating the customer during booking, look up `require_prepay`. If true AND the workspace has the `no_show_prepay` feature active, override the deposit computation to **100% (full prepay)** regardless of the tenant's normal deposit setting. This reuses the existing Square/Stripe deposit checkout path — it only changes `depositType` to `full` for that booking.
+
+Dashboard:
+- On `dashboard.staff`/customers view (or a small "Clients" section), show a no-show badge and a toggle to manually clear/set `require_prepay`. Gated behind the Enterprise feature via `useSubscription().can("no_show_prepay")`.
+
+### B. Automated Waitlist
+
+Goal: when a booked slot frees up (cancellation), instantly SMS waitlisted clients a booking link.
+
+Schema (migration) — new table `public.waitlist_entries`:
+- `workspace_id`, `service_id`, `provider_id` (nullable = any), `customer_name`, `customer_email`, `customer_phone`, `desired_date` (nullable), `desired_from`/`desired_to` time window (nullable), `status` (`waiting`/`notified`/`booked`/`expired`), `notified_at`, `created_at`, `updated_at`.
+- GRANTs: `authenticated` (dashboard reads via RLS scoped to workspace members), `service_role` full; `anon` INSERT via a narrow policy so public booking visitors can join. RLS: members manage their workspace's entries; public can insert only.
+
+Public booking page (`AlluringDollsBookingFlow.tsx` + shared flow):
+- When a chosen date/provider has no open slots, show a "Join the waitlist" CTA that captures name/email/phone + desired window and inserts a `waitlist_entries` row (server fn).
+
+Cancellation → notify:
+- On appointment cancellation (status → `cancelled`), a DB trigger calls a new public server route `src/routes/api/public/hooks/waitlist-notify.ts` (secured with the existing `apikey`/webhook-secret pattern). The route finds matching `waiting` entries (same workspace/service, provider match-or-any, freed slot fits the desired window), sends each an SMS via the existing Twilio helper with a booking deep link, and marks them `notified`.
+- Gated behind Enterprise `waitlist_bidding` — if the workspace lacks the feature, the trigger/route no-ops.
+
+SMS: reuse `src/lib/sms/twilio.server.ts` (`sendSms`); add a `buildWaitlistSms` builder alongside `buildConfirmationSms`.
+
+### Feature gating summary
+Both A and B check `workspace_has_feature(workspace_id, '<flag>', env)` server-side before acting, and `useSubscription().can(...)` client-side for UI visibility — so only Enterprise workspaces get the behavior.
+
+## Verification
+- Pricing page renders new names, prices, and bullet lists; checkout still opens with existing lookup keys.
+- Simulate 2 no-shows for a test customer → next booking forces full prepay checkout.
+- Create a waitlist entry, cancel a matching appointment → confirm the notify route selects it and (in test) logs/sends the SMS.
+- `tsgo` typecheck passes.
+
+## Follow-up phases (not in this build)
+1. Review Redirect Flow (post-visit Google review ask).
+2. Private Visual Client Profiles (photos/charts/notes per client).
+3. Dynamic VIP Tiering & Hidden Calendars (deposit waivers + priority/hidden slots).
 
 ## Technical notes
-
-- Files: `src/lib/booking.functions.ts` (add `hairColors` fetch/return), `src/routes/booking.$slug.tsx` (color state + pass-through + append to notes), `src/components/AlluringDollsBookingFlow.tsx` (color selector, summary line, leopard CSS).
-- Data changes go through the insert/migration tools: hair-color rows, add-on row, service deactivation, new category + 2 services + provider links — all scoped to the Alluring Dolls workspace only.
-- No changes to the shared booking flow used by other tenants; color UI and payload additions are gated to the `alluringdolls` slug / custom component.
-- Verification: screenshot the booking page to confirm colors, the curls/crimps add-on, the Wig Install category, and a visible leopard texture.
+- Files: `src/lib/entitlements.ts`, `src/routes/pricing.tsx`, `src/lib/booking.functions.ts`, `src/components/AlluringDollsBookingFlow.tsx` (+ shared booking route), `src/lib/sms/twilio.server.ts`, new `src/lib/waitlist.functions.ts`, new `src/routes/api/public/hooks/waitlist-notify.ts`, dashboard clients UI.
+- Migrations: customer/no-show columns + trigger, payment-settings threshold column, `waitlist_entries` table with GRANTs/RLS, `workspace_has_feature` update, cancellation-notify trigger.
+- Stripe: recreate the six prices at the new amounts (same lookup keys).

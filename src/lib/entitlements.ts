@@ -4,16 +4,27 @@ export type BillingPeriod = "monthly" | "yearly";
 
 export type Feature =
   | "booking"
-  | "workflow_automations"
-  | "sms_marketing"
-  | "no_show_automation";
+  | "service_lifecycle_automation"
+  | "review_redirect"
+  | "client_profiles"
+  | "vip_tiering"
+  | "no_show_prepay"
+  | "waitlist_bidding";
 
 // Single source of truth for which plan unlocks which feature.
 // Mirrors the SQL helper public.workspace_has_feature.
 export const PLAN_FEATURES: Record<PlanTier, Feature[]> = {
   basic: ["booking"],
-  pro: ["booking", "workflow_automations", "sms_marketing"],
-  enterprise: ["booking", "workflow_automations", "sms_marketing", "no_show_automation"],
+  pro: ["booking", "service_lifecycle_automation", "review_redirect", "client_profiles"],
+  enterprise: [
+    "booking",
+    "service_lifecycle_automation",
+    "review_redirect",
+    "client_profiles",
+    "vip_tiering",
+    "no_show_prepay",
+    "waitlist_bidding",
+  ],
 };
 
 export const PLAN_RANK: Record<PlanTier, number> = {
@@ -42,50 +53,48 @@ export const DESIGN_FEE_NAME = "Done-For-You Design";
 export const PLANS: PlanMeta[] = [
   {
     tier: "basic",
-    name: "Basic",
+    name: "Basic — The Foundation",
     monthlyPriceId: "basic_monthly",
     yearlyPriceId: "basic_yearly",
-    monthlyCents: 3000,
-    yearlyCents: 30000,
-    tagline: "Everything you need to run appointments.",
+    monthlyCents: 2500,
+    yearlyCents: 25000,
+    tagline: "The Foundation — everything you need to take bookings.",
     features: [
-      "Booking site (wizard-generated)",
-      "Email appointment confirmations",
-      "24-hour appointment reminders",
-      "Client management",
-      "Deposit collection",
+      "Custom-coded booking site (with the $100 setup add-on)",
+      "Standard calendar & deposit collection",
+      "Basic SMS & email reminders",
+      "Standard client management",
     ],
   },
   {
     tier: "pro",
-    name: "Pro",
+    name: "Pro — The Retention Engine",
     monthlyPriceId: "pro_monthly",
     yearlyPriceId: "pro_yearly",
     monthlyCents: 4500,
     yearlyCents: 45000,
-    tagline: "Keep clients coming back on autopilot.",
+    tagline: "The Retention Engine — keep clients coming back on autopilot.",
     features: [
       "Everything in Basic",
-      "SMS reminders",
-      "Post-visit feedback email",
-      "Rebook nudge sequence",
-      "Review redirect flow",
+      "Predictive service-lifecycle automations (rebook nudges & follow-ups)",
+      "Review redirect flow (auto-ask happy clients for Google reviews)",
+      "Private visual client profiles (maps, charts & progress photos)",
     ],
   },
   {
     tier: "enterprise",
-    name: "Enterprise",
+    name: "Enterprise / Studio — The VIP & Protection Tier",
     monthlyPriceId: "enterprise_monthly",
     yearlyPriceId: "enterprise_yearly",
     monthlyCents: 6500,
     yearlyCents: 65000,
-    tagline: "Maximize every slot with advanced automation.",
+    tagline: "The VIP & Protection Tier — protect every slot and reward loyalty.",
     features: [
       "Everything in Pro",
-      "No-show automation",
-      "Waitlist management",
-      "Birthday & loyalty emails",
-      "Priority support with direct access",
+      "Dynamic VIP tiering & hidden calendars (deposit waivers, priority booking)",
+      'The "No-Show Burn Book" — auto-enforce 100% prepay for flaky clients',
+      "Automated waitlist SMS bidding (fill canceled slots instantly)",
+      "No-show automation & loyalty emails",
     ],
   },
 ];

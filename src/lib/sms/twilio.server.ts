@@ -45,6 +45,29 @@ export function buildConfirmationSms(d: {
   return lines.join("\n");
 }
 
+// Builds a waitlist "a slot just opened" SMS with a booking link.
+export function buildWaitlistSms(d: {
+  businessName?: string;
+  firstName?: string;
+  serviceName?: string;
+  dateLabel?: string;
+  timeLabel?: string;
+  bookingUrl?: string;
+}): string {
+  const business = d.businessName || "Our Studio";
+  const lines: string[] = [];
+  lines.push(`Hi ${d.firstName || "there"}, a spot just opened at ${business}!`);
+  if (d.serviceName) lines.push(`Service: ${d.serviceName}`);
+  if (d.dateLabel) lines.push(`Date: ${d.dateLabel}`);
+  if (d.timeLabel) lines.push(`Time: ${d.timeLabel}`);
+  lines.push("");
+  lines.push("First to book gets it:");
+  if (d.bookingUrl) lines.push(d.bookingUrl);
+  return lines.join("\n");
+}
+
+
+
 
 function toE164(raw: string): string {
   const trimmed = raw.trim();

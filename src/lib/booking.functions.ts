@@ -113,6 +113,11 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
           }
         : null;
 
+    const { data: waitlistEnabled } = await supabaseAdmin.rpc("workspace_has_feature", {
+      _workspace_id: ws.id,
+      _feature: "waitlist_bidding",
+    });
+
     return {
       workspace: ws,
       services: services ?? [],
@@ -122,6 +127,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       lengthOptions: lengthOptions ?? [],
       hairColors: hairColors ?? [],
       payment,
+      waitlistEnabled: Boolean(waitlistEnabled),
     };
   });
 
@@ -279,12 +285,13 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   const fullName = `${data.firstName} ${data.lastName}`.trim();
   const { data: existing } = await supabaseAdmin
     .from("customers")
-    .select("id")
+    .select("id, require_prepay")
     .eq("workspace_id", data.workspaceId)
     .eq("email", data.email)
     .maybeSingle();
 
   let customerId = existing?.id as string | undefined;
+  let requirePrepay = Boolean(existing?.require_prepay);
   if (!customerId) {
     const { data: ins, error: insErr } = await supabaseAdmin
       .from("customers")
@@ -293,6 +300,15 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
       .single();
     if (insErr) throw new Error(insErr.message);
     customerId = ins.id;
+  }
+
+  // No-show prepay only applies on Enterprise workspaces with the feature.
+  if (requirePrepay) {
+    const { data: hasFeature } = await supabaseAdmin.rpc("workspace_has_feature", {
+      _workspace_id: data.workspaceId,
+      _feature: "no_show_prepay",
+    });
+    requirePrepay = Boolean(hasFeature);
   }
 
   // Compose notes with add-ons so providers + emails can surface them.
@@ -326,6 +342,7 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
     endIso,
     service: svc,
     basePriceCents: (svc.price_cents ?? 0) + addOnTotal,
+    requirePrepay,
   };
 }
 
@@ -381,7 +398,7 @@ export const createDepositCheckout = createServerFn({ method: "POST" })
     const inserted = await prepareAndInsertAppointment(data, "pending");
     const currency = (settings.currency || inserted.service.currency || "USD").toLowerCase();
     const depositCents = computeDepositCents(inserted.basePriceCents, {
-      depositType: settings.deposit_type,
+      depositType: inserted.requirePrepay ? "full" : settings.deposit_type,
       depositAmountCents: Number(settings.deposit_amount_cents ?? 0),
       depositPercent: Number(settings.deposit_percent ?? 0),
     });
@@ -529,7 +546,7 @@ export const createSquareDepositCheckout = createServerFn({ method: "POST" })
     const inserted = await prepareAndInsertAppointment(data, "pending");
     const currency = (settings.currency || inserted.service.currency || "USD").toUpperCase();
     const depositCents = computeDepositCents(inserted.basePriceCents, {
-      depositType: settings.deposit_type,
+      depositType: inserted.requirePrepay ? "full" : settings.deposit_type,
       depositAmountCents: Number(settings.deposit_amount_cents ?? 0),
       depositPercent: Number(settings.deposit_percent ?? 0),
     });
