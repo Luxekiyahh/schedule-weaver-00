@@ -34,6 +34,23 @@ function NotificationsPage() {
   const [initial, setInitial] = useState<Settings>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [testing, setTesting] = useState(false);
+  const sendTest = useServerFn(sendTestSms);
+
+  async function onTestSms() {
+    if (!testPhone.trim()) return;
+    setTesting(true);
+    try {
+      const res = await sendTest({ data: { phone: testPhone.trim() } });
+      if (res.ok) toast.success("Test SMS sent", { description: `Message ${res.sid} is on its way.` });
+      else toast.error("Could not send test SMS", { description: res.error });
+    } catch (err) {
+      toast.error("Could not send test SMS", { description: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setTesting(false);
+    }
+  }
 
   useEffect(() => {
     (async () => {
