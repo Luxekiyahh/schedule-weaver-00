@@ -218,12 +218,15 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.5, delay: Math.min(i, 3) * 0.05 }}
               >
-                <h2
-                  className="ad-display text-2xl sm:text-3xl text-center"
-                  style={{ color: "var(--ad-gold)" }}
-                >
-                  {cat.name}
-                </h2>
+                <div className="flex flex-col items-center gap-3">
+                  <AdStoreImage url={cat.image_url} size={64} />
+                  <h2
+                    className="ad-display text-2xl sm:text-3xl text-center"
+                    style={{ color: "var(--ad-gold)" }}
+                  >
+                    {cat.name}
+                  </h2>
+                </div>
                 {cat.description && (
                   <p className="mt-2 text-center text-xs text-[color:var(--ad-smoke)] italic">
                     {cat.description}
@@ -235,24 +238,27 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
                     return (
                       <div key={v.id} className="ad-card p-4 sm:p-5">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h3
-                              className="text-sm font-medium tracking-wide"
-                              style={{ color: "var(--ad-ivory)" }}
-                            >
-                              {v.name}
-                            </h3>
-                            {v.description && (
-                              <p className="mt-1.5 text-xs text-[color:var(--ad-smoke)] leading-relaxed">
-                                {v.description}
-                              </p>
-                            )}
-                            {dur && (
-                              <div className="mt-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[color:var(--ad-smoke)]">
-                                <Clock className="w-3 h-3" />
-                                <span>{dur}</span>
-                              </div>
-                            )}
+                          <div className="flex items-start gap-3 flex-1">
+                            <AdStoreImage url={v.image_url} size={44} />
+                            <div className="flex-1">
+                              <h3
+                                className="text-sm font-medium tracking-wide"
+                                style={{ color: "var(--ad-ivory)" }}
+                              >
+                                {v.name}
+                              </h3>
+                              {v.description && (
+                                <p className="mt-1.5 text-xs text-[color:var(--ad-smoke)] leading-relaxed">
+                                  {v.description}
+                                </p>
+                              )}
+                              {dur && (
+                                <div className="mt-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[color:var(--ad-smoke)]">
+                                  <Clock className="w-3 h-3" />
+                                  <span>{dur}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <div
                             className="text-base font-medium"
