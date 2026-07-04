@@ -74,7 +74,7 @@ function CatalogAdminPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = (await load({ data: {} })) as Data;
+      const res = (await load()) as Data;
       setData(res);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to load catalog");
