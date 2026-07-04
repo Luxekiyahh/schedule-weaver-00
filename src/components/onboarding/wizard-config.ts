@@ -276,6 +276,9 @@ export type WizardState = {
   hours: DayHours[];
   locationType: LocationType;
   address: string;
+  businessPhone: string;
+  businessEmail: string;
+  businessWebsite: string;
   policies: Policies;
   intake: IntakeQuestion[];
 };
