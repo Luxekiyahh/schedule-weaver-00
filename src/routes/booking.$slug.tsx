@@ -7,7 +7,10 @@ import {
   createBooking,
   createDepositCheckout,
   confirmDepositBooking,
+  createSquareDepositCheckout,
+  confirmSquareDepositBooking,
 } from "@/lib/booking.functions";
+
 import {
   ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight,
   Clock, ImageIcon, Loader2, MapPin, Sparkles, User, Users,
@@ -66,6 +69,9 @@ function BookingPage() {
   const submit = useServerFn(createBooking);
   const startDeposit = useServerFn(createDepositCheckout);
   const confirmDeposit = useServerFn(confirmDepositBooking);
+  const startSquareDeposit = useServerFn(createSquareDepositCheckout);
+  const confirmSquareDeposit = useServerFn(confirmSquareDepositBooking);
+
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Awaited<ReturnType<typeof getBookingWorkspace>> | null>(null);
@@ -155,9 +161,21 @@ function BookingPage() {
     const params = new URLSearchParams(window.location.search);
     const appt = params.get("appt");
     const sessionId = params.get("session_id");
+    const squareOrder = params.get("square_order");
     if (params.get("deposit") === "cancelled") {
       toast.error("Deposit not completed. Your slot was released — please try again.");
       window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    if (appt && squareOrder) {
+      setConfirmingDeposit(true);
+      confirmSquareDeposit({ data: { appointmentId: appt } })
+        .then((res) => {
+          setDone({ start_at: res.start_at });
+          window.history.replaceState({}, "", window.location.pathname);
+        })
+        .catch((e: any) => toast.error(e.message ?? "Could not verify your deposit"))
+        .finally(() => setConfirmingDeposit(false));
       return;
     }
     if (!appt || !sessionId) return;
@@ -170,6 +188,7 @@ function BookingPage() {
       .catch((e: any) => toast.error(e.message ?? "Could not verify your deposit"))
       .finally(() => setConfirmingDeposit(false));
   }, []);
+
 
   const handleSubmit = async () => {
     if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
@@ -194,6 +213,14 @@ function BookingPage() {
         window.location.href = res.url;
         return;
       }
+      if (depositRequired && data.payment?.provider === "square") {
+        const res = await startSquareDeposit({
+          data: { ...common, origin: window.location.origin, slug },
+        });
+        window.location.href = res.url;
+        return;
+      }
+
       const res = await submit({ data: common });
       setDone({ start_at: res.start_at });
     } catch (e: any) {

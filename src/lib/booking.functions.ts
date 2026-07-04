@@ -473,3 +473,175 @@ export const confirmDepositBooking = createServerFn({ method: "POST" })
 
     return { ok: true, start_at: appt.start_at, end_at: appt.end_at };
   });
+
+// ---------------------------------------------------------------------------
+// Square deposit flow (mirrors the Stripe path, on the TENANT's Square account)
+// ---------------------------------------------------------------------------
+
+function squareApiBase(environment: string | null | undefined): string {
+  return environment === "sandbox"
+    ? "https://connect.squareupsandbox.com"
+    : "https://connect.squareup.com";
+}
+
+const SQUARE_VERSION = "2024-10-17";
+
+// Creates a pending appointment and a Square hosted payment link for the deposit.
+export const createSquareDepositCheckout = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    bookingInput.extend({ origin: z.string().url().max(500), slug: z.string().min(1).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: settings } = await supabaseAdmin
+      .from("workspace_payment_settings")
+      .select("provider, connection_status, deposit_type, deposit_amount_cents, deposit_percent, currency")
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+    if (
+      !settings ||
+      settings.provider !== "square" ||
+      settings.connection_status !== "connected" ||
+      settings.deposit_type === "none"
+    ) {
+      throw new Error("This business isn't set up to collect deposits via card.");
+    }
+
+    const { data: creds } = await supabaseAdmin
+      .from("workspace_payment_credentials")
+      .select("square_access_token, square_location_id, environment")
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+    const token = creds?.square_access_token;
+    const locationId = creds?.square_location_id;
+    if (!token || !locationId) {
+      throw new Error("This business hasn't finished connecting its payment account.");
+    }
+
+    const inserted = await prepareAndInsertAppointment(data, "pending");
+    const currency = (settings.currency || inserted.service.currency || "USD").toUpperCase();
+    const depositCents = computeDepositCents(inserted.basePriceCents, {
+      depositType: settings.deposit_type,
+      depositAmountCents: Number(settings.deposit_amount_cents ?? 0),
+      depositPercent: Number(settings.deposit_percent ?? 0),
+    });
+    if (depositCents < 1) throw new Error("The configured deposit amount is too small to charge.");
+
+    const origin = data.origin.replace(/\/$/, "");
+    const redirectUrl = `${origin}/booking/${data.slug}?appt=${inserted.appointmentId}&square_order=${inserted.appointmentId}`;
+    const label =
+      settings.deposit_type === "full"
+        ? `${inserted.service.name}`
+        : `Deposit — ${inserted.service.name}`;
+
+    const base = squareApiBase(creds?.environment);
+    const res = await fetch(`${base}/v2/online-checkout/payment-links`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Square-Version": SQUARE_VERSION,
+      },
+      body: JSON.stringify({
+        idempotency_key: `dep-${inserted.appointmentId}`,
+        order: {
+          location_id: locationId,
+          reference_id: inserted.appointmentId,
+          line_items: [
+            {
+              name: label,
+              quantity: "1",
+              base_price_money: { amount: depositCents, currency },
+            },
+          ],
+        },
+        checkout_options: {
+          redirect_url: redirectUrl,
+          ask_for_shipping_address: false,
+        },
+        payment_note: `Booking ${inserted.appointmentId}`,
+      }),
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      payment_link?: { url?: string; order_id?: string };
+      errors?: { detail?: string }[];
+    };
+    if (!res.ok || !json.payment_link?.url) {
+      await supabaseAdmin.from("appointments").delete().eq("id", inserted.appointmentId);
+      throw new Error(json.errors?.[0]?.detail || "Could not start checkout. Please try again.");
+    }
+
+    return { url: json.payment_link.url, appointmentId: inserted.appointmentId, depositCents };
+  });
+
+// Verifies a paid Square order and confirms the pending appointment.
+export const confirmSquareDepositBooking = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ appointmentId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: appt } = await supabaseAdmin
+      .from("appointments")
+      .select("id, workspace_id, status, start_at, end_at")
+      .eq("id", data.appointmentId)
+      .maybeSingle();
+    if (!appt) throw new Error("Booking not found.");
+    if (appt.status === "confirmed") return { ok: true, start_at: appt.start_at, end_at: appt.end_at };
+
+    const { data: creds } = await supabaseAdmin
+      .from("workspace_payment_credentials")
+      .select("square_access_token, square_location_id, environment")
+      .eq("workspace_id", appt.workspace_id)
+      .maybeSingle();
+    const token = creds?.square_access_token;
+    const locationId = creds?.square_location_id;
+    if (!token || !locationId) throw new Error("Payment account unavailable.");
+
+    const base = squareApiBase(creds?.environment);
+    // Square has no lookup-by-reference_id, so search this location's recent
+    // orders and match on the reference_id we set when creating the link.
+    const res = await fetch(`${base}/v2/orders/search`, {
+
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Square-Version": SQUARE_VERSION,
+      },
+      body: JSON.stringify({
+        location_ids: [locationId],
+        query: {
+          filter: {
+            state_filter: { states: ["COMPLETED", "OPEN"] },
+          },
+        },
+        limit: 100,
+      }),
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      orders?: { id: string; reference_id?: string; state?: string; net_amount_due_money?: { amount?: number } }[];
+      errors?: { detail?: string }[];
+    };
+    if (!res.ok) throw new Error(json.errors?.[0]?.detail || "Could not verify payment.");
+
+    const order = (json.orders ?? []).find((o) => o.reference_id === data.appointmentId);
+    if (!order) throw new Error("Your deposit hasn't been received yet. Please complete payment.");
+    const paid = order.state === "COMPLETED" || (order.net_amount_due_money?.amount ?? 1) === 0;
+    if (!paid) {
+      throw new Error("Your deposit hasn't been received yet. Please complete payment.");
+    }
+
+    const { error: updErr } = await supabaseAdmin
+      .from("appointments")
+      .update({ status: "confirmed" })
+      .eq("id", data.appointmentId);
+    if (updErr) throw new Error(updErr.message);
+
+    try {
+      const { sendAppointmentEmails } = await import("@/lib/email/appointment-emails.server");
+      await sendAppointmentEmails(data.appointmentId);
+    } catch (e) {
+      console.error("[confirmSquareDepositBooking] email dispatch failed", e);
+    }
+
+    return { ok: true, start_at: appt.start_at, end_at: appt.end_at };
+  });
