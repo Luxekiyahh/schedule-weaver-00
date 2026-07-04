@@ -17,7 +17,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
     supabaseAdmin.from("customers").select("full_name, email, phone").eq("id", appt.customer_id).maybeSingle(),
     supabaseAdmin
       .from("workspaces")
-      .select("name, slug, owner_id, theme_config, notification_settings")
+      .select("name, slug, owner_id, theme_config, notification_settings, business_address, business_phone, business_email, business_website")
       .eq("id", appt.workspace_id)
       .maybeSingle(),
     supabaseAdmin
