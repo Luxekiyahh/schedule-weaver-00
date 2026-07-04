@@ -134,23 +134,67 @@ function BookingPage() {
       .finally(() => setSlotsLoading(false));
   }, [selectedDate, service?.id, providerId]);
 
+  // Selected add-on option objects (length options act as add-ons).
+  const addOns = useMemo(
+    () => (data?.lengthOptions ?? []).filter((o: any) => selectedAddOns.includes(o.id)),
+    [data, selectedAddOns],
+  );
+  const addOnsPayload = useMemo(
+    () => addOns.map((o: any) => ({ name: o.name, priceCents: o.price_cents })),
+    [addOns],
+  );
+  const addOnTotalCents = useMemo(
+    () => addOns.reduce((s: number, o: any) => s + (o.price_cents ?? 0), 0),
+    [addOns],
+  );
+  const depositRequired = !!data?.payment;
+
+  // Handle return from the tenant's Stripe deposit checkout.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const appt = params.get("appt");
+    const sessionId = params.get("session_id");
+    if (params.get("deposit") === "cancelled") {
+      toast.error("Deposit not completed. Your slot was released — please try again.");
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    if (!appt || !sessionId) return;
+    setConfirmingDeposit(true);
+    confirmDeposit({ data: { appointmentId: appt, sessionId } })
+      .then((res) => {
+        setDone({ start_at: res.start_at });
+        window.history.replaceState({}, "", window.location.pathname);
+      })
+      .catch((e: any) => toast.error(e.message ?? "Could not verify your deposit"))
+      .finally(() => setConfirmingDeposit(false));
+  }, []);
+
   const handleSubmit = async () => {
     if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
     setSubmitting(true);
     try {
-      const res = await submit({
-        data: {
-          workspaceId: data.workspace.id,
-          serviceId: service.id,
-          providerMemberId: selectedSlot.member_id,
-          date: selectedDate,
-          time: selectedSlot.time,
-          firstName: form.firstName,
-          lastName: form.lastName,
-          email: form.email,
-          notes: form.notes,
-        },
-      });
+      const common = {
+        workspaceId: data.workspace.id,
+        serviceId: service.id,
+        providerMemberId: selectedSlot.member_id,
+        date: selectedDate,
+        time: selectedSlot.time,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        notes: form.notes,
+        addOns: addOnsPayload,
+      };
+      if (depositRequired && data.payment?.provider === "stripe") {
+        const res = await startDeposit({
+          data: { ...common, origin: window.location.origin, slug },
+        });
+        window.location.href = res.url;
+        return;
+      }
+      const res = await submit({ data: common });
       setDone({ start_at: res.start_at });
     } catch (e: any) {
       toast.error(e.message ?? "Could not complete booking");
