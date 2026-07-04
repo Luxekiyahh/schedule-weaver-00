@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Clock, ArrowRight, MapPin, MessageCircle, CalendarClock } from "lucide-react";
+import { Clock, ArrowRight, MapPin, MessageCircle, CalendarClock, ImageIcon } from "lucide-react";
 
 /**
  * ALLURING DOLLS — bespoke storefront skin.
