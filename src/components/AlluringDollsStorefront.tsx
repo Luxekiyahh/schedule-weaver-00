@@ -400,3 +400,23 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
     </div>
   );
 }
+
+function AdStoreImage({ url, size }: { url?: string | null; size: number }) {
+  const style = { width: size, height: size };
+  if (url) {
+    return <img src={url} alt="" style={style} className="rounded object-cover" />;
+  }
+  return (
+    <div
+      className="grid place-items-center rounded shrink-0"
+      style={{
+        ...style,
+        border: "1px solid var(--ad-border)",
+        color: "var(--ad-smoke)",
+        background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
+      }}
+    >
+      <ImageIcon style={{ width: size * 0.42, height: size * 0.42 }} />
+    </div>
+  );
+}
