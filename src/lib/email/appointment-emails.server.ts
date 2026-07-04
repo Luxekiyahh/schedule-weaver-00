@@ -128,13 +128,23 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
     tasks.push(
       (async () => {
         try {
-          const { sendSms } = await import("@/lib/sms/twilio.server");
-          const changeContact = workspace.business_phone
-            ? ` Call ${workspace.business_phone} to make changes.`
-            : "";
+          const { sendSms, buildConfirmationSms } = await import("@/lib/sms/twilio.server");
           await sendSms({
             to: customer.phone!,
-            body: `${workspace.name}: Your ${service.name} is confirmed for ${dateLabel} at ${timeLabel}.${changeContact}`,
+            body: buildConfirmationSms({
+              businessName: workspace.name,
+              firstName,
+              serviceName: service.name,
+              dateLabel,
+              timeLabel,
+              priceLabel,
+              addOns,
+              notes: cleanNotes,
+              businessAddress: workspace.business_address ?? "",
+              businessPhone: workspace.business_phone ?? "",
+              businessEmail: workspace.business_email ?? "",
+              businessWebsite: workspace.business_website ?? "",
+            }),
           });
         } catch (err) {
           console.error("[appointment-emails] SMS send failed", err);
