@@ -22,6 +22,10 @@ interface Props {
   addOns?: string;
   notes?: string;
   primary?: string;
+  businessAddress?: string;
+  businessPhone?: string;
+  businessEmail?: string;
+  businessWebsite?: string;
 }
 
 const Email = ({
@@ -34,6 +38,10 @@ const Email = ({
   addOns = "",
   notes = "",
   primary = "#4f46e5",
+  businessAddress = "",
+  businessPhone = "",
+  businessEmail = "",
+  businessWebsite = "",
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
