@@ -161,9 +161,21 @@ function BookingPage() {
     const params = new URLSearchParams(window.location.search);
     const appt = params.get("appt");
     const sessionId = params.get("session_id");
+    const squareOrder = params.get("square_order");
     if (params.get("deposit") === "cancelled") {
       toast.error("Deposit not completed. Your slot was released — please try again.");
       window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    if (appt && squareOrder) {
+      setConfirmingDeposit(true);
+      confirmSquareDeposit({ data: { appointmentId: appt } })
+        .then((res) => {
+          setDone({ start_at: res.start_at });
+          window.history.replaceState({}, "", window.location.pathname);
+        })
+        .catch((e: any) => toast.error(e.message ?? "Could not verify your deposit"))
+        .finally(() => setConfirmingDeposit(false));
       return;
     }
     if (!appt || !sessionId) return;
@@ -176,6 +188,7 @@ function BookingPage() {
       .catch((e: any) => toast.error(e.message ?? "Could not verify your deposit"))
       .finally(() => setConfirmingDeposit(false));
   }, []);
+
 
   const handleSubmit = async () => {
     if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
