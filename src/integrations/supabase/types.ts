@@ -1059,6 +1059,10 @@ export type Database = {
       workspaces: {
         Row: {
           ai_credits: number
+          business_address: string | null
+          business_email: string | null
+          business_phone: string | null
+          business_website: string | null
           created_at: string
           domain_status: string
           font_family: string
@@ -1078,6 +1082,10 @@ export type Database = {
         }
         Insert: {
           ai_credits?: number
+          business_address?: string | null
+          business_email?: string | null
+          business_phone?: string | null
+          business_website?: string | null
           created_at?: string
           domain_status?: string
           font_family?: string
@@ -1097,6 +1105,10 @@ export type Database = {
         }
         Update: {
           ai_credits?: number
+          business_address?: string | null
+          business_email?: string | null
+          business_phone?: string | null
+          business_website?: string | null
           created_at?: string
           domain_status?: string
           font_family?: string
