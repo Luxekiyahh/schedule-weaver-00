@@ -71,6 +71,10 @@ function BookingPage() {
   const confirmDeposit = useServerFn(confirmDepositBooking);
   const startSquareDeposit = useServerFn(createSquareDepositCheckout);
   const confirmSquareDeposit = useServerFn(confirmSquareDepositBooking);
+  const submitWaitlist = useServerFn(joinWaitlist);
+
+  const [waitlistJoined, setWaitlistJoined] = useState(false);
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
 
 
   const [loading, setLoading] = useState(true);
