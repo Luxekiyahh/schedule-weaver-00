@@ -1,46 +1,42 @@
-# Add business address + contact info to the booking confirmation email
+## Goal
+Add SMS booking-confirmation sending (via Twilio) to the existing confirmation flow, and add a "Send test SMS" button so we can verify it end-to-end.
 
-Right now the app stores no business address or contact details anywhere, so I'll add fields for each business to enter (address, phone, contact email, website), persist them, then show them in the customer booking-confirmation email. I'll also remove the "Need to make a change? Just reply to this email…" line since these are sent from a no-reply address.
+## What exists today
+- Booking confirmations are **email-only**: the `appointment-confirmation` webhook calls `sendAppointmentEmails(appt.id)` in `src/lib/email/appointment-emails.server.ts`.
+- `workspaces.notification_settings` JSON stores prefs including `client_sms` (currently just a UI toggle on `dashboard.notifications.tsx`, not wired to anything).
+- Twilio credentials already exist as secrets: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`.
+- `customers` table has a `phone` column; workspaces have `business_phone`, `name`, etc.
 
-## 1. Data model (migration)
+## Plan
 
-Add four nullable text columns to `workspaces`:
-- `business_address`
-- `business_phone`
-- `business_email`
-- `business_website`
+### 1. Twilio SMS helper (server-only)
+Create `src/lib/sms/twilio.server.ts`:
+- `sendSms({ to, body })` posts to Twilio REST API `https://api.twilio.com/2010-04-01/Accounts/{SID}/Messages.json` with HTTP Basic auth (`SID:AUTH_TOKEN`), `application/x-www-form-urlencoded` body (`To`, `From`, `Body`).
+- Reads `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` from `process.env` **inside** the function.
+- Basic E.164 normalization of `to`; throws with the Twilio error body on non-2xx so failures are visible in logs.
 
-No new table, so no new grants needed. Existing RLS on `workspaces` already covers member access.
+### 2. Wire SMS into the confirmation flow
+In `src/lib/email/appointment-emails.server.ts` (inside `sendAppointmentEmails`), after the email tasks:
+- Add `client_sms` to the `prefs` merge default (`client_sms: false`).
+- If `prefs.client_sms && customer.phone`, call `sendSms` with a concise confirmation message, e.g.:
+  `"{businessName}: Your {serviceName} is confirmed for {dateLabel} at {timeLabel}. Reply to {business_phone} to make changes."`
+- Wrap the SMS send in its own try/catch so an SMS failure never blocks the emails (log and continue). Reuse the already-computed `dateLabel`/`timeLabel`.
 
-## 2. Save / load the fields
+### 3. "Send test SMS" button (to test it)
+- Add a server function `sendTestSms` in `src/lib/sms/sms.functions.ts` using `createServerFn` + `requireSupabaseAuth`, validating `{ phone: string }`. It verifies the caller is a member of a workspace (via their membership) and calls `sendSms` with a fixed test message. Returns `{ ok, sid }` or a typed error.
+- On `src/routes/dashboard.notifications.tsx`, add a small "Test SMS" input (phone number) + button under the SMS card that calls the function via `useServerFn` and toasts success/failure.
 
-- New authenticated server function `saveBusinessInfo` (in `src/lib/tenant.functions.ts`) using `requireSupabaseAuth` + a workspace-membership/admin check, writing the four columns.
-- Extend the existing workspace/context loader used by the dashboard so the current values come back for editing.
+### 4. Verify
+- Typecheck/build.
+- Use the test button (or `stack_modern--invoke-server-function`) to fire a real SMS to a provided number and confirm delivery + check server logs.
+- Optionally insert a test `confirmed` appointment with `client_sms` enabled to confirm the webhook path also sends.
 
-## 3. Where businesses enter it
+## Notes
+- Uses the existing direct Twilio secrets (no connector changes needed).
+- No DB migration required — `client_sms` already lives in `notification_settings`.
+- I'll need a destination phone number to send the actual test SMS to.
 
-Per your answer, both places:
-- **Onboarding "Identity" step** (`src/routes/onboarding.tsx`, step 3): add Address, Phone, Contact email, Website inputs to the wizard state, and persist them when the workspace is created (`finalizeTenantSignup`).
-- **Dashboard** (`src/routes/dashboard.home.tsx`): add an editable "Business info" card (Address, Phone, Contact email, Website) with a Save button that calls `saveBusinessInfo`, so existing businesses can fill it in and edit later.
-
-## 4. Email template changes
-
-- `src/lib/email/appointment-emails.server.ts`: select the four new columns and pass `businessAddress`, `businessPhone`, `businessEmail`, `businessWebsite` into the `booking-confirmation` template data.
-- `src/lib/email-templates/booking-confirmation.tsx`:
-  - Add a **Location** block showing the business address (only if present).
-  - Add a **Contact** block showing phone, email, and website (each only if present).
-  - **Remove** the "Need to make a change? Just reply to this email and we'll take care of it." line.
-  - Update `previewData` with sample address/phone/email/website.
-
-Each new block renders only when its value exists, so businesses that haven't filled the info in won't get empty rows.
-
-## 5. Verification
-
-- Run the typecheck/build.
-- Render the confirmation template via the email preview route to confirm the address/contact blocks show and the reply line is gone.
-- Smoke-test the dashboard "Business info" card saves and reloads with the values.
-
-## Technical notes
-
-- Files: one migration; `src/lib/tenant.functions.ts`; `src/routes/onboarding.tsx`; `src/routes/dashboard.home.tsx`; `src/lib/email/appointment-emails.server.ts`; `src/lib/email-templates/booking-confirmation.tsx`.
-- The From address stays no-reply; the contact block gives customers a real way to reach the business instead of replying.
+## Technical details
+- Twilio auth: `Authorization: Basic base64(ACCOUNT_SID:AUTH_TOKEN)`, body via `URLSearchParams`.
+- All secret reads happen inside handler bodies (Worker runtime injects env per-request).
+- `*.server.ts` helper is imported only from other server code / server functions, never from route components directly.
