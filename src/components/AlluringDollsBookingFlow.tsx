@@ -1,12 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Calendar as CalendarIcon,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
+  ImageIcon,
   Loader2,
   User,
   Users,
