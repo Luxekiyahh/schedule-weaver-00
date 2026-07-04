@@ -85,6 +85,7 @@ function BookingPage() {
   const [slots, setSlots] = useState<{ time: string; member_id: string }[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<{ time: string; member_id: string } | null>(null);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
 
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
