@@ -44,7 +44,7 @@ type Appt = {
 
 const STATUS_STYLES: Record<Status, string> = {
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  confirmed: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+  confirmed: "bg-[#141414]/5 text-[#141414] ring-[#141414]/20",
   completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   cancelled: "bg-slate-100 text-slate-500 ring-slate-200",
 };
@@ -184,7 +184,7 @@ function HomePage() {
         {/* Header */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-indigo-600">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-[#141414]">
               <Sparkles className="h-3.5 w-3.5" /> {greeting()}
             </div>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
@@ -203,10 +203,10 @@ function HomePage() {
         </div>
 
         {/* Public link share */}
-        <div className="mt-6 overflow-hidden rounded-2xl border bg-gradient-to-r from-slate-900 to-indigo-900 p-5 text-white shadow-lg">
+        <div className="mt-6 overflow-hidden rounded-2xl border bg-[#141414] p-5 text-white shadow-lg">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wider text-indigo-200">Your public booking link</p>
+              <p className="text-xs uppercase tracking-wider text-[#f8f7f4]/60">Your public booking link</p>
               <p className="mt-1 truncate font-mono text-sm text-white/90">{bookingUrl || "—"}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -280,8 +280,8 @@ function HomePage() {
                 ))
               ) : today.length === 0 ? (
                 <div className="px-5 py-16 text-center">
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-indigo-50">
-                    <CalendarX2 className="h-6 w-6 text-indigo-500" />
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#141414]/5">
+                    <CalendarX2 className="h-6 w-6 text-[#141414]" />
                   </div>
                   <p className="mt-4 text-sm font-medium text-slate-900">You're clear for today!</p>
                   <p className="mt-1 text-xs text-slate-500">No bookings scheduled. Enjoy the breathing room.</p>
@@ -391,7 +391,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
   return (
     <section className="mt-4 rounded-2xl border bg-white p-5 shadow-sm">
       <div className="mb-1 flex items-center gap-2 text-base font-semibold text-slate-900">
-        <MapPin className="h-4 w-4 text-indigo-600" /> Business info
+        <MapPin className="h-4 w-4 text-[#141414]" /> Business info
       </div>
       <p className="mb-4 text-sm text-slate-500">
         Shown to clients on their booking confirmation email so they know where to go and how to reach you.
@@ -405,7 +405,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="sm:col-span-2 block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Address</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="123 Main St, Suite 4, City, ST 00000"
@@ -414,7 +414,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Phone</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(555) 123-4567"
@@ -423,7 +423,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Contact email</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="hello@yourbusiness.com"
@@ -432,7 +432,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="sm:col-span-2 block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Website</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="www.yourbusiness.com"
@@ -442,7 +442,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
             <button
               onClick={onSave}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#141414] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#141414]/90 disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Save business info
@@ -465,9 +465,9 @@ function Metric({
   icon, label, value, hint, accent,
 }: { icon: React.ReactNode; label: string; value: string; hint?: string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md ${accent ? "ring-1 ring-indigo-100" : ""}`}>
+    <div className={`rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md ${accent ? "ring-1 ring-[#141414]/10" : ""}`}>
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-        <span className={`grid h-6 w-6 place-items-center rounded-md ${accent ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-600"}`}>
+        <span className={`grid h-6 w-6 place-items-center rounded-md ${accent ? "bg-[#141414]/5 text-[#141414]" : "bg-slate-100 text-slate-600"}`}>
           {icon}
         </span>
         {label}
@@ -489,11 +489,11 @@ function SkeletonCard() {
 }
 
 const TONES: Record<string, string> = {
-  indigo: "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100",
+  indigo: "bg-[#141414]/5 text-[#141414] group-hover:bg-[#141414]/10",
   emerald: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
   amber: "bg-amber-50 text-amber-600 group-hover:bg-amber-100",
   rose: "bg-rose-50 text-rose-600 group-hover:bg-rose-100",
-  violet: "bg-violet-50 text-violet-600 group-hover:bg-violet-100",
+  violet: "bg-[#141414]/5 text-[#141414] group-hover:bg-[#141414]/10",
 };
 
 function ActionCard({

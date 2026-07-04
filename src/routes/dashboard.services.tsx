@@ -143,8 +143,8 @@ function ServicesPage() {
           </div>
         ) : services.length === 0 ? (
           <div className="mt-12 rounded-2xl border bg-white py-16 text-center shadow-sm">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-indigo-50">
-              <Briefcase className="h-6 w-6 text-indigo-500" />
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#141414]/5">
+              <Briefcase className="h-6 w-6 text-[#141414]" />
             </div>
             <p className="mt-4 text-sm font-medium text-slate-900">No services yet</p>
             <p className="mt-1 text-xs text-slate-500">
