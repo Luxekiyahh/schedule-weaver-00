@@ -76,6 +76,7 @@ function BookingPage() {
 
   const [waitlistJoined, setWaitlistJoined] = useState(false);
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistPhone, setWaitlistPhone] = useState("");
 
 
   const [loading, setLoading] = useState(true);
