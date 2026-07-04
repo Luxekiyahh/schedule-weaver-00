@@ -455,7 +455,7 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
           <div className="ad-rule" />
           <p className="ad-display ad-chrome text-4xl mt-8">{ws.name || "Alluring Dolls"}</p>
           <p className="mt-5 inline-flex items-center gap-1.5 text-xs text-[color:var(--ad-smoke)]">
-            <MapPin className="w-3.5 h-3.5" /> 33 W Ave A, Apt 3A · Belle Glade, FL
+            <MapPin className="w-3.5 h-3.5" /> Belle Glade, FL
           </p>
           <p className="mt-1.5 text-xs text-[color:var(--ad-smoke)]">
             Text only · (561) 975-8519 · Open Mon–Sat, 10am–6pm
