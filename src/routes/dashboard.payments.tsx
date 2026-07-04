@@ -159,8 +159,8 @@ function PaymentsPage() {
 
   const openConnect = () => {
     if (provider === "none") return;
-    // Default environment guess: preview → sandbox, custom domain → live.
-    setCredEnv(getStripeEnvironment());
+    // Square is live-only; other providers default by environment guess.
+    setCredEnv(provider === "square" ? "live" : getStripeEnvironment());
     setStripeSecretKey("");
     setStripePublishableKey("");
     setPaypalClientId("");
