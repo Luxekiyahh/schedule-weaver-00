@@ -1,49 +1,52 @@
-# Restore Alluring Dolls & prevent onboarding overwrites
+# Categorize Alluring Dolls services + add "Doll" as provider
 
-## What happened
+## Background
 
-The onboarding flow never creates a *new* workspace. Both `finalizeTenantSignup` and `completeOnboarding` (in `src/lib/onboarding.functions.ts` / `src/lib/tenant.functions.ts`) look up **the oldest workspace owned by the signed-in account and overwrite it in place**. When the Alluring Dolls owner account re-entered the wizard to make "Bubbles & Co", it renamed and re-skinned the existing Alluring Dolls record instead of creating a separate one.
+Your reference screenshot shows the original Alluring Dolls menu grouped into named categories (e.g. **BRAIDS** — "Braiding services by size and count."), the same multi-category style Dolliimarie uses (Hair Extension Installs / Maintenance / Removal & Care). During the earlier restore I lumped everything under one "Hair Services" category, so this fixes that.
 
-The real Alluring Dolls workspace (`5542a2d5-…`) now has name "Bubbles & Co", slug `bubbles-co`, and Bubbles branding. Its 15 original services and 6 appointments are intact. The signature Alluring Dolls storefront/booking design is **hardcoded in code** and keyed off the exact slug `alluringdolls` (`booking.$slug.tsx`, `AlluringDollsStorefront.tsx`), so restoring the slug automatically brings the custom design back.
+Two tables drive the menu and must stay in sync:
+- **Storefront** (`/alluringdolls`) reads `service_variants` grouped by `service_categories`.
+- **Booking flow** (`/booking/alluringdolls`) reads the `services` table via each row's `category_id`.
 
-## Part 1 — Restore the data (data update, no schema change)
+Providers are workspace members; the booking flow shows a provider's name from their profile and only offers a service if that member is linked in `service_providers`. Right now Alluring Dolls has **zero provider links**, and the owner's display name is the business name "Alluring Dolls".
 
-On workspace `5542a2d5-b3be-4fa3-be3e-da209e1d9177`:
+## Part 1 — Re-categorize into 4 categories
 
-**`workspaces`**
-- `name` → `Alluring Dolls`
-- `slug` → `alluringdolls` (re-enables the bespoke storefront skin)
-- Leave `theme_id`/colors as-is — the Alluring Dolls skin uses its own baked-in colors/fonts, so the overwritten DB colors don't affect the storefront. (You can adjust colors/logo later from the dashboard.)
+Create these categories (with descriptions, ordered) and assign every service to the right one, in BOTH `services.category_id` and the mirrored `service_variants`:
 
-**`workspace_branding`**
-- `hero_headline` → `Welcome to our booking site`
-- `hero_subhead` → `Located in Belle Glade, FL`
-- `layout_config.policies` → `deposit: 25`, `grace: "15 minutes"`, plus the full custom policy note you provided (deposit non-refundable, blow-out required, 15-min late rule, rescheduling/cancellation rules, $25 same-day fee) stored in `customNote`.
-- Reset `layout_config.industry`/`owner_title`/`location` away from the Bubbles auto-detailing values.
+```text
+Braids            — "Braiding services by size and count."
+  Braids by Count: 2-4 / 6-8 / 10-14 / 20 / 25+
+  Braids by Size: Medium / Smedium / Small / XSmall
+Sew-Ins           — "Traditional, frontal, and closure installs."
+  Traditional Sew-in / Frontal/Closure Sew-in / Half Braids Half Sew-in
+Wig Installs      — "Closure and frontal wig installations."
+  Closure wig install / Frontal wig install
+Styling & Add-Ons — "Finishing touches and add-ons."
+  Curls or Crimps Styling Add-on
+```
 
-**Cleanup**
-- Delete the stray Bubbles "Basic Detail" service (`10a843a3-…`) and any mirrored `service_variants` row / `service_providers` link for it, so only the real Alluring Dolls services remain.
+Steps:
+1. Insert the 4 categories (`active`, `sort_order` 1–4). Remove the leftover single "Hair Services" category.
+2. `UPDATE services SET category_id = <matching category>` for each service (name-matched), keeping their existing prices/durations/active flags untouched.
+3. Rebuild `service_variants` from the services so the storefront mirrors the same grouping, sort_order by price within each category.
 
-Note: the current `logo_url` is the Bubbles logo (you didn't specify a replacement). I'll leave it in place; you can re-upload the correct logo from the dashboard, or give me a URL and I'll set it in the same change.
+Prices/durations are preserved exactly; only the grouping changes.
 
-## Part 2 — Prevent this from happening again (block re-onboarding)
+## Part 2 — Add "Doll" as the provider
 
-Goal: once an account's workspace is configured, onboarding can never overwrite it.
+Doll is the owner (account `courttayicousfoster@gmail.com`, member `2e8cacfa…`). To make her the booking provider shown as "Doll":
 
-1. **Schema:** add an `onboarded_at timestamptz` column to `workspaces` (migration). Backfill it to `now()` for every workspace that already has services or a branding row (including the restored Alluring Dolls one) so existing accounts are treated as done.
-
-2. **Server guards** (`src/lib/onboarding.functions.ts`, `src/lib/tenant.functions.ts`): at the top of `completeOnboarding` and `finalizeTenantSignup`, if the resolved workspace already has `onboarded_at` set, throw a clear "This account is already set up" error instead of overwriting. `completeOnboarding` sets `onboarded_at = now()` on success.
-
-3. **Route guard** (`src/routes/onboarding.tsx`): on load, call `getOnboardingContext` / a small status check; if the account is already onboarded, redirect to `/dashboard` so the wizard can't be re-run at all.
+1. Set the owner's profile display name to **Doll** (business name stays "Alluring Dolls" on the workspace).
+2. Link the owner member as a `service_providers` entry for every active service, so all services are bookable under Doll.
+3. Availability already exists (weekly hours), so no change needed there.
 
 ## Technical notes
 
-- Part 1 is executed with the data-change (insert/update) tool since it only edits existing rows.
-- Part 2's column addition is a migration; the guard logic is app code edited afterward.
-- No RLS/policy changes required; all writes go through existing server functions using the service-role client.
+- All of this is data changes (insert/update/delete) on existing tables — no schema migration, no app-code changes.
+- The "Curls or Crimps Styling Add-on" is currently inactive in `services` (so it stays off the bookable list) but active as a storefront variant; it will sit under "Styling & Add-Ons" on the menu. I'll leave its active flags as-is unless you want it bookable.
 
 ## Verification
 
-- Query the workspace + branding rows to confirm slug `alluringdolls`, restored hero text/policies, and that the stray service is gone.
-- Load `/alluringdolls` (and `/booking/alluringdolls`) in the preview to confirm the custom Alluring Dolls design renders again with the correct services.
-- Attempt to re-open `/onboarding` on an onboarded account and confirm it redirects to `/dashboard`; confirm the server functions reject a second run.
+- Query categories + each service's `category_id` and the rebuilt variants to confirm the 4 groups.
+- Load `/alluringdolls` and `/booking/alluringdolls` in preview to confirm the menu shows Braids / Sew-Ins / Wig Installs / Styling & Add-Ons, and that Doll appears as the provider with bookable slots.
