@@ -213,6 +213,14 @@ function BookingPage() {
         window.location.href = res.url;
         return;
       }
+      if (depositRequired && data.payment?.provider === "square") {
+        const res = await startSquareDeposit({
+          data: { ...common, origin: window.location.origin, slug },
+        });
+        window.location.href = res.url;
+        return;
+      }
+
       const res = await submit({ data: common });
       setDone({ start_at: res.start_at });
     } catch (e: any) {
