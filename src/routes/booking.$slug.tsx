@@ -250,6 +250,11 @@ function BookingPage() {
       <AlluringDollsBookingFlow
         workspaceName={ws.name}
         services={data.services}
+        categories={data.categories}
+        lengthOptions={data.lengthOptions}
+        selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns}
+        addOnTotalCents={addOnTotalCents}
+        depositRequired={depositRequired}
         eligibleProviders={eligibleProviders}
         step={step} setStep={setStep}
         serviceId={serviceId} setServiceId={setServiceId}
