@@ -149,6 +149,9 @@ const completeSchema = z.object({
     type: z.enum(["studio", "mobile", "home"]),
     address: z.string().trim().max(300).optional().default(""),
   }),
+  businessPhone: z.string().trim().max(60).optional().default(""),
+  businessEmail: z.string().trim().max(160).optional().default(""),
+  businessWebsite: z.string().trim().max(200).optional().default(""),
   policies: z.object({
     deposit: z.number().min(0).max(1_000_000),
     cancellation: z.string().max(40),
