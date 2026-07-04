@@ -51,12 +51,31 @@ export function useSubscription(): SubscriptionState {
         return;
       }
       const wsId = mem.workspace_id as string;
-      const { data: sub } = await supabase
+      const env = getStripeEnvironment();
+      const columns = "plan_tier, status, setup_fee_paid, current_period_end";
+      let { data: sub } = await supabase
         .from("subscriptions")
-        .select("plan_tier, status, setup_fee_paid, current_period_end")
+        .select(columns)
         .eq("workspace_id", wsId)
-        .eq("environment", getStripeEnvironment())
+        .eq("environment", env)
         .maybeSingle();
+
+      // Preview/dev runs in the sandbox environment, but real subscribers only
+      // ever have a "live" row (checkout targets live). Without a fallback they
+      // read as inactive in preview and get bounced to /pricing. Fall back to
+      // the live row for gating in sandbox only — never the reverse, so the
+      // published (live) site is unaffected.
+      if (!sub && env === "sandbox") {
+        const { data: liveSub } = await supabase
+          .from("subscriptions")
+          .select(columns)
+          .eq("workspace_id", wsId)
+          .eq("environment", "live")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        sub = liveSub;
+      }
 
       if (cancelled) return;
       setWorkspaceId(wsId);
