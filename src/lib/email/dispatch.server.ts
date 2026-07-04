@@ -11,7 +11,7 @@ import { TEMPLATES } from "@/lib/email-templates/registry";
 // Never import this from client-reachable module scope; it uses the service
 // role client. Import it inside server handlers only.
 
-const SITE_NAME = "schedule-weaver-00";
+const SITE_NAME = "Procschedule";
 const SENDER_DOMAIN = "notify.procschedule.com";
 const FROM_DOMAIN = "notify.procschedule.com";
 
