@@ -92,6 +92,10 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
           addOns,
           notes: cleanNotes,
           primary,
+          businessAddress: workspace.business_address ?? "",
+          businessPhone: workspace.business_phone ?? "",
+          businessEmail: workspace.business_email ?? "",
+          businessWebsite: workspace.business_website ?? "",
         },
       }),
     );
