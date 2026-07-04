@@ -100,5 +100,10 @@
   },
   "overrides": {
     "@tanstack/router-core": "1.171.13"
+  },
+  "pnpm": {
+    "overrides": {
+      "entities": "4.5.0"
+    }
   }
 }
