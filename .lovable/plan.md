@@ -1,42 +1,66 @@
 ## Goal
-Add SMS booking-confirmation sending (via Twilio) to the existing confirmation flow, and add a "Send test SMS" button so we can verify it end-to-end.
+A complete luxury visual rebrand of the **Alluring Dolls** booking experience — storefront + booking flow — while preserving 100% of functionality, data, routes, and backend. Purely presentational changes in two self-contained skin components.
 
-## What exists today
-- Booking confirmations are **email-only**: the `appointment-confirmation` webhook calls `sendAppointmentEmails(appt.id)` in `src/lib/email/appointment-emails.server.ts`.
-- `workspaces.notification_settings` JSON stores prefs including `client_sms` (currently just a UI toggle on `dashboard.notifications.tsx`, not wired to anything).
-- Twilio credentials already exist as secrets: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`.
-- `customers` table has a `phone` column; workspaces have `business_phone`, `name`, etc.
+## Scope (what changes)
+Only these two files, both scoped to the `alluringdolls` slug:
+- `src/components/AlluringDollsStorefront.tsx` — landing / menu / policies page
+- `src/components/AlluringDollsBookingFlow.tsx` — 4-step booking UI (Service → Provider → Time → Details)
 
-## Plan
+**Untouched:** all route logic (`$slug.tsx`, `booking.$slug.tsx`), server functions, booking/slot/deposit/payment logic, data pipeline, categories/variants/length/color data, policy text, navigation, URLs, database. Every prop contract and handler stays identical — I only restyle the markup that renders them.
 
-### 1. Twilio SMS helper (server-only)
-Create `src/lib/sms/twilio.server.ts`:
-- `sendSms({ to, body })` posts to Twilio REST API `https://api.twilio.com/2010-04-01/Accounts/{SID}/Messages.json` with HTTP Basic auth (`SID:AUTH_TOKEN`), `application/x-www-form-urlencoded` body (`To`, `From`, `Body`).
-- Reads `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` from `process.env` **inside** the function.
-- Basic E.164 normalization of `to`; throws with the Twilio error body on non-2xx so failures are visible in logs.
+## Design system upgrade (shared `ad-*` tokens in both files)
 
-### 2. Wire SMS into the confirmation flow
-In `src/lib/email/appointment-emails.server.ts` (inside `sendAppointmentEmails`), after the email tasks:
-- Add `client_sms` to the `prefs` merge default (`client_sms: false`).
-- If `prefs.client_sms && customer.phone`, call `sendSms` with a concise confirmation message, e.g.:
-  `"{businessName}: Your {serviceName} is confirmed for {dateLabel} at {timeLabel}. Reply to {business_phone} to make changes."`
-- Wrap the SMS send in its own try/catch so an SMS failure never blocks the emails (log and continue). Reuse the already-computed `dateLabel`/`timeLabel`.
+### 1. Palette (your exact brand colors)
+Update CSS variables to:
+```
+--ad-bg: #090809;  --ad-bg2: #151214;
+--ad-gold: #CDA45B;  --ad-gold-2: #B98B47;  --ad-gold-bright: #F3E0AD;
+--ad-ivory: #F8F5EF;  --ad-smoke: #C8B7A0;
+--ad-border: rgba(205,164,91,.25);  --ad-glow: rgba(205,164,91,.18);
+```
+All fills become gradients (no flat one-dimensional surfaces).
 
-### 3. "Send test SMS" button (to test it)
-- Add a server function `sendTestSms` in `src/lib/sms/sms.functions.ts` using `createServerFn` + `requireSupabaseAuth`, validating `{ phone: string }`. It verifies the caller is a member of a workspace (via their membership) and calls `sendSms` with a fixed test message. Returns `{ ok, sid }` or a typed error.
-- On `src/routes/dashboard.notifications.tsx`, add a small "Test SMS" input (phone number) + button under the SMS card that calls the function via `useServerFn` and toasts success/failure.
+### 2. Typography
+Swap the Google Fonts `<link>` to load **Cinzel** (uppercase section/hero titles), **Cormorant Garamond** (editorial serif display/subheads), and **Inter** (body). Increase paragraph whitespace and heading letter-spacing. Body stays highly readable.
 
-### 4. Verify
-- Typecheck/build.
-- Use the test button (or `stack_modern--invoke-server-function`) to fire a real SMS to a provided number and confirm delivery + check server logs.
-- Optionally insert a test `confirmed` appointment with `client_sms` enabled to confirm the webhook path also sends.
+### 3. CSS leopard background (no images)
+A fixed, full-viewport `.ad-leopard` layer built entirely with layered `radial-gradient`s — oversized irregular charcoal-on-black spots, blurred edges, embossed/leather feel, low opacity, seamless & responsive. Layered beneath soft radial lighting gradients. Its opacity rises subtly on scroll via framer-motion `useScroll` → `useTransform` bound to a fixed overlay (reduced-motion respected).
 
-## Notes
-- Uses the existing direct Twilio secrets (no connector changes needed).
-- No DB migration required — `client_sms` already lives in `notification_settings`.
-- I'll need a destination phone number to send the actual test SMS to.
+### 4. Luxury lighting & depth
+Add a top spotlight radial glow, corner ambient glows, and a vignette overlay. Cards gain layered shadows, thin gold borders, soft inner highlights, and optional glassmorphism where appropriate.
 
-## Technical details
-- Twilio auth: `Authorization: Basic base64(ACCOUNT_SID:AUTH_TOKEN)`, body via `URLSearchParams`.
-- All secret reads happen inside handler bodies (Worker runtime injects env per-request).
-- `*.server.ts` helper is imported only from other server code / server functions, never from route components directly.
+### 5. Champagne chrome effect (`.ad-chrome`)
+Brushed champagne metallic text: multi-stop gold gradient clipped to text + engraved dual text-shadow + soft reflection. Applied only to the hero name, section titles, featured/callout headings. Keep the existing slow light-sweep as the signature shimmer (reduced-motion safe).
+
+### 6. Capsule buttons (`.ad-cta`)
+Large radius champagne-gold gradient capsules, embossed, soft shadow; hover = glow + lift + scale, 250–350ms transitions. Replaces every button/CTA including the sticky mobile book bar and the booking-flow next/back/confirm buttons (restyled via existing `ad-cta-btn`/`ad-ghost-btn` hooks).
+
+### 7. Forms (booking flow)
+Rounded matte inputs, gold border, gold focus ring, generous spacing, floating-label styling where feasible, subtle focus animations — via the existing `ad-input`/`ad-label` classes (no logic/state changes).
+
+## Section-by-section restyle
+
+**Storefront:**
+- **Hero** → editorial: large chrome heading, generous spacing, spotlight lighting, refined eyebrow + contact row, curved section transition.
+- **Menu / category sections** → oversized rounded editorial cards; service rows become luxury product cards (rounded, gradient, soft shadow, gold accent) with hover lift to scale 1.02 + brighter border + deeper shadow; better type hierarchy.
+- **Length add-ons & hair colors** → refined luxury panels; swatches with soft gold ring glow.
+- **Policies ("Good to Know")** → large rounded luxury information panel: premium padding, gold outline, soft gradient bg, each policy its own block with thin gold divider lines.
+- **Footer** → refined with chrome wordmark and thin gold rule.
+
+**Booking flow:**
+- Restyle the step indicator, service/provider selection rows, calendar & slot grid, and details form to the same luxury card/button/form language. Keep the 4-step structure, props, and handlers exactly as-is.
+
+## Motion
+Scroll-reveal fade-up on sections (existing `whileInView` retained/tuned), button glow on hover, heading shimmer, image/card fades, 250–350ms transitions. All gated behind `prefers-reduced-motion`.
+
+## Mobile
+Comfortable spacing, readable type, large tap targets, elegant card stacking, luxury sticky book bar. Verified at mobile width.
+
+## Verification
+- Typecheck/build clean.
+- Playwright screenshots of `/alluringdolls` and `/booking/alluringdolls` at desktop + mobile widths to confirm the luxury look and that all data (services, prices, policies, colors, steps) still renders.
+- Confirm CTAs still navigate to the booking route and the flow steps still advance.
+
+## Technical notes
+- Both skins use inline `<style>` blocks with raw CSS (not `@apply`), so no `@reference` needed; remote fonts stay as a `<link>` tag in JSX (allowed). No changes to `src/styles.css`, Tailwind theme, or global tokens — the rebrand is fully contained to these two components so no other tenant is affected.
+- No new dependencies (framer-motion already present).
