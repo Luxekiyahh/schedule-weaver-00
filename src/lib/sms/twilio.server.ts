@@ -5,6 +5,47 @@
 
 export type SendSmsResult = { sid: string };
 
+// Builds a plain-text SMS that mirrors the booking-confirmation email content.
+export function buildConfirmationSms(d: {
+  businessName?: string;
+  firstName?: string;
+  serviceName?: string;
+  dateLabel?: string;
+  timeLabel?: string;
+  priceLabel?: string;
+  addOns?: string;
+  notes?: string;
+  businessAddress?: string;
+  businessPhone?: string;
+  businessEmail?: string;
+  businessWebsite?: string;
+}): string {
+  const business = d.businessName || "Our Studio";
+  const lines: string[] = [];
+  lines.push(`Hi ${d.firstName || "there"}, your appointment at ${business} is confirmed.`);
+  lines.push("");
+  if (d.serviceName) lines.push(`Service: ${d.serviceName}`);
+  if (d.addOns) lines.push(`Add-ons: ${d.addOns}`);
+  if (d.dateLabel) lines.push(`Date: ${d.dateLabel}`);
+  if (d.timeLabel) lines.push(`Time: ${d.timeLabel}`);
+  if (d.priceLabel) lines.push(`Total: ${d.priceLabel}`);
+  if (d.notes) lines.push(`Notes: ${d.notes}`);
+  if (d.businessAddress) {
+    lines.push("");
+    lines.push(`Location: ${d.businessAddress}`);
+  }
+  const contact: string[] = [];
+  if (d.businessPhone) contact.push(`Phone: ${d.businessPhone}`);
+  if (d.businessEmail) contact.push(`Email: ${d.businessEmail}`);
+  if (d.businessWebsite) contact.push(`Web: ${d.businessWebsite}`);
+  if (contact.length) {
+    lines.push("");
+    lines.push(...contact);
+  }
+  return lines.join("\n");
+}
+
+
 function toE164(raw: string): string {
   const trimmed = raw.trim();
   if (trimmed.startsWith("+")) {
