@@ -349,6 +349,43 @@ function ServiceDialog({
             <Label htmlFor="svc-desc">Description</Label>
             <Textarea id="svc-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="What's included…" />
           </div>
+          <div className="space-y-2">
+            <Label>Image</Label>
+            <div className="flex items-center gap-3">
+              {imageUrl ? (
+                <div className="relative">
+                  <img src={imageUrl} alt="" className="h-16 w-16 rounded-lg border object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl(null)}
+                    className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full bg-slate-900 text-white shadow"
+                    aria-label="Remove image"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="grid h-16 w-16 place-items-center rounded-lg border border-dashed text-slate-400">
+                  <ImagePlus className="h-5 w-5" />
+                </div>
+              )}
+              <div>
+                <input id="svc-image" type="file" accept="image/*" className="hidden" onChange={onPickImage} disabled={uploading} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => document.getElementById("svc-image")?.click()}
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                  {imageUrl ? "Replace image" : "Add image"}
+                </Button>
+                <p className="mt-1 text-xs text-slate-500">Shown on your booking page. PNG or JPG, up to 5MB.</p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="svc-dur">Duration (minutes)</Label>
