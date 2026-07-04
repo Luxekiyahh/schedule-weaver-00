@@ -1282,6 +1282,9 @@ function StepPreview({
           })),
         hours: wizard.hours.map((h) => ({ dow: h.dow, open: h.open, start: h.start, end: h.end })),
         location: { type: wizard.locationType, address: wizard.address.trim() },
+        businessPhone: wizard.businessPhone.trim(),
+        businessEmail: wizard.businessEmail.trim(),
+        businessWebsite: wizard.businessWebsite.trim(),
         policies: {
           deposit: parseFloat(wizard.policies.deposit) || 0,
           cancellation: wizard.policies.cancellation,
