@@ -7,7 +7,10 @@ import {
   createBooking,
   createDepositCheckout,
   confirmDepositBooking,
+  createSquareDepositCheckout,
+  confirmSquareDepositBooking,
 } from "@/lib/booking.functions";
+
 import {
   ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight,
   Clock, ImageIcon, Loader2, MapPin, Sparkles, User, Users,
