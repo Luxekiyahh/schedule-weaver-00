@@ -33,7 +33,9 @@ type Service = {
   price_cents: number;
   currency: string;
   is_active: boolean;
+  image_url: string | null;
 };
+
 
 type Ctx = { workspaceId: string; memberId: string; role: Role };
 
