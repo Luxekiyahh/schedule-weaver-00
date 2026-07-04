@@ -295,6 +295,22 @@ function Dashboard() {
     setSelectedAppt((p) => (p && p.id === id ? { ...p, status } : p));
   };
 
+  const deleteAppointment = async (id: string) => {
+    if (!confirm("Delete this appointment permanently? This cannot be undone.")) return;
+    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Appointment deleted");
+    setAppointments((prev) => prev.filter((a) => a.id !== id));
+    setSelectedAppt(null);
+  };
+
+  // Cancelled appointments are hidden from the grid by default so cancelling
+  // visibly removes them; the "Show cancelled" toggle brings them back.
+  const visibleAppointments = useMemo(
+    () => (showCancelled ? appointments : appointments.filter((a) => a.status !== "cancelled")),
+    [appointments, showCancelled],
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen grid place-items-center bg-slate-50">
