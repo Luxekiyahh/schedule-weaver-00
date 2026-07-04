@@ -122,7 +122,7 @@ function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@business.com"
                   disabled={loading}
-                  className="w-full h-11 pl-10 pr-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#141414] focus:ring-4 focus:ring-[#141414]/10 disabled:opacity-60"
                 />
               </div>
             </div>
@@ -140,7 +140,7 @@ function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   disabled={loading}
-                  className="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#141414] focus:ring-4 focus:ring-[#141414]/10 disabled:opacity-60"
                 />
                 <button
                   type="button"
@@ -157,7 +157,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+              className="w-full h-11 rounded-lg bg-[#141414] hover:bg-[#141414]/90 text-[#f8f7f4] text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
             >
               {loading ? (
                 <>
@@ -174,7 +174,7 @@ function LoginPage() {
         {/* Footer */}
         <p className="text-center text-sm text-slate-500 mt-6">
           Don't have an account?{" "}
-          <Link to="/onboarding" className="font-medium text-indigo-600 hover:text-indigo-700 transition">
+          <Link to="/onboarding" className="font-medium text-[#141414] hover:underline transition">
             Set up your business
           </Link>
         </p>
