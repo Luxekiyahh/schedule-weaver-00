@@ -177,7 +177,9 @@ export const saveProviderCredentials = createServerFn({ method: "POST" })
           credPatch.paypal_secret = data.paypalSecret;
         } else if (data.provider === "square") {
           if (!data.squareAccessToken) throw new Error("Enter your Square access token.");
-          const v = await validateSquare(data.squareAccessToken, data.environment);
+          // Square is live-only on this platform.
+          environment = "live";
+          const v = await validateSquare(data.squareAccessToken, "live");
           accountId = v.accountId;
           credPatch.square_access_token = data.squareAccessToken;
           credPatch.square_location_id = v.locationId;
