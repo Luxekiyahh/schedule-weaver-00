@@ -487,6 +487,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           name: string
           sort_order: number
           updated_at: string
@@ -497,6 +498,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name: string
           sort_order?: number
           updated_at?: string
@@ -507,6 +509,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           sort_order?: number
           updated_at?: string
@@ -658,6 +661,7 @@ export type Database = {
           description: string | null
           duration_min: number
           id: string
+          image_url: string | null
           name: string
           price_cents: number
           sort_order: number
@@ -671,6 +675,7 @@ export type Database = {
           description?: string | null
           duration_min?: number
           id?: string
+          image_url?: string | null
           name: string
           price_cents?: number
           sort_order?: number
@@ -684,6 +689,7 @@ export type Database = {
           description?: string | null
           duration_min?: number
           id?: string
+          image_url?: string | null
           name?: string
           price_cents?: number
           sort_order?: number
