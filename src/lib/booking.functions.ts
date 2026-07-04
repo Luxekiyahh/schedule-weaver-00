@@ -113,6 +113,11 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
           }
         : null;
 
+    const { data: waitlistEnabled } = await supabaseAdmin.rpc("workspace_has_feature", {
+      _workspace_id: ws.id,
+      _feature: "waitlist_bidding",
+    });
+
     return {
       workspace: ws,
       services: services ?? [],
@@ -122,6 +127,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       lengthOptions: lengthOptions ?? [],
       hairColors: hairColors ?? [],
       payment,
+      waitlistEnabled: Boolean(waitlistEnabled),
     };
   });
 
