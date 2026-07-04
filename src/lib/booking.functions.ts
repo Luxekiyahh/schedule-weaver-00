@@ -62,6 +62,12 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
         .eq("active", true)
         .order("sort_order", { ascending: true }),
       supabaseAdmin
+        .from("service_hair_colors")
+        .select("id, code, label, swatch_hex, sort_order")
+        .eq("workspace_id", ws.id)
+        .eq("active", true)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
         .from("workspace_payment_settings")
         .select("provider, connection_status, deposit_type, deposit_amount_cents, deposit_percent, currency")
         .eq("workspace_id", ws.id)
