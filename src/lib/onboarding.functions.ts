@@ -201,6 +201,10 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         primary_color: data.primaryColor,
         secondary_color: data.secondaryColor,
         logo_url: data.logoUrl ?? null,
+        business_address: data.location.address || null,
+        business_phone: data.businessPhone || null,
+        business_email: data.businessEmail || null,
+        business_website: data.businessWebsite || null,
       })
       .eq("id", workspaceId);
     if (updErr) throw new Error(updErr.message);
