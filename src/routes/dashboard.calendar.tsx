@@ -106,6 +106,7 @@ function Dashboard() {
   const [cursor, setCursor] = useState<Date>(startOfDay(new Date()));
   const [selectedProvider, setSelectedProvider] = useState<string>("all"); // member id or "all"
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
+  const [showCancelled, setShowCancelled] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
 
   const navigate = useNavigate();
