@@ -120,6 +120,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
       serviceProviders: links ?? [],
       categories: categories ?? [],
       lengthOptions: lengthOptions ?? [],
+      hairColors: hairColors ?? [],
       payment,
     };
   });
