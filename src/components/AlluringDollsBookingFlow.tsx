@@ -570,7 +570,42 @@ export function AlluringDollsBookingFlow({
                     </div>
                   )}
 
+                  {/* Hair color */}
+                  {hairColors.length > 0 && (
+                    <div className="mt-6">
+                      <div className="ad-label">Hair Color (optional)</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {hairColors.map((c) => {
+                          const on = selectedColorId === c.id;
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => setSelectedColorId(on ? null : c.id)}
+                              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition"
+                              style={{
+                                backgroundColor: on ? "var(--ad-gold)" : "transparent",
+                                color: on ? "#1a1108" : "var(--ad-ivory)",
+                                border: `1px solid ${on ? "var(--ad-gold)" : "var(--ad-border)"}`,
+                              }}
+                            >
+                              <span
+                                className="inline-block h-3.5 w-3.5 rounded-full"
+                                style={{
+                                  background: c.swatch_hex ?? "#000",
+                                  border: "1px solid rgba(205,164,91,.5)",
+                                }}
+                              />
+                              {c.code}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Summary */}
+
                   <div className="ad-card mt-6 p-4 text-sm">
                     <div className="flex justify-between">
                       <span style={{ color: "var(--ad-smoke)" }}>Service</span>
