@@ -317,6 +317,7 @@ function HomePage() {
               <ActionCard to="/onboarding" icon={<Wand2 className="h-5 w-5" />} title="AI Storefront Designer" desc="Customize your live site" tone="violet" />
               <ActionCard to="/dashboard/calendar" icon={<Plus className="h-5 w-5" />} title="Book appointment" desc="Manually create a booking" tone="indigo" />
               <ActionCard to="/dashboard/services" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
+              <ActionCard to="/dashboard/catalog" icon={<Briefcase className="h-5 w-5" />} title="Categories & providers" desc="Organize menu & assign staff" tone="violet" />
               <ActionCard to="/dashboard/availability" icon={<CalendarClock className="h-5 w-5" />} title="Update availability" desc="Working hours" tone="amber" />
               <ActionCard to="/dashboard/notifications" icon={<Bell className="h-5 w-5" />} title="Notifications" desc="Email & SMS alerts" tone="rose" />
               <ActionCard to="/dashboard/billing" icon={<DollarSign className="h-5 w-5" />} title="Billing & Plan" desc="Manage your subscription" tone="indigo" />
