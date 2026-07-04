@@ -35,14 +35,19 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data: ws, error } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug")
+      .select("id, name, slug, onboarded_at")
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!ws) throw new Error("No workspace found for this account.");
-    return { workspaceId: ws.id, slug: ws.slug, name: ws.name };
+    return {
+      workspaceId: ws.id,
+      slug: ws.slug,
+      name: ws.name,
+      onboarded: Boolean(ws.onboarded_at),
+    };
   });
 
 function slugify(input: string): string {
