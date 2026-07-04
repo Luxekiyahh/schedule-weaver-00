@@ -489,28 +489,15 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
 }
 
 function AdStoreImage({ url, size }: { url?: string | null; size: number }) {
+  if (!url) return null;
   const style = { width: size, height: size };
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt=""
-        style={style}
-        className="rounded-2xl object-cover shrink-0 shadow-[0_10px_28px_-12px_rgba(0,0,0,.85)]"
-      />
-    );
-  }
   return (
-    <div
-      className="grid place-items-center rounded-2xl shrink-0"
-      style={{
-        ...style,
-        border: "1px solid var(--ad-border)",
-        color: "var(--ad-smoke)",
-        background: "color-mix(in oklab, var(--ad-bg2) 80%, transparent)",
-      }}
-    >
-      <ImageIcon style={{ width: size * 0.4, height: size * 0.4 }} />
-    </div>
+    <img
+      src={url}
+      alt=""
+      style={style}
+      className="rounded-2xl object-cover shrink-0 shadow-[0_10px_28px_-12px_rgba(0,0,0,.85)]"
+    />
   );
 }
+
