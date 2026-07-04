@@ -22,6 +22,7 @@ import { Route as DashboardServicesRouteImport } from './routes/dashboard.servic
 import { Route as DashboardPaymentsRouteImport } from './routes/dashboard.payments'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
+import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
@@ -101,6 +102,11 @@ const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
 const DashboardHomeRoute = DashboardHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCatalogRoute = DashboardCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/payments': typeof DashboardPaymentsRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/payments': typeof DashboardPaymentsRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/dashboard/availability': typeof DashboardAvailabilityRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/payments': typeof DashboardPaymentsRoute
@@ -294,6 +303,7 @@ export interface FileRouteTypes {
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/calendar'
+    | '/dashboard/catalog'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/payments'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/calendar'
+    | '/dashboard/catalog'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/payments'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/calendar'
+    | '/dashboard/catalog'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/payments'
@@ -486,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHomeRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/catalog': {
+      id: '/dashboard/catalog'
+      path: '/catalog'
+      fullPath: '/dashboard/catalog'
+      preLoaderRoute: typeof DashboardCatalogRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/calendar': {
       id: '/dashboard/calendar'
       path: '/calendar'
@@ -598,6 +617,7 @@ interface DashboardRouteChildren {
   DashboardAvailabilityRoute: typeof DashboardAvailabilityRoute
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
+  DashboardCatalogRoute: typeof DashboardCatalogRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardPaymentsRoute: typeof DashboardPaymentsRoute
@@ -609,6 +629,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAvailabilityRoute: DashboardAvailabilityRoute,
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
+  DashboardCatalogRoute: DashboardCatalogRoute,
   DashboardHomeRoute: DashboardHomeRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardPaymentsRoute: DashboardPaymentsRoute,
