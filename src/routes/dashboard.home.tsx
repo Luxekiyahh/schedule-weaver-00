@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, Check, Copy, DollarSign, Sparkles, Clock, Users, Briefcase,
   Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2, Bell,
-  ExternalLink, Wand2, Wallet, MapPin,
+  ExternalLink, Wallet, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTenantUrl } from "@/lib/subdomain";
