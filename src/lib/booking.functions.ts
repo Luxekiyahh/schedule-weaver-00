@@ -100,7 +100,10 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
     const payment =
       ps &&
       ps.provider &&
-      ps.provider !== "none" &&
+      // Only providers with an implemented deposit-checkout path may surface a
+      // deposit requirement. PayPal has no Orders/Checkout flow wired up yet, so
+      // exposing it would promise a "deposit" the booking flow never collects.
+      (ps.provider === "stripe" || ps.provider === "square") &&
       ps.connection_status === "connected" &&
       ps.deposit_type &&
       ps.deposit_type !== "none"

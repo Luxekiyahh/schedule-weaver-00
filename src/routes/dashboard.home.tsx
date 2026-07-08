@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, Check, Copy, DollarSign, Sparkles, Clock, Users, Briefcase,
   Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2, Bell,
-  ExternalLink, Wand2, Wallet, MapPin,
+  ExternalLink, Wallet, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTenantUrl } from "@/lib/subdomain";
@@ -314,7 +314,7 @@ function HomePage() {
           <section>
             <h2 className="mb-3 px-1 text-base font-semibold text-slate-900">Quick actions</h2>
             <div className="grid grid-cols-2 gap-3">
-              <ActionCard to="/onboarding" icon={<Wand2 className="h-5 w-5" />} title="AI Storefront Designer" desc="Customize your live site" tone="violet" />
+              
               <ActionCard to="/dashboard/calendar" icon={<Plus className="h-5 w-5" />} title="Book appointment" desc="Manually create a booking" tone="indigo" />
               <ActionCard to="/dashboard/services" icon={<Settings2 className="h-5 w-5" />} title="Manage services" desc="Pricing & catalog" tone="emerald" />
               <ActionCard to="/dashboard/catalog" icon={<Briefcase className="h-5 w-5" />} title="Categories & providers" desc="Organize menu & assign staff" tone="violet" />
