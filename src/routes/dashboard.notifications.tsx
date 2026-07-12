@@ -167,6 +167,19 @@ function NotificationsPage() {
             onChange={(v) => setSettings((s) => ({ ...s, client_sms: v }))}
           />
           <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <Label htmlFor="notify_mobile" className="text-sm font-medium">Owner mobile for booking alerts</Label>
+            <p className="text-sm text-muted-foreground">
+              We'll text this number when a new booking comes in. Used when no business phone is set.
+            </p>
+            <Input
+              id="notify_mobile"
+              type="tel"
+              placeholder="+1 555 123 4567"
+              value={notifyMobile}
+              onChange={(e) => setNotifyMobile(e.target.value)}
+            />
+          </div>
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
             <Label htmlFor="test_sms" className="text-sm font-medium">Send a test SMS</Label>
             <p className="text-sm text-muted-foreground">Verify Twilio delivery by texting your own phone.</p>
             <div className="flex gap-2">
@@ -192,7 +205,7 @@ function NotificationsPage() {
               <Bell className="h-4 w-4" /> You have unsaved changes
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => setSettings(initial)} disabled={saving}>Reset</Button>
+              <Button variant="ghost" onClick={() => { setSettings(initial); setNotifyMobile(initialNotifyMobile); }} disabled={saving}>Reset</Button>
               <Button onClick={onSave} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save changes"}
               </Button>
