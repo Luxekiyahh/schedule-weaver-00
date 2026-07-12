@@ -1156,6 +1156,7 @@ export type Database = {
           logo_url: string | null
           name: string
           notification_settings: Json
+          notify_mobile: string | null
           onboarded_at: string | null
           owner_id: string
           primary_color: string
@@ -1180,6 +1181,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           notification_settings?: Json
+          notify_mobile?: string | null
           onboarded_at?: string | null
           owner_id: string
           primary_color?: string
@@ -1204,6 +1206,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           notification_settings?: Json
+          notify_mobile?: string | null
           onboarded_at?: string | null
           owner_id?: string
           primary_color?: string
