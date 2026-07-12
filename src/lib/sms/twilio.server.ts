@@ -66,6 +66,57 @@ export function buildWaitlistSms(d: {
   return lines.join("\n");
 }
 
+// Builds the "thank you for booking" SMS sent to the client after they book.
+// Asks them to reply YES to confirm or NO to cancel.
+export function buildBookingRequestSms(d: {
+  businessName?: string;
+  firstName?: string;
+  serviceName?: string;
+  dateLabel?: string;
+  timeLabel?: string;
+  priceLabel?: string;
+  addOns?: string;
+  businessAddress?: string;
+}): string {
+  const business = d.businessName || "Our Studio";
+  const lines: string[] = [];
+  lines.push(`Hi ${d.firstName || "there"}, thank you for booking with ${business}!`);
+  lines.push("");
+  if (d.serviceName) lines.push(`Service: ${d.serviceName}`);
+  if (d.addOns) lines.push(`Add-ons: ${d.addOns}`);
+  if (d.dateLabel) lines.push(`Date: ${d.dateLabel}`);
+  if (d.timeLabel) lines.push(`Time: ${d.timeLabel}`);
+  if (d.priceLabel) lines.push(`Total: ${d.priceLabel}`);
+  if (d.businessAddress) {
+    lines.push("");
+    lines.push(`Location: ${d.businessAddress}`);
+  }
+  lines.push("");
+  lines.push("Reply YES to confirm or NO to cancel.");
+  return lines.join("\n");
+}
+
+// Builds the new-booking alert SMS sent to the business owner/tenant.
+export function buildOwnerAlertSms(d: {
+  businessName?: string;
+  customerName?: string;
+  customerPhone?: string;
+  serviceName?: string;
+  dateLabel?: string;
+  timeLabel?: string;
+}): string {
+  const lines: string[] = [];
+  lines.push(`New booking${d.businessName ? ` at ${d.businessName}` : ""} (awaiting client confirmation):`);
+  if (d.customerName) lines.push(`Client: ${d.customerName}`);
+  if (d.customerPhone) lines.push(`Phone: ${d.customerPhone}`);
+  if (d.serviceName) lines.push(`Service: ${d.serviceName}`);
+  if (d.dateLabel) lines.push(`Date: ${d.dateLabel}`);
+  if (d.timeLabel) lines.push(`Time: ${d.timeLabel}`);
+  return lines.join("\n");
+}
+
+
+
 
 
 
