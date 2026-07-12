@@ -84,18 +84,20 @@ function NotificationsPage() {
   const dirty =
     settings.client_email !== initial.client_email ||
     settings.client_sms !== initial.client_sms ||
-    settings.provider_email !== initial.provider_email;
+    settings.provider_email !== initial.provider_email ||
+    notifyMobile.trim() !== initialNotifyMobile.trim();
 
   async function onSave() {
     if (!workspaceId) return;
     setSaving(true);
     const { error } = await supabase
       .from("workspaces")
-      .update({ notification_settings: settings })
+      .update({ notification_settings: settings, notify_mobile: notifyMobile.trim() || null })
       .eq("id", workspaceId);
     setSaving(false);
     if (error) { toast.error("Could not save", { description: error.message }); return; }
     setInitial(settings);
+    setInitialNotifyMobile(notifyMobile.trim());
     toast.success("Notification preferences saved");
   }
 
