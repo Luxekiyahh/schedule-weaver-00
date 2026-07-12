@@ -227,6 +227,7 @@ const bookingInput = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.string().trim().email().max(255),
+  phone: z.string().trim().min(6).max(20),
   notes: z.string().trim().max(1000).optional().default(""),
   addOns: addOnSchema,
 });
