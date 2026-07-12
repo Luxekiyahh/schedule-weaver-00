@@ -88,6 +88,29 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
       await seedDolliimarie(ws.id, userId);
     }
 
+    // 6. Send a welcome email listing platform features (best-effort).
+    try {
+      const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const recipientEmail = userRes?.user?.email;
+      if (recipientEmail) {
+        const { enqueueTransactionalEmail } = await import("@/lib/email/dispatch.server");
+        await enqueueTransactionalEmail({
+          templateName: "welcome",
+          recipientEmail,
+          idempotencyKey: `welcome-${userId}`,
+          templateData: {
+            firstName:
+              (userRes?.user?.user_metadata?.full_name as string | undefined) || data.businessName,
+            businessName: data.businessName,
+            dashboardUrl: "https://procschedule.com/dashboard/home",
+            supportEmail: "admin@procschedule.com",
+          },
+        });
+      }
+    } catch (err) {
+      console.error("[tenant] welcome email failed", err);
+    }
+
     return { workspaceId: ws.id, slug: data.slug };
   });
 
