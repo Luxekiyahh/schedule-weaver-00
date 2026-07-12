@@ -1,28 +1,38 @@
-# Fix cancelled appointments + add delete on the calendar
+# Welcome email on signup
 
-## What's happening now
+Send a branded "Welcome to Procschedule" email as soon as a user creates their account, listing the platform's features and the support address **admin@procschedule.com**.
 
-In `src/routes/dashboard.calendar.tsx`, choosing **Cancelled** in the appointment dialog's Status dropdown *does* work — it writes `status = 'cancelled'` to the database. But cancelled appointments keep rendering in the day/week/month views (styled grey with a line-through), so it looks like "nothing happened." There is also no delete action anywhere. Your account has permission to delete appointments, so both fixes are safe.
+## Where it triggers
 
-## Changes
+New accounts are created in the onboarding wizard, which calls the `finalizeTenantSignup` server function right after signup. That handler already runs server-side with the service-role client and knows the new user — it's the reliable place to enqueue the welcome email (fires exactly once per new account, no client dependency).
 
-### 1. Hide cancelled appointments from the calendar (with a toggle)
-- By default, filter out `cancelled` appointments from the day, week, and month grids so cancelling visibly removes the appointment.
-- Add a small **"Show cancelled"** toggle in the calendar header so you can bring them back into view when you want to review them.
-- The day's stats (revenue, pending count) already ignore cancelled ones, so those stay correct.
+## What I'll build
 
-### 2. Add a Delete button to the appointment dialog
-- Add a **Delete appointment** button (with a confirm prompt) in the detail dialog.
-- On confirm, permanently remove the appointment from the database and the calendar, close the dialog, and show a success toast.
-- If the delete is blocked or fails, show the error instead of failing silently.
+1. **New email template** `src/lib/email-templates/welcome.tsx`
+   - React Email component matching the existing templates' style (same `#ffffff` body, brand-consistent container/heading/button).
+   - Content:
+     - Warm welcome headline + intro.
+     - A feature list covering the platform's capabilities, e.g.:
+       - Custom-branded booking storefront at procschedule.com/your-name
+       - Calendar with day/week/month views and appointment management
+       - Online deposits & payment collection
+       - Automated SMS & email reminders and confirmations
+       - Client management and profiles
+       - Service catalog, availability, and staff management
+       - Review-redirect, VIP tiering, waitlist, and no-show protection (higher tiers)
+     - Clear support line: "Questions? Email us at admin@procschedule.com".
+     - CTA button linking to the dashboard.
+   - Subject: "Welcome to Procschedule 🎉".
 
-### 3. Keep the Cancelled option
-- The Status dropdown keeps all options (Pending, Confirmed, Completed, Cancelled, No-show). Marking **Cancelled** now clearly removes the appointment from the default calendar view (recoverable via the toggle), while **Delete** is the permanent option.
+2. **Register the template** in `src/lib/email-templates/registry.ts` under key `welcome`.
 
-## Technical notes
-- All changes are confined to `src/routes/dashboard.calendar.tsx` (frontend). No schema or backend changes.
-- Delete uses the existing appointments delete path allowed for owners/admins; cancel continues to use the existing status update.
+3. **Trigger the send** inside `finalizeTenantSignup` (`src/lib/tenant.functions.ts`):
+   - After the workspace is finalized, resolve the user's email (via `supabaseAdmin.auth.admin.getUserById(userId)`), then call `enqueueTransactionalEmail({ templateName: "welcome", recipientEmail, idempotencyKey: 'welcome-' + userId, templateData })`.
+   - Import `enqueueTransactionalEmail` **inside the handler** (it's a `.server` helper using the service-role client) so it never leaks into the client bundle.
+   - Wrap the send in try/catch so a mail hiccup never blocks account creation.
 
-## Verification
-- Mark an appointment Cancelled → it disappears from the calendar; enable "Show cancelled" → it reappears greyed out.
-- Delete an appointment → it's gone from the calendar and does not return after refresh.
+## Notes
+
+- Uses the existing Lovable email infrastructure (domain `notify.procschedule.com` is verified and the queue is healthy) — no new setup or secrets.
+- This is a transactional email (one recipient, triggered by their own signup), fully compliant with app-email rules.
+- No schema changes.
