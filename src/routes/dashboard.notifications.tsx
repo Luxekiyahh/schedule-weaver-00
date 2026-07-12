@@ -34,6 +34,8 @@ function NotificationsPage() {
   const [initial, setInitial] = useState<Settings>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [notifyMobile, setNotifyMobile] = useState("");
+  const [initialNotifyMobile, setInitialNotifyMobile] = useState("");
   const [testPhone, setTestPhone] = useState("");
   const [testing, setTesting] = useState(false);
   const sendTest = useServerFn(sendTestSms);
@@ -67,12 +69,14 @@ function NotificationsPage() {
       setWorkspaceId(mem.workspace_id);
       const { data: ws } = await supabase
         .from("workspaces")
-        .select("notification_settings")
+        .select("notification_settings, notify_mobile")
         .eq("id", mem.workspace_id)
         .single();
       const cfg = { ...DEFAULTS, ...((ws?.notification_settings as Partial<Settings>) ?? {}) };
       setSettings(cfg);
       setInitial(cfg);
+      setNotifyMobile(ws?.notify_mobile ?? "");
+      setInitialNotifyMobile(ws?.notify_mobile ?? "");
       setLoading(false);
     })();
   }, []);
