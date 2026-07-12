@@ -93,7 +93,7 @@ function BookingPage() {
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", notes: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [confirmingDeposit, setConfirmingDeposit] = useState(false);
   const [done, setDone] = useState<{ start_at: string } | null>(null);
@@ -216,6 +216,7 @@ function BookingPage() {
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
+        phone: form.phone,
         notes,
         addOns: addOnsPayload,
       };
@@ -574,6 +575,19 @@ function BookingPage() {
                     </Field>
                   </div>
                   <div className="sm:col-span-2">
+                    <Field label="Mobile number">
+                      <Input
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        placeholder="e.g. (555) 123-4567"
+                      />
+                      <p className="mt-1 text-xs text-slate-500">
+                        We'll text you to confirm — reply YES to confirm or NO to cancel.
+                      </p>
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
                     <Field label="Notes (optional)">
                       <Textarea
                         rows={3}
@@ -647,7 +661,7 @@ function BookingPage() {
                   <Button
                     style={{ backgroundColor: primary }}
                     className="text-white hover:opacity-90"
-                    disabled={submitting || !form.firstName || !form.lastName || !form.email || !selectedSlot || !service}
+                    disabled={submitting || !form.firstName || !form.lastName || !form.email || !form.phone || !selectedSlot || !service}
                     onClick={handleSubmit}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
