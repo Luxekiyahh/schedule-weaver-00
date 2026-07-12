@@ -227,6 +227,7 @@ const bookingInput = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.string().trim().email().max(255),
+  phone: z.string().trim().min(6).max(20),
   notes: z.string().trim().max(1000).optional().default(""),
   addOns: addOnSchema,
 });
@@ -288,7 +289,7 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   const fullName = `${data.firstName} ${data.lastName}`.trim();
   const { data: existing } = await supabaseAdmin
     .from("customers")
-    .select("id, require_prepay")
+    .select("id, require_prepay, phone")
     .eq("workspace_id", data.workspaceId)
     .eq("email", data.email)
     .maybeSingle();
@@ -298,11 +299,14 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   if (!customerId) {
     const { data: ins, error: insErr } = await supabaseAdmin
       .from("customers")
-      .insert({ workspace_id: data.workspaceId, full_name: fullName, email: data.email })
+      .insert({ workspace_id: data.workspaceId, full_name: fullName, email: data.email, phone: data.phone })
       .select("id")
       .single();
     if (insErr) throw new Error(insErr.message);
     customerId = ins.id;
+  } else if (data.phone && !existing?.phone) {
+    // Backfill phone on returning customers who never had one saved.
+    await supabaseAdmin.from("customers").update({ phone: data.phone }).eq("id", customerId);
   }
 
   // No-show prepay only applies on Enterprise workspaces with the feature.
@@ -352,9 +356,17 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
 export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((input) => bookingInput.parse(input))
   .handler(async ({ data }) => {
-    const res = await prepareAndInsertAppointment(data, "confirmed");
-    // Confirmed inserts fire the appointment webhook, which queues the emails.
-    return { ok: true, start_at: res.startIso, end_at: res.endIso };
+    // Booking stays pending until the client confirms by replying YES to the
+    // text message. Inserting as "pending" skips the confirmed-only email
+    // webhook; we send the booking-request + owner-alert SMS directly here.
+    const res = await prepareAndInsertAppointment(data, "pending");
+    try {
+      const { sendBookingSms } = await import("@/lib/sms/booking-sms.server");
+      await sendBookingSms(res.appointmentId);
+    } catch (err) {
+      console.error("[createBooking] SMS dispatch failed", err);
+    }
+    return { ok: true, start_at: res.startIso, end_at: res.endIso, pending: true };
   });
 
 function computeDepositCents(
