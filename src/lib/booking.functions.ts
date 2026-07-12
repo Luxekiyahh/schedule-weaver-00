@@ -356,9 +356,17 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
 export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((input) => bookingInput.parse(input))
   .handler(async ({ data }) => {
-    const res = await prepareAndInsertAppointment(data, "confirmed");
-    // Confirmed inserts fire the appointment webhook, which queues the emails.
-    return { ok: true, start_at: res.startIso, end_at: res.endIso };
+    // Booking stays pending until the client confirms by replying YES to the
+    // text message. Inserting as "pending" skips the confirmed-only email
+    // webhook; we send the booking-request + owner-alert SMS directly here.
+    const res = await prepareAndInsertAppointment(data, "pending");
+    try {
+      const { sendBookingSms } = await import("@/lib/sms/booking-sms.server");
+      await sendBookingSms(res.appointmentId);
+    } catch (err) {
+      console.error("[createBooking] SMS dispatch failed", err);
+    }
+    return { ok: true, start_at: res.startIso, end_at: res.endIso, pending: true };
   });
 
 function computeDepositCents(
