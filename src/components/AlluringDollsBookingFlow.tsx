@@ -128,8 +128,8 @@ export function AlluringDollsBookingFlow({
   slots: Slot[];
   selectedSlot: Slot | null;
   setSelectedSlot: (s: Slot) => void;
-  form: { firstName: string; lastName: string; email: string; notes: string };
-  setForm: (f: { firstName: string; lastName: string; email: string; notes: string }) => void;
+  form: { firstName: string; lastName: string; email: string; phone: string; notes: string };
+  setForm: (f: { firstName: string; lastName: string; email: string; phone: string; notes: string }) => void;
   submitting: boolean;
   done: { start_at: string } | null;
   onSubmit: () => void;
@@ -519,6 +519,17 @@ export function AlluringDollsBookingFlow({
                           type="email"
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        />
+                      </AdField>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <AdField label="Mobile number">
+                        <Input
+                          className="ad-input"
+                          type="tel"
+                          value={form.phone}
+                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          placeholder="e.g. (555) 123-4567"
                         />
                       </AdField>
                     </div>
