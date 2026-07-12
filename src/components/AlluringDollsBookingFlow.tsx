@@ -693,6 +693,7 @@ export function AlluringDollsBookingFlow({
                         !form.firstName ||
                         !form.lastName ||
                         !form.email ||
+                        !form.phone ||
                         !selectedSlot ||
                         !service
                       }
