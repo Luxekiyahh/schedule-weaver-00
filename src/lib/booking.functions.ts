@@ -289,7 +289,7 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   const fullName = `${data.firstName} ${data.lastName}`.trim();
   const { data: existing } = await supabaseAdmin
     .from("customers")
-    .select("id, require_prepay")
+    .select("id, require_prepay, phone")
     .eq("workspace_id", data.workspaceId)
     .eq("email", data.email)
     .maybeSingle();
@@ -299,11 +299,14 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   if (!customerId) {
     const { data: ins, error: insErr } = await supabaseAdmin
       .from("customers")
-      .insert({ workspace_id: data.workspaceId, full_name: fullName, email: data.email })
+      .insert({ workspace_id: data.workspaceId, full_name: fullName, email: data.email, phone: data.phone })
       .select("id")
       .single();
     if (insErr) throw new Error(insErr.message);
     customerId = ins.id;
+  } else if (data.phone && !existing?.phone) {
+    // Backfill phone on returning customers who never had one saved.
+    await supabaseAdmin.from("customers").update({ phone: data.phone }).eq("id", customerId);
   }
 
   // No-show prepay only applies on Enterprise workspaces with the feature.
