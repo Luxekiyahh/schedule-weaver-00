@@ -16,6 +16,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as DashboardStaffRouteImport } from './routes/dashboard.staff'
 import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
@@ -28,6 +29,7 @@ import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AdminTenantsRouteImport } from './routes/admin.tenants'
 import { Route as AdminServicesRouteImport } from './routes/admin.services'
 import { Route as AdminDomainsRouteImport } from './routes/admin.domains'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -73,6 +75,11 @@ const SlugRoute = SlugRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -133,6 +140,11 @@ const BookingSlugRoute = BookingSlugRouteImport.update({
 const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
   path: '/book/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTenantsRoute = AdminTenantsRouteImport.update({
+  id: '/admin/tenants',
+  path: '/admin/tenants',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminServicesRoute = AdminServicesRouteImport.update({
@@ -208,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
+  '/admin/tenants': typeof AdminTenantsRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -220,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/staff': typeof DashboardStaffRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -240,6 +254,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
+  '/admin/tenants': typeof AdminTenantsRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -252,6 +267,7 @@ export interface FileRoutesByTo {
   '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/staff': typeof DashboardStaffRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/admin': typeof AdminIndexRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -273,6 +289,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/admin/domains': typeof AdminDomainsRoute
   '/admin/services': typeof AdminServicesRoute
+  '/admin/tenants': typeof AdminTenantsRoute
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -285,6 +302,7 @@ export interface FileRoutesById {
   '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/staff': typeof DashboardStaffRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -307,6 +325,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/admin/domains'
     | '/admin/services'
+    | '/admin/tenants'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -319,6 +338,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/staff'
     | '/email/unsubscribe'
+    | '/admin/'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
@@ -339,6 +359,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/admin/domains'
     | '/admin/services'
+    | '/admin/tenants'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -351,6 +372,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/staff'
     | '/email/unsubscribe'
+    | '/admin'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
@@ -371,6 +393,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/admin/domains'
     | '/admin/services'
+    | '/admin/tenants'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -383,6 +406,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/staff'
     | '/email/unsubscribe'
+    | '/admin/'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
@@ -404,9 +428,11 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   AdminDomainsRoute: typeof AdminDomainsRoute
   AdminServicesRoute: typeof AdminServicesRoute
+  AdminTenantsRoute: typeof AdminTenantsRoute
   BookSlugRoute: typeof BookSlugRoute
   BookingSlugRoute: typeof BookingSlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
   ApiPublicGenerateBrandingRoute: typeof ApiPublicGenerateBrandingRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -467,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -551,6 +584,13 @@ declare module '@tanstack/react-router' {
       path: '/book/$slug'
       fullPath: '/book/$slug'
       preLoaderRoute: typeof BookSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/tenants': {
+      id: '/admin/tenants'
+      path: '/admin/tenants'
+      fullPath: '/admin/tenants'
+      preLoaderRoute: typeof AdminTenantsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/services': {
@@ -671,9 +711,11 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   AdminDomainsRoute: AdminDomainsRoute,
   AdminServicesRoute: AdminServicesRoute,
+  AdminTenantsRoute: AdminTenantsRoute,
   BookSlugRoute: BookSlugRoute,
   BookingSlugRoute: BookingSlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  AdminIndexRoute: AdminIndexRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
   ApiPublicGenerateBrandingRoute: ApiPublicGenerateBrandingRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
