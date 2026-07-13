@@ -507,15 +507,17 @@ export const getSystemHealth = createServerFn({ method: "GET" })
     let stripeFailedCharges: any[] = [];
     let stripeError: string | null = null;
     try {
-      const { createStripeClient } = await import("@/lib/stripe.server");
+      const { stripeFetch } = await import("@/lib/stripe.server");
       const envs: ("live" | "sandbox")[] = [];
       if (process.env.STRIPE_LIVE_API_KEY) envs.push("live");
       if (process.env.STRIPE_SANDBOX_API_KEY) envs.push("sandbox");
       for (const env of envs) {
         try {
-          const stripe = createStripeClient(env);
-          const charges = await stripe.charges.list({ limit: 20 });
-          for (const c of charges.data) {
+          const charges = await stripeFetch<{ data: any[] }>(env, "/charges", {
+            method: "GET",
+            params: { limit: 20 },
+          });
+          for (const c of charges.data ?? []) {
             if (c.status === "failed" || (c.refunded && c.amount_refunded > 0)) {
               stripeFailedCharges.push({
                 id: c.id,
