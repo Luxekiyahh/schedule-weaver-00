@@ -99,8 +99,10 @@ export async function sendBookingSms(appointmentId: string): Promise<void> {
     tasks.push(
       (async () => {
         try {
-          await sendSms({
+          await logAndSendSms({
             to: ownerNumber!,
+            workspaceId: appt.workspace_id,
+            purpose: "owner_alert",
             body: buildOwnerAlertSms({
               businessName: workspace.name,
               customerName: customer.full_name ?? "",
