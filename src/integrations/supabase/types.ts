@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          detail: Json | null
+          id: string
+          target_workspace_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          target_workspace_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          target_workspace_id?: string | null
+        }
+        Relationships: []
+      }
       ai_generation_logs: {
         Row: {
           created_at: string
@@ -791,6 +818,42 @@ export type Database = {
           },
         ]
       }
+      sms_send_log: {
+        Row: {
+          body: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          purpose: string | null
+          status: string
+          to_number: string | null
+          twilio_sid: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          purpose?: string | null
+          status?: string
+          to_number?: string | null
+          twilio_sid?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          purpose?: string | null
+          status?: string
+          to_number?: string | null
+          twilio_sid?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -1162,6 +1225,9 @@ export type Database = {
           primary_color: string
           secondary_color: string
           slug: string
+          suspended_at: string | null
+          suspended_by: string | null
+          suspended_reason: string | null
           theme_config: Json
           theme_id: string | null
           timezone: string
@@ -1187,6 +1253,9 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           slug: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           theme_config?: Json
           theme_id?: string | null
           timezone?: string
@@ -1212,6 +1281,9 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           slug?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           theme_config?: Json
           theme_id?: string | null
           timezone?: string
@@ -1224,6 +1296,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_cron_status: {
+        Args: never
+        Returns: {
+          active: boolean
+          jobid: number
+          jobname: string
+          last_end: string
+          last_start: string
+          last_status: string
+          schedule: string
+        }[]
+      }
+      admin_platform_stats: { Args: never; Returns: Json }
       consume_ai_credit: {
         Args: { _prompt: string; _workspace_id: string }
         Returns: number
