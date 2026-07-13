@@ -1,9 +1,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-  sendSms,
   buildBookingRequestSms,
   buildOwnerAlertSms,
 } from "./twilio.server";
+import { logAndSendSms } from "./log-and-send.server";
 
 // Hydrates a freshly created (pending) appointment and sends:
 //  - the client a "thank you for booking" SMS with appointment details +
