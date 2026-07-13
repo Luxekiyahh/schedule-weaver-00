@@ -16,6 +16,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as DashboardStaffRouteImport } from './routes/dashboard.staff'
 import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
@@ -28,11 +29,14 @@ import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing
 import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
 import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AdminTenantsRouteImport } from './routes/admin.tenants'
 import { Route as AdminServicesRouteImport } from './routes/admin.services'
+import { Route as AdminHealthRouteImport } from './routes/admin.health'
 import { Route as AdminDomainsRouteImport } from './routes/admin.domains'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
+import { Route as AdminTenantsIdRouteImport } from './routes/admin.tenants.$id'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -73,6 +77,11 @@ const SlugRoute = SlugRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -135,9 +144,19 @@ const BookSlugRoute = BookSlugRouteImport.update({
   path: '/book/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTenantsRoute = AdminTenantsRouteImport.update({
+  id: '/admin/tenants',
+  path: '/admin/tenants',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminServicesRoute = AdminServicesRouteImport.update({
   id: '/admin/services',
   path: '/admin/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminHealthRoute = AdminHealthRouteImport.update({
+  id: '/admin/health',
+  path: '/admin/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDomainsRoute = AdminDomainsRouteImport.update({
@@ -162,6 +181,11 @@ const ApiPublicAppointmentConfirmationRoute =
     path: '/api/public/appointment-confirmation',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminTenantsIdRoute = AdminTenantsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminTenantsRoute,
+} as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
     id: '/lovable/email/transactional/send',
@@ -207,7 +231,9 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/admin/domains': typeof AdminDomainsRoute
+  '/admin/health': typeof AdminHealthRoute
   '/admin/services': typeof AdminServicesRoute
+  '/admin/tenants': typeof AdminTenantsRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -220,6 +246,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/staff': typeof DashboardStaffRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/tenants/$id': typeof AdminTenantsIdRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -239,7 +267,9 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/admin/domains': typeof AdminDomainsRoute
+  '/admin/health': typeof AdminHealthRoute
   '/admin/services': typeof AdminServicesRoute
+  '/admin/tenants': typeof AdminTenantsRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -252,6 +282,8 @@ export interface FileRoutesByTo {
   '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/staff': typeof DashboardStaffRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/tenants/$id': typeof AdminTenantsIdRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -272,7 +304,9 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/admin/domains': typeof AdminDomainsRoute
+  '/admin/health': typeof AdminHealthRoute
   '/admin/services': typeof AdminServicesRoute
+  '/admin/tenants': typeof AdminTenantsRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/booking/$slug': typeof BookingSlugRoute
   '/dashboard/availability': typeof DashboardAvailabilityRoute
@@ -285,6 +319,8 @@ export interface FileRoutesById {
   '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/staff': typeof DashboardStaffRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/tenants/$id': typeof AdminTenantsIdRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -306,7 +342,9 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/admin/domains'
+    | '/admin/health'
     | '/admin/services'
+    | '/admin/tenants'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -319,6 +357,8 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/staff'
     | '/email/unsubscribe'
+    | '/admin/'
+    | '/admin/tenants/$id'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
@@ -338,7 +378,9 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/admin/domains'
+    | '/admin/health'
     | '/admin/services'
+    | '/admin/tenants'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -351,6 +393,8 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/staff'
     | '/email/unsubscribe'
+    | '/admin'
+    | '/admin/tenants/$id'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
@@ -370,7 +414,9 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/admin/domains'
+    | '/admin/health'
     | '/admin/services'
+    | '/admin/tenants'
     | '/book/$slug'
     | '/booking/$slug'
     | '/dashboard/availability'
@@ -383,6 +429,8 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/staff'
     | '/email/unsubscribe'
+    | '/admin/'
+    | '/admin/tenants/$id'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
     | '/lovable/email/suppression'
@@ -403,10 +451,13 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
   AdminDomainsRoute: typeof AdminDomainsRoute
+  AdminHealthRoute: typeof AdminHealthRoute
   AdminServicesRoute: typeof AdminServicesRoute
+  AdminTenantsRoute: typeof AdminTenantsRouteWithChildren
   BookSlugRoute: typeof BookSlugRoute
   BookingSlugRoute: typeof BookingSlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
   ApiPublicGenerateBrandingRoute: typeof ApiPublicGenerateBrandingRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -467,6 +518,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -553,11 +611,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/tenants': {
+      id: '/admin/tenants'
+      path: '/admin/tenants'
+      fullPath: '/admin/tenants'
+      preLoaderRoute: typeof AdminTenantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/services': {
       id: '/admin/services'
       path: '/admin/services'
       fullPath: '/admin/services'
       preLoaderRoute: typeof AdminServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/health': {
+      id: '/admin/health'
+      path: '/admin/health'
+      fullPath: '/admin/health'
+      preLoaderRoute: typeof AdminHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/domains': {
@@ -587,6 +659,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/appointment-confirmation'
       preLoaderRoute: typeof ApiPublicAppointmentConfirmationRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/tenants/$id': {
+      id: '/admin/tenants/$id'
+      path: '/$id'
+      fullPath: '/admin/tenants/$id'
+      preLoaderRoute: typeof AdminTenantsIdRouteImport
+      parentRoute: typeof AdminTenantsRoute
     }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
@@ -661,6 +740,18 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
+interface AdminTenantsRouteChildren {
+  AdminTenantsIdRoute: typeof AdminTenantsIdRoute
+}
+
+const AdminTenantsRouteChildren: AdminTenantsRouteChildren = {
+  AdminTenantsIdRoute: AdminTenantsIdRoute,
+}
+
+const AdminTenantsRouteWithChildren = AdminTenantsRoute._addFileChildren(
+  AdminTenantsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
@@ -670,10 +761,13 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
   AdminDomainsRoute: AdminDomainsRoute,
+  AdminHealthRoute: AdminHealthRoute,
   AdminServicesRoute: AdminServicesRoute,
+  AdminTenantsRoute: AdminTenantsRouteWithChildren,
   BookSlugRoute: BookSlugRoute,
   BookingSlugRoute: BookingSlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  AdminIndexRoute: AdminIndexRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
   ApiPublicGenerateBrandingRoute: ApiPublicGenerateBrandingRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
@@ -687,13 +781,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

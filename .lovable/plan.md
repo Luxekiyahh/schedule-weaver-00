@@ -1,61 +1,50 @@
-# Booking SMS: client thank-you + tenant alert + YES/NO confirmation
+## Master Admin Dashboard for Procschedule tenants
 
-## Goal
-When a client books:
-1. The client gets a "thank you for booking" SMS with their appointment info and the business address, asking them to reply **YES** to confirm or **NO** to cancel.
-2. The tenant (owner) gets an SMS alert about the new booking.
-3. The appointment stays **pending until the client replies YES**; **NO** cancels it and frees the slot.
+Build an internal operator console at `/admin`, gated to platform admins (`platform_admins` + `is_platform_admin()` — both already exist). It reuses the existing server-fn + admin-gate patterns from `admin.domains.tsx` / `platform-admin.functions.ts`.
 
-## Key constraints discovered
-- The public booking form does **not** collect a phone number today, and `createBooking` inserts appointments as `confirmed`. Both must change.
-- SMS sending already exists (`src/lib/sms/twilio.server.ts`) via the direct Twilio REST API using existing secrets (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`).
-- Two-way replies require Twilio to POST inbound messages to a public webhook — this needs a one-time setup step in the Twilio Console (see Setup below).
+### 1. Database migration
 
-## Changes
+- **Suspend support:** add `suspended_at timestamptz`, `suspended_reason text`, `suspended_by uuid` to `workspaces`.
+- **Enforce suspension:** update `getStorefront` and the booking-create path to treat a suspended workspace as unavailable (storefront shows a "temporarily unavailable" state; booking is rejected).
+- **SMS logging:** create `public.sms_send_log` (workspace_id, to_number, body, purpose, twilio_sid, status, error_message, created_at) with GRANTs (service_role all; authenticated none — operator-only via admin fns) and RLS enabled fail-closed, mirroring `email_send_log`.
+- **Operator read RPCs (SECURITY DEFINER, guarded by `is_platform_admin()`):**
+  - `admin_cron_status()` → returns `cron.job` rows + latest `cron.job_run_details` (status, run time). PostgREST can't reach the `cron` schema directly, so this RPC is required.
+  - `admin_platform_stats()` → aggregate counts (tenants by status, bookings last 7/30d, recent email failures from `email_send_log`, recent SMS failures from `sms_send_log`).
 
-### 1. Database (migration)
-- Add `notify_mobile` (text, nullable) to `workspaces` — the owner's mobile for booking alerts, used as a fallback when `business_phone` is empty. Tenant alert is sent to `business_phone` if present, otherwise `notify_mobile`.
-- Add `sms_confirmation_status` (text, nullable) + optional `customer_phone` denormalization is not needed — phone is already stored on `customers`. We will store the client phone on the `customers` row (existing `phone` column).
-- No new table required. Inbound replies are matched by the sender's phone number to the customer's most recent `pending` appointment.
+### 2. SMS logging wrapper
 
-### 2. Collect phone on the booking form
-- Add a required `phone` field to the booking input schema in `src/lib/booking.functions.ts` (zod: trimmed, 6–20 chars) and to the public booking UI (`src/routes/booking.$slug.tsx`, and `book.$slug.tsx` if it renders a form).
-- Persist the phone onto the `customers` record in `prepareAndInsertAppointment` (set on create, and update existing customers that have no phone).
+Add a `logAndSendSms()` helper (server-only) that calls the existing `sendSms()` and records the attempt + result into `sms_send_log`. Route the booking SMS (`booking-sms.server.ts`), waitlist, and confirmation sends through it so Twilio activity becomes queryable. `sendSms()` itself stays unchanged.
 
-### 3. Pending-until-YES flow
-- Change `createBooking` to insert the appointment with status **`pending`** instead of `confirmed`.
-- Since the existing appointment-insert webhook only emails on `confirmed`, the new booking-time SMS (both client + tenant) will be sent directly from `createBooking` after insert (not via the email webhook), through a new server-only helper.
+### 3. Server functions (`src/lib/platform-admin.functions.ts`, extended)
 
-### 4. New SMS helper: `src/lib/sms/booking-sms.server.ts`
-- `sendBookingSms(appointmentId)`: hydrates appointment + customer + workspace + service (like `appointment-emails.server.ts`) and sends:
-  - **Client thank-you SMS** (new builder `buildBookingRequestSms` in `twilio.server.ts`): greeting, service, date/time, price, business address, and "Reply YES to confirm or NO to cancel."
-  - **Tenant alert SMS** (new builder `buildOwnerAlertSms`): customer name, service, date/time, and client phone — sent to `business_phone` || `notify_mobile`.
-- Respects existing notification prefs where sensible; always attempts the client confirmation SMS since it's core to the flow.
-- Wrapped in try/catch so SMS failures never block the booking.
+Every function re-checks `is_platform_admin()` before acting (same guard already used in the file).
 
-### 5. Inbound reply webhook: `src/routes/api/public/sms/inbound.ts`
-- Twilio POSTs `application/x-www-form-urlencoded` with `From`, `Body`, and a signature header.
-- Verify the request using Twilio's `X-Twilio-Signature` (HMAC-SHA1 over the URL + sorted params with the auth token) — reject unverified requests.
-- Normalize `From` to E.164, find the customer(s) with that phone, then their most recent `pending` appointment.
-- If body starts with **YES/Y** → set status `confirmed` (this fires the existing confirmation email webhook path too) and reply with a TwiML confirmation message.
-- If body starts with **NO/N** → set status `cancelled` (frees the slot; existing cancellation trigger runs) and reply with a TwiML cancellation message.
-- Otherwise reply with a short "Reply YES or NO" TwiML.
-- Returns `text/xml` TwiML so Twilio relays the auto-reply.
+- `listTenants()` — name, slug, `domain_status`, `suspended_at`, derived status (suspended / trial / active / past_due / cancelled from `subscriptions`), plan_tier, created_at, owner email.
+- `getTenantDetail({ workspaceId })` — services/variants, recent appointments (with customer + status), payment settings + provider connection status, recent `email_send_log` and `sms_send_log` rows for that workspace.
+- `suspendTenant` / `reactivateTenant({ workspaceId, reason })` — set/clear suspension fields.
+- `impersonateTenant({ workspaceId })` — **full dashboard impersonation.** Looks up the owner's email, calls `supabaseAdmin.auth.admin.generateLink({ type: 'magiclink' })`, returns the `token_hash`; the client calls `supabase.auth.verifyOtp` to establish the owner's session, then routes to `/dashboard/home`. Logs the impersonation event (operator id + target + timestamp) into a lightweight audit note in `sms_send_log`-style pattern (new `admin_audit_log` table added in the migration). Includes a clear warning banner that this replaces the current session.
+- `resendConfirmationSms({ appointmentId })` — rehydrate + resend via `buildConfirmationSms` + `logAndSendSms`.
+- `resendWelcomeEmail({ workspaceId })` — re-enqueue the `welcome` template via `enqueueTransactionalEmail`.
+- `triggerAppointmentWebhook({ appointmentId })` — POST the appointment-confirmation webhook with the shared secret (server-to-server), for manual replay.
+- `rerunCronForTenant()` / `pokeEmailQueue()` — manually invoke the email-queue process route (the only per-tenant cron surface today) and re-run waitlist-notify for a chosen cancelled appointment.
+- `getSystemHealth()` — combines: Stripe live/sandbox failed & past_due subscriptions from the `subscriptions` table **plus** recent failed charges pulled live via `createStripeClient` (using `src/lib/stripe.server.ts`); Twilio failures from `sms_send_log` **plus** a live pull of recent message statuses from the Twilio REST API; email failures from `email_send_log`; and `admin_cron_status()`.
 
-### 6. Tenant settings UI
-- In the notifications settings route (`src/routes/dashboard.notifications.tsx`), add an "Owner mobile for booking alerts" input bound to `workspaces.notify_mobile`, saved via a small authenticated server function. Explain it's used when no business phone is set.
+### 4. Routes (UI)
 
-## Setup the user must do (one-time)
-- In the Twilio Console, set the **Messaging → A message comes in** webhook for the project's Twilio number to:
-  `https://schedule-weaver-00.lovable.app/api/public/sms/inbound` (POST).
-- Recommend enabling SMS Pumping Protection / Geo Permissions for the number.
+Shared admin gate helper (redirect to `/login` if signed out; server fns enforce admin). Reuse the clean card styling already in `admin.domains.tsx`.
 
-## Verification
-- Typecheck.
-- Simulate an inbound POST (signed) to the webhook and confirm a pending appointment flips to confirmed/cancelled.
-- Confirm booking with a real phone triggers both SMS and leaves the appointment pending until reply.
+- `/admin` — landing: nav + health summary tiles.
+- `/admin/tenants` — tenant list/overview table with status/plan/created, search, suspend toggle, and links to detail + storefront preview.
+- `/admin/tenants/$id` — tenant detail: services, recent bookings, payment status, email/SMS logs; action buttons (impersonate, suspend/reactivate, resend welcome email, resend confirmation SMS per booking, replay webhook).
+- `/admin/health` — system health: Stripe failures, Twilio failures, email failures, pg_cron job status with last-run times.
 
-## Technical notes
-- Inbound webhook runs in the Worker runtime; use Web Crypto (HMAC-SHA1) for Twilio signature verification (no Node-only libs).
-- All server-only Supabase access uses `supabaseAdmin` imported inside handlers.
-- The Twilio number is shared across tenants, so replies are matched by customer phone → latest pending appointment (across the platform). Edge case: a client with pending appointments at two businesses — YES/NO applies to the most recent; acceptable for v1.
+Storefront preview = open `https://<slug>.procschedule.com` (or `/{slug}`) in a new tab. Full impersonation = the magic-link flow above.
+
+### 5. Verification
+
+Typecheck; load `/admin/*` as a platform admin; confirm tenant list, detail, suspend/reactivate, impersonation session swap, each manual trigger, and the health panel (including live Stripe/Twilio pulls) render and function.
+
+### Technical notes
+- Impersonation via `auth.admin.generateLink` + client `verifyOtp` is the standard Supabase approach (no password needed); the operator's own session is replaced, so the UI warns before proceeding and offers a "return to admin" sign-out.
+- All Stripe calls go through `createStripeClient` (gateway), never the raw SDK. Twilio status uses the existing REST pattern from `twilio.server.ts`.
+- New tables (`sms_send_log`, `admin_audit_log`) follow the CREATE→GRANT→RLS→POLICY order; both are operator/service-role only (fail-closed for authenticated/anon).

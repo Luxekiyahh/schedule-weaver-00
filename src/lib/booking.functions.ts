@@ -237,6 +237,13 @@ type BookingInput = z.infer<typeof bookingInput>;
 // Validates availability, resolves the customer, and inserts the appointment
 // with the given status. Shared by the direct-confirm and deposit flows.
 async function prepareAndInsertAppointment(data: BookingInput, status: "confirmed" | "pending") {
+  const { data: wsRow } = await supabaseAdmin
+    .from("workspaces")
+    .select("suspended_at")
+    .eq("id", data.workspaceId)
+    .maybeSingle();
+  if (wsRow?.suspended_at) throw new Error("This business is not currently accepting bookings.");
+
   const { data: svc, error: svcErr } = await supabaseAdmin
     .from("services")
     .select("id, name, duration_minutes, price_cents, currency, workspace_id, is_active")

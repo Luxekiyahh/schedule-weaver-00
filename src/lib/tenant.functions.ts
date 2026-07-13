@@ -262,11 +262,12 @@ export const getStorefront = createServerFn({ method: "POST" })
     const { data: ws } = await supabaseAdmin
       .from("workspaces")
       .select(
-        "id, name, slug, timezone, owner_id, domain_status, theme_id, primary_color, secondary_color, font_family, logo_url",
+        "id, name, slug, timezone, owner_id, domain_status, theme_id, primary_color, secondary_color, font_family, logo_url, suspended_at",
       )
       .eq("slug", data.slug)
       .maybeSingle();
     if (!ws) return { workspace: null };
+    if (ws.suspended_at) return { workspace: null, suspended: true };
 
     const [branding, categories, variants, lengthOptions, hairColors] = await Promise.all([
       supabaseAdmin.from("workspace_branding").select("*").eq("workspace_id", ws.id).maybeSingle(),

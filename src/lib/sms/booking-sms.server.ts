@@ -1,9 +1,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-  sendSms,
   buildBookingRequestSms,
   buildOwnerAlertSms,
 } from "./twilio.server";
+import { logAndSendSms } from "./log-and-send.server";
 
 // Hydrates a freshly created (pending) appointment and sends:
 //  - the client a "thank you for booking" SMS with appointment details +
@@ -71,8 +71,10 @@ export async function sendBookingSms(appointmentId: string): Promise<void> {
     tasks.push(
       (async () => {
         try {
-          await sendSms({
+          await logAndSendSms({
             to: customer.phone!,
+            workspaceId: appt.workspace_id,
+            purpose: "booking_request",
             body: buildBookingRequestSms({
               businessName: workspace.name,
               firstName,
@@ -97,8 +99,10 @@ export async function sendBookingSms(appointmentId: string): Promise<void> {
     tasks.push(
       (async () => {
         try {
-          await sendSms({
+          await logAndSendSms({
             to: ownerNumber!,
+            workspaceId: appt.workspace_id,
+            purpose: "owner_alert",
             body: buildOwnerAlertSms({
               businessName: workspace.name,
               customerName: customer.full_name ?? "",
