@@ -369,13 +369,15 @@ function BookingPage() {
             <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-emerald-50 ring-1 ring-emerald-200">
               <Check className="h-7 w-7 text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-semibold text-slate-900">You're booked!</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Almost done — please confirm by text</h2>
             <p className="mt-2 text-sm text-slate-500">
               {new Date(done.start_at).toLocaleString([], {
                 weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC",
               })}
             </p>
-            <p className="mt-1 text-sm text-slate-500">A confirmation has been recorded for {form.email}.</p>
+            <p className="mt-3 text-sm text-slate-500">
+              We just texted {form.phone || "your phone"}. Reply <strong>YES</strong> (with the code in the message) to confirm your appointment. You'll receive a confirmation email at {form.email} once confirmed.
+            </p>
           </div>
         ) : (
           <div className={`mt-8 overflow-hidden ${radius} bg-white shadow-sm ring-1 ring-slate-200`}>
