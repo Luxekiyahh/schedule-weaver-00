@@ -311,7 +311,7 @@ export function AlluringDollsBookingFlow({
               <Check className="h-7 w-7" style={{ color: "var(--ad-gold)" }} />
             </div>
             <h2 className="ad-display text-2xl" style={{ color: "var(--ad-gold)" }}>
-              You're Booked
+              Confirm By Text
             </h2>
             <p className="mt-3 text-sm" style={{ color: "var(--ad-ivory)" }}>
               {new Date(done.start_at).toLocaleString([], {
