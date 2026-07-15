@@ -109,13 +109,18 @@ export async function resolvePrice(
 }
 
 // Webhook signature verification is performed offline (no network call), so we
-// can reuse a single Stripe instance regardless of environment.
-const verifier = new Stripe("sk_signature_verification_only");
+// can reuse a single Stripe instance regardless of environment. In the Worker /
+// edge runtime the synchronous crypto path is unavailable, so use the async
+// verifier — sync throws "SubtleCryptoProvider cannot be used in a synchronous
+// context".
+const verifier = new Stripe("sk_signature_verification_only", {
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 export function constructWebhookEvent(
   body: string,
   signature: string,
   env: StripeEnv,
-): Stripe.Event {
-  return verifier.webhooks.constructEvent(body, signature, getWebhookSecret(env));
+): Promise<Stripe.Event> {
+  return verifier.webhooks.constructEventAsync(body, signature, getWebhookSecret(env));
 }

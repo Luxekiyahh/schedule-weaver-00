@@ -84,6 +84,8 @@ export async function sendBookingSms(appointmentId: string): Promise<void> {
               priceLabel,
               addOns,
               businessAddress: workspace.business_address ?? "",
+              // Short per-appointment token so YES/NO replies map to THIS booking.
+              confirmCode: appt.id.replace(/-/g, "").slice(0, 6).toUpperCase(),
             }),
           });
         } catch (err) {

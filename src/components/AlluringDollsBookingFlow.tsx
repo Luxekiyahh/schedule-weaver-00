@@ -311,7 +311,7 @@ export function AlluringDollsBookingFlow({
               <Check className="h-7 w-7" style={{ color: "var(--ad-gold)" }} />
             </div>
             <h2 className="ad-display text-2xl" style={{ color: "var(--ad-gold)" }}>
-              You're Booked
+              Confirm By Text
             </h2>
             <p className="mt-3 text-sm" style={{ color: "var(--ad-ivory)" }}>
               {new Date(done.start_at).toLocaleString([], {
@@ -323,8 +323,8 @@ export function AlluringDollsBookingFlow({
                 timeZone: "UTC",
               })}
             </p>
-            <p className="mt-1 text-sm" style={{ color: "var(--ad-smoke)" }}>
-              A confirmation has been recorded for {form.email}.
+            <p className="mt-3 text-sm" style={{ color: "var(--ad-smoke)" }}>
+              We just texted {form.phone || "your phone"}. Reply <strong>YES</strong> (with the code in the message) to confirm your appointment. A confirmation email will go to {form.email} once confirmed.
             </p>
             <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--ad-smoke)" }}>
               A $25 non-refundable deposit secures your spot — remaining balance is cash only. Come

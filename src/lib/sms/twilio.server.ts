@@ -77,6 +77,7 @@ export function buildBookingRequestSms(d: {
   priceLabel?: string;
   addOns?: string;
   businessAddress?: string;
+  confirmCode?: string;
 }): string {
   const business = d.businessName || "Our Studio";
   const lines: string[] = [];
@@ -92,7 +93,13 @@ export function buildBookingRequestSms(d: {
     lines.push(`Location: ${d.businessAddress}`);
   }
   lines.push("");
-  lines.push("Reply YES to confirm or NO to cancel.");
+  // Include a short per-appointment code so the inbound handler can match
+  // this reply to THIS booking (multi-tenant + repeat customers).
+  if (d.confirmCode) {
+    lines.push(`Reply YES ${d.confirmCode} to confirm or NO ${d.confirmCode} to cancel.`);
+  } else {
+    lines.push("Reply YES to confirm or NO to cancel.");
+  }
   return lines.join("\n");
 }
 

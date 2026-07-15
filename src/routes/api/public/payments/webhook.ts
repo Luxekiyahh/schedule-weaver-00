@@ -181,7 +181,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
   const body = await req.text();
   if (!signature) throw new Error("Missing stripe-signature header");
 
-  const event = constructWebhookEvent(body, signature, env);
+  const event = await constructWebhookEvent(body, signature, env);
 
   switch (event.type) {
     case "checkout.session.completed":
