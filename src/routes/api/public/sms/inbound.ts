@@ -88,7 +88,8 @@ export const Route = createFileRoute("/api/public/sms/inbound")({
         }
 
         const from = toE164(params.From || "");
-        const body = (params.Body || "").trim().toLowerCase();
+        const rawBody = (params.Body || "").trim();
+        const body = rawBody.toLowerCase();
         const isYes = /^(y|yes|yeah|yep|confirm)\b/.test(body);
         const isNo = /^(n|no|nope|cancel)\b/.test(body);
 
@@ -96,10 +97,15 @@ export const Route = createFileRoute("/api/public/sms/inbound")({
           return twiml("Please reply YES to confirm your appointment or NO to cancel.");
         }
 
+        // Extract a per-appointment 6-char hex token that we embed in the
+        // outbound booking-request SMS. Without it we cannot safely disambiguate
+        // between multiple pending appointments on the same phone number.
+        const codeMatch = rawBody.match(/\b([0-9a-fA-F]{6})\b/);
+        const code = codeMatch ? codeMatch[1].toLowerCase() : null;
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // Find the customer(s) with this phone, then their most recent pending
-        // appointment across the platform.
+        // Find the customer(s) with this phone.
         const { data: customers } = await supabaseAdmin
           .from("customers")
           .select("id")
@@ -109,18 +115,44 @@ export const Route = createFileRoute("/api/public/sms/inbound")({
           return twiml("We couldn't find a matching appointment for this number.");
         }
 
-        const { data: appt } = await supabaseAdmin
+        // Only look at pending appointments that are NOT waiting on a
+        // deposit — those flip to confirmed via the payment webhook, not SMS.
+        const { data: pendingAppts } = await supabaseAdmin
           .from("appointments")
-          .select("id, status")
+          .select("id, status, deposit_cents, square_order_id, created_at")
           .in("customer_id", customerIds)
           .eq("status", "pending")
           .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .limit(25);
+
+        const eligible = (pendingAppts ?? []).filter(
+          (a) =>
+            !a.square_order_id &&
+            !(a.deposit_cents && Number(a.deposit_cents) > 0),
+        );
+
+        // Prefer the token match; fall back only when there's exactly one
+        // eligible pending appointment (unambiguous).
+        let appt: { id: string } | undefined;
+        if (code) {
+          appt = eligible.find(
+            (a) => a.id.replace(/-/g, "").slice(0, 6).toLowerCase() === code,
+          );
+        }
+        if (!appt) {
+          if (!code && eligible.length === 1) {
+            appt = eligible[0];
+          } else if (eligible.length > 1) {
+            return twiml(
+              "We found more than one pending booking for this number. Please reply with the code from your booking text, e.g. YES ABC123.",
+            );
+          }
+        }
 
         if (!appt) {
           return twiml("You have no appointment awaiting confirmation.");
         }
+
 
         if (isYes) {
           await supabaseAdmin
