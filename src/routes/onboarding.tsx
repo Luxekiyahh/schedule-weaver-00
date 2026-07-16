@@ -7,12 +7,16 @@ import {
   ArrowRight,
   Check,
   Loader2,
+  LogOut,
   Plus,
   Star,
   Trash2,
   Upload,
+  UserCheck,
   X,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { resolveHomePathForUser, signOutAndReset } from "@/lib/auth-signout";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,31 +150,53 @@ function OnboardingWizard() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [hasAccount, setHasAccount] = useState(false);
 
+  // Identity gate: if a session is already sitting in this browser, we do NOT
+  // silently drop the visitor into that account's dashboard. Show a card and
+  // require an explicit "Continue" or "Sign out" click.
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [existingUser, setExistingUser] = useState<{ id: string; email: string | null } | null>(null);
+  const [existingOnboarded, setExistingOnboarded] = useState(false);
+
   const getCtx = useServerFn(getOnboardingContext);
 
-  // If the visitor is already signed in, skip the account step and load context.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return; // brand-new visitor → start at the Account step
-      getCtx()
-        .then((ctx) => {
-          // Already set up? The wizard would overwrite the existing site,
-          // so send them to the dashboard instead.
-          if (ctx.onboarded) {
-            navigate({ to: "/dashboard" });
-            return;
-          }
+    let cancelled = false;
+    // getUser() revalidates with the auth server — do not trust a raw session.
+    supabase.auth.getUser().then(async ({ data, error: userErr }) => {
+      if (cancelled) return;
+      if (userErr || !data.user) {
+        setExistingUser(null);
+        setCheckingSession(false);
+        return;
+      }
+      const user = { id: data.user.id, email: data.user.email ?? null };
+      try {
+        const ctx = await getCtx();
+        if (cancelled) return;
+        if (ctx.onboarded) {
+          // Signed in AND already onboarded — show the identity gate rather
+          // than silently redirecting into that account's dashboard.
+          setExistingUser(user);
+          setExistingOnboarded(true);
+        } else {
+          // Same person mid-setup — skip the account step and continue.
           setWorkspaceId(ctx.workspaceId);
           setHasAccount(true);
           setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
           setStep((s) => (s === 1 ? 2 : s));
-        })
-        .catch(() => {
-          /* signed in but no workspace yet — keep them on the account step */
-        });
+        }
+      } catch {
+        // Signed in but no workspace yet — keep them on the account step.
+      } finally {
+        if (!cancelled) setCheckingSession(false);
+      }
     });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const patch = (p: Partial<WizardState>) => setWizard((w) => ({ ...w, ...p }));
 
@@ -205,6 +231,133 @@ function OnboardingWizard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {checkingSession && (
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      {!checkingSession && existingUser && existingOnboarded && (
+        <SignedInGate user={existingUser} navigate={navigate} />
+      )}
+      {!checkingSession && !(existingUser && existingOnboarded) && (
+        <OnboardingBody
+          step={step}
+          setStep={setStep}
+          wizard={wizard}
+          patch={patch}
+          workspaceId={workspaceId}
+          hasAccount={hasAccount}
+          error={error}
+          next={next}
+          back={back}
+          navigate={navigate}
+          onAccountCreated={onAccountCreated}
+        />
+      )}
+    </div>
+  );
+}
+
+function SignedInGate({
+  user,
+  navigate,
+}: {
+  user: { id: string; email: string | null };
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  const queryClient = useQueryClient();
+  const [continuing, setContinuing] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function handleContinue() {
+    setContinuing(true);
+    try {
+      const dest = await resolveHomePathForUser(user.id);
+      navigate({ to: dest });
+    } finally {
+      setContinuing(false);
+    }
+  }
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await signOutAndReset(queryClient);
+      // Reload so the wizard picks up the cleared session and starts fresh.
+      window.location.reload();
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-7 shadow-sm">
+        <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 px-3.5 py-3">
+          <UserCheck className="h-5 w-5 mt-0.5 shrink-0 text-foreground" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">You're already signed in</p>
+            <p className="text-sm text-muted-foreground truncate">{user.email ?? "Signed-in account"}</p>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Your business is already set up. Continue to your dashboard, or sign out first if you're
+          setting up a different account on this device.
+        </p>
+        <Button
+          type="button"
+          onClick={handleContinue}
+          disabled={continuing || signingOut}
+          className="mt-5 w-full"
+        >
+          {continuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Continue to your dashboard
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleSignOut}
+          disabled={continuing || signingOut}
+          className="mt-2 w-full"
+        >
+          {signingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+          Sign out & set up a new business
+        </Button>
+        <p className="mt-4 text-xs text-muted-foreground text-center">
+          Not you? Sign out to keep this account private on this device.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function OnboardingBody({
+  step,
+  setStep: _setStep,
+  wizard,
+  patch,
+  workspaceId,
+  hasAccount: _hasAccount,
+  error,
+  next,
+  back,
+  navigate,
+  onAccountCreated,
+}: {
+  step: number;
+  setStep: (s: number | ((prev: number) => number)) => void;
+  wizard: WizardState;
+  patch: (p: Partial<WizardState>) => void;
+  workspaceId: string | null;
+  hasAccount: boolean;
+  error: string | null;
+  next: () => void;
+  back: () => void;
+  navigate: ReturnType<typeof useNavigate>;
+  onAccountCreated: (ctx: { workspaceId: string; businessName: string }) => void;
+}) {
+  return (
+    <>
       {/* Progress */}
       <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3">
@@ -287,9 +440,10 @@ function OnboardingWizard() {
           <LivePreview wizard={wizard} />
         </div>
       </div>
-    </div>
+    </>
   );
 }
+
 
 type StepProps = {
   wizard: WizardState;
