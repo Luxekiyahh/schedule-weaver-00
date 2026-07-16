@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { isPlatformAdmin } from "@/lib/platform-admin.functions";
 import { Loader2, ShieldAlert, LayoutDashboard, Users, Activity, Globe } from "lucide-react";
+import { ForceDarkTheme } from "@/components/theme/ThemeProvider";
 
 export function AdminGate({ children }: { children: ReactNode }) {
   const checkAdmin = useServerFn(isPlatformAdmin);
