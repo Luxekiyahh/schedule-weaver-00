@@ -128,7 +128,12 @@ function LoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium text-slate-700">Password</label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium text-slate-700">Password</label>
+                <Link to="/forgot-password" className="text-xs font-medium text-[#141414]/60 hover:text-[#141414] hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
