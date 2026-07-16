@@ -325,7 +325,16 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     // variant per add-on (stored as "<Service> — <Add-on>" so the public
     // booking flow surfaces them as additional selectable items).
     if (data.services.length) {
-      const variantRows: Array<Record<string, unknown>> = [];
+      const variantRows: Array<{
+        workspace_id: string;
+        category_id: string;
+        name: string;
+        description: string | null;
+        price_cents: number;
+        duration_min: number;
+        sort_order: number;
+        active: boolean;
+      }> = [];
       data.services.forEach((s, i) => {
         const cid = (s.categoryId && catIdMap.get(s.categoryId)) || defaultCatId;
         variantRows.push({
