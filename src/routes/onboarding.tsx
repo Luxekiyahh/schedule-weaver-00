@@ -440,9 +440,10 @@ function OnboardingBody({
           <LivePreview wizard={wizard} />
         </div>
       </div>
-    </div>
+    </>
   );
 }
+
 
 type StepProps = {
   wizard: WizardState;
