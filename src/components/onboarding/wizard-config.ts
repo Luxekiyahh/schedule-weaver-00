@@ -192,6 +192,13 @@ export function formatTimeLabel(value: string): string {
 }
 
 export type ServiceOption = { id: string; label: string; price: string };
+export type ServiceAddOn = {
+  id: string;
+  name: string;
+  price: string;
+  duration: string;
+};
+export type ServiceCategory = { id: string; name: string };
 export type ServiceDraft = {
   id: string;
   name: string;
@@ -200,6 +207,8 @@ export type ServiceDraft = {
   customDuration: string;
   price: string;
   options: ServiceOption[];
+  categoryId: string | null;
+  addOns: ServiceAddOn[];
 };
 export type DayHours = { dow: number; open: boolean; start: string; end: string };
 export type LocationType = "studio" | "mobile" | "home";
@@ -272,6 +281,7 @@ export type WizardState = {
   primaryColor: string;
   secondaryColor: string;
   portfolio: PortfolioPhoto[];
+  categories: ServiceCategory[];
   services: ServiceDraft[];
   hours: DayHours[];
   locationType: LocationType;
@@ -299,7 +309,7 @@ export function uid(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export function emptyService(name = ""): ServiceDraft {
+export function emptyService(name = "", categoryId: string | null = null): ServiceDraft {
   return {
     id: uid(),
     name,
@@ -308,6 +318,8 @@ export function emptyService(name = ""): ServiceDraft {
     customDuration: "",
     price: "",
     options: [],
+    categoryId,
+    addOns: [],
   };
 }
 
@@ -320,9 +332,10 @@ export function initialWizard(): WizardState {
     bio: "",
     logoDataUrl: null,
     logoUrl: null,
-    primaryColor: "#6d28d9",
-    secondaryColor: "#ec4899",
+    primaryColor: "#C9A15A",
+    secondaryColor: "#0A090B",
     portfolio: [],
+    categories: [],
     services: [],
     hours: defaultHours(),
     locationType: "studio",

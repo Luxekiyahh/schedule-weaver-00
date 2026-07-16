@@ -122,10 +122,27 @@ const serviceSchema = z.object({
   description: z.string().trim().max(1000).optional().default(""),
   durationMinutes: z.number().int().min(1).max(1440),
   priceCents: z.number().int().min(0).max(100_000_000),
+  categoryId: z.string().nullable().optional().default(null),
   options: z
     .array(z.object({ label: z.string().trim().max(120), price: z.number().min(0).max(1_000_000) }))
     .max(20)
     .default([]),
+  addOns: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(120),
+        priceCents: z.number().int().min(0).max(100_000_000),
+        durationMinutes: z.number().int().min(0).max(1440).default(0),
+      }),
+    )
+    .max(20)
+    .default([]),
+});
+
+const categorySchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().trim().min(1).max(120),
+  sort: z.number().int().min(0).max(200).default(0),
 });
 
 const completeSchema = z.object({
@@ -138,6 +155,7 @@ const completeSchema = z.object({
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   portfolioUrls: z.array(z.string().url()).max(9).default([]),
+  categories: z.array(categorySchema).max(20).default([]),
   services: z.array(serviceSchema).max(50).default([]),
   hours: z
     .array(
@@ -245,8 +263,45 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     );
     if (brandErr) throw new Error(brandErr.message);
 
-    // 3. Services (replace)
+    // 3. Categories (replace) — one row per wizard category, or a single
+    // default category derived from the industry when the wizard didn't
+    // supply any.
+    await supabaseAdmin.from("service_variants").delete().eq("workspace_id", workspaceId);
     await supabaseAdmin.from("services").delete().eq("workspace_id", workspaceId);
+    await supabaseAdmin.from("service_categories").delete().eq("workspace_id", workspaceId);
+
+    // Map wizard-local category ids -> DB category ids.
+    const catIdMap = new Map<string, string>();
+    let defaultCatId: string | null = null;
+
+    if (data.categories.length) {
+      const catRows = data.categories.map((c) => ({
+        workspace_id: workspaceId,
+        name: c.name,
+        sort_order: c.sort,
+        active: true,
+      }));
+      const { data: inserted, error: catErr } = await supabaseAdmin
+        .from("service_categories")
+        .insert(catRows)
+        .select("id");
+      if (catErr) throw new Error(catErr.message);
+      (inserted ?? []).forEach((row, i) => {
+        catIdMap.set(data.categories[i].id, row.id);
+      });
+      defaultCatId = inserted?.[0]?.id ?? null;
+    } else if (data.services.length) {
+      const categoryName = data.industry ? `${data.industry} Services` : "Services";
+      const { data: cat, error: catErr } = await supabaseAdmin
+        .from("service_categories")
+        .insert({ workspace_id: workspaceId, name: categoryName, sort_order: 0, active: true })
+        .select("id")
+        .single();
+      if (catErr) throw new Error(catErr.message);
+      defaultCatId = cat.id;
+    }
+
+    // 3b. Services rows (dashboard/booking flow reads these).
     let insertedServices: { id: string }[] = [];
     if (data.services.length) {
       const rows = data.services.map((s) => ({
@@ -256,6 +311,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         duration_minutes: s.durationMinutes,
         price_cents: s.priceCents,
         options: s.options,
+        category_id: (s.categoryId && catIdMap.get(s.categoryId)) || defaultCatId,
       }));
       const { data: svcRows, error: svcErr } = await supabaseAdmin
         .from("services")
@@ -265,41 +321,52 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       insertedServices = svcRows ?? [];
     }
 
-    // 3b. Mirror services into the public storefront catalog schema
-    // (service_categories + service_variants), which is what the public
-    // booking pages read. Without this, onboarded tenants show an empty
-    // storefront ("This business hasn't published any services yet.").
-    await supabaseAdmin.from("service_variants").delete().eq("workspace_id", workspaceId);
-    await supabaseAdmin.from("service_categories").delete().eq("workspace_id", workspaceId);
+    // 3c. Storefront variants — one base variant per service plus one
+    // variant per add-on (stored as "<Service> — <Add-on>" so the public
+    // booking flow surfaces them as additional selectable items).
     if (data.services.length) {
-      const categoryName = data.industry ? `${data.industry} Services` : "Services";
-      const { data: cat, error: catErr } = await supabaseAdmin
-        .from("service_categories")
-        .insert({ workspace_id: workspaceId, name: categoryName, sort_order: 0, active: true })
-        .select("id")
-        .single();
-      if (catErr) throw new Error(catErr.message);
-
-      const variantRows = data.services.map((s, i) => ({
-        workspace_id: workspaceId,
-        category_id: cat.id,
-        name: s.name,
-        description: s.description || null,
-        price_cents: s.priceCents,
-        duration_min: s.durationMinutes,
-        sort_order: i,
-        active: true,
-      }));
-      const { error: varErr } = await supabaseAdmin.from("service_variants").insert(variantRows);
-      if (varErr) throw new Error(varErr.message);
-
-      // Link the flat services to this category so the booking flow can group
-      // them into a collapsible category dropdown.
-      await supabaseAdmin
-        .from("services")
-        .update({ category_id: cat.id })
-        .eq("workspace_id", workspaceId);
+      const variantRows: Array<{
+        workspace_id: string;
+        category_id: string;
+        name: string;
+        description: string | null;
+        price_cents: number;
+        duration_min: number;
+        sort_order: number;
+        active: boolean;
+      }> = [];
+      data.services.forEach((s, i) => {
+        const cid = (s.categoryId && catIdMap.get(s.categoryId)) || defaultCatId;
+        if (!cid) return;
+        variantRows.push({
+          workspace_id: workspaceId,
+          category_id: cid,
+          name: s.name,
+          description: s.description || null,
+          price_cents: s.priceCents,
+          duration_min: s.durationMinutes,
+          sort_order: i * 100,
+          active: true,
+        });
+        s.addOns.forEach((a, j) => {
+          variantRows.push({
+            workspace_id: workspaceId,
+            category_id: cid,
+            name: `${s.name} — ${a.name}`,
+            description: null,
+            price_cents: a.priceCents,
+            duration_min: a.durationMinutes || 0,
+            sort_order: i * 100 + j + 1,
+            active: true,
+          });
+        });
+      });
+      if (variantRows.length) {
+        const { error: varErr } = await supabaseAdmin.from("service_variants").insert(variantRows);
+        if (varErr) throw new Error(varErr.message);
+      }
     }
+
 
 
     // 4. Availability (replace owner member rows)
