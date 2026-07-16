@@ -82,11 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "ProcSchedule — A Custom Booking Site for Service Professionals" },
       { name: "twitter:description", content: "Stop sending clients to a generic calendar. We custom-code a high-converting booking and client-retention site for your business for a flat $100 setup." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/64147022-7ad2-4f6e-a388-c0809a490919" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/64147022-7ad2-4f6e-a388-c0809a490919" },
+      { property: "og:image", content: "https://procschedule.com/__l5e/assets-v1/622e3933-71fe-4cab-957a-44e58034c292/procschedule-icon-1024.png" },
+      { name: "twitter:image", content: "https://procschedule.com/__l5e/assets-v1/622e3933-71fe-4cab-957a-44e58034c292/procschedule-icon-1024.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/__l5e/assets-v1/72d84a02-2a15-4d0a-9765-2dfd95a55580/procschedule-favicon-32.png" },
+      { rel: "icon", type: "image/png", sizes: "16x16", href: "/__l5e/assets-v1/19cde8a3-208a-4990-94e6-57c0b0d3bb42/procschedule-favicon-16.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/__l5e/assets-v1/31b50624-670c-47d5-9934-ae5c6757f6d7/procschedule-icon-180.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

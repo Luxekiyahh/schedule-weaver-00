@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { useSubscription } from "@/hooks/useSubscription";
 import { syncWorkspaceSubscription } from "@/utils/payments.functions";
-import { isPlatformAdmin } from "@/lib/platform-admin.functions";
+import { isBillingBypassed } from "@/lib/platform-admin.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -31,19 +31,20 @@ function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const syncSub = useServerFn(syncWorkspaceSubscription);
-  const checkAdmin = useServerFn(isPlatformAdmin);
+  const checkBypass = useServerFn(isBillingBypassed);
   const [synced, setSynced] = useState(false);
   const syncStarted = useRef(false);
-  // Platform admins bypass the subscription paywall entirely.
-  const [adminChecked, setAdminChecked] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Billing bypass is limited to a hard-coded master account email (verified
+  // server-side against the Supabase JWT claim, not user metadata).
+  const [bypassChecked, setBypassChecked] = useState(false);
+  const [isBypassed, setIsBypassed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    checkAdmin()
-      .then((r) => { if (!cancelled) setIsAdmin(!!r?.isPlatformAdmin); })
-      .catch(() => { if (!cancelled) setIsAdmin(false); })
-      .finally(() => { if (!cancelled) setAdminChecked(true); });
+    checkBypass()
+      .then((r) => { if (!cancelled) setIsBypassed(!!r?.bypassed); })
+      .catch(() => { if (!cancelled) setIsBypassed(false); })
+      .finally(() => { if (!cancelled) setBypassChecked(true); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -65,19 +66,19 @@ function DashboardLayout() {
   const allowed = ALLOWED_WHEN_INACTIVE.some((p) => location.pathname.startsWith(p));
 
   useEffect(() => {
-    if (sub.loading || !synced || !adminChecked) return;
-    if (isAdmin) return; // platform admins are always entitled
+    if (sub.loading || !synced || !bypassChecked) return;
+    if (isBypassed) return; // master account is always entitled
     if (!sub.isActive && !allowed) {
       toast.error("Your subscription is inactive", {
         description: "Choose a plan to continue using your dashboard.",
       });
       navigate({ to: "/pricing" });
     }
-  }, [sub.loading, synced, adminChecked, isAdmin, sub.isActive, allowed, navigate]);
+  }, [sub.loading, synced, bypassChecked, isBypassed, sub.isActive, allowed, navigate]);
 
-  // While we resolve subscription/admin state, avoid flashing protected content
-  // or a premature paywall redirect.
-  if ((sub.loading || !synced || !adminChecked) && !allowed) {
+  // While we resolve subscription/bypass state, avoid flashing protected
+  // content or a premature paywall redirect.
+  if ((sub.loading || !synced || !bypassChecked) && !allowed) {
     return (
       <ThemeProvider>
         <div className="min-h-screen flex items-center justify-center bg-background">

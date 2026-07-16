@@ -1,18 +1,7 @@
 import * as React from "react";
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from "@react-email/components";
+import { Button, Link, Section, Text } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
+import { BrandedEmail, styles, BRAND } from "./_layout";
 
 interface Props {
   firstName?: string;
@@ -28,7 +17,7 @@ const FEATURES: { title: string; desc: string }[] = [
   },
   {
     title: "Smart calendar & appointment management",
-    desc: "Day, week, and month views with easy rescheduling, cancellations, and status tracking.",
+    desc: "Day, week, and month views with easy rescheduling and status tracking.",
   },
   {
     title: "Online deposits & payment collection",
@@ -46,116 +35,56 @@ const FEATURES: { title: string; desc: string }[] = [
     title: "Services, availability & staff",
     desc: "Build your service catalog, set your hours, and manage your team.",
   },
-  {
-    title: "Growth & protection tools",
-    desc: "Review redirects, VIP tiering, waitlists, and no-show protection on higher plans.",
-  },
 ];
 
 const Email = ({
   firstName = "there",
   businessName = "your business",
-  dashboardUrl = "https://procschedule.com/dashboard/home",
-  supportEmail = "admin@procschedule.com",
+  dashboardUrl = BRAND.dashboardUrl,
+  supportEmail = BRAND.supportEmail,
 }: Props) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Welcome to Procschedule — everything you need to take bookings</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={header}>
-          <Text style={eyebrow}>Welcome aboard</Text>
-          <Heading style={headerTitle}>Welcome to Procschedule 🎉</Heading>
+  <BrandedEmail preview="Welcome to ProcSchedule — everything you need to take bookings">
+    <Text style={styles.eyebrow}>Welcome aboard</Text>
+    <Text style={styles.h1}>Welcome to ProcSchedule</Text>
+    <Text style={styles.p}>Hi {firstName},</Text>
+    <Text style={styles.p}>
+      Thanks for creating your ProcSchedule account for <strong>{businessName}</strong>. Your
+      booking business is ready to grow — here's everything you can do:
+    </Text>
+
+    <Section style={styles.card}>
+      {FEATURES.map((f) => (
+        <Section key={f.title} style={styles.rowBorder}>
+          <Text style={styles.itemTitle}>{f.title}</Text>
+          <Text style={styles.itemDesc}>{f.desc}</Text>
         </Section>
-        <Section style={body}>
-          <Text style={paragraph}>Hi {firstName},</Text>
-          <Text style={paragraph}>
-            Thanks for creating your Procschedule account for <strong>{businessName}</strong>! Your
-            booking business is ready to grow. Here's everything you can do:
-          </Text>
+      ))}
+    </Section>
 
-          <Section style={card}>
-            {FEATURES.map((f) => (
-              <Section key={f.title} style={featureRow}>
-                <Text style={featureTitle}>{f.title}</Text>
-                <Text style={featureDesc}>{f.desc}</Text>
-              </Section>
-            ))}
-          </Section>
+    <Section style={styles.ctaWrap}>
+      <Button href={dashboardUrl} style={styles.cta}>
+        Go to your dashboard
+      </Button>
+    </Section>
 
-          <Section style={{ textAlign: "center" as const, margin: "24px 0 8px" }}>
-            <Button href={dashboardUrl} style={cta}>
-              Go to your dashboard
-            </Button>
-          </Section>
-
-          <Hr style={hr} />
-
-          <Text style={sectionLabel}>Need help?</Text>
-          <Text style={paragraph}>
-            Our support team is here for you. Reach us anytime at{" "}
-            <Link href={`mailto:${supportEmail}`} style={emailLink}>
-              {supportEmail}
-            </Link>
-            .
-          </Text>
-        </Section>
-      </Container>
-    </Body>
-  </Html>
+    <Text style={styles.small}>
+      Need help? Reach us anytime at{" "}
+      <Link href={`mailto:${supportEmail}`} style={styles.link}>
+        {supportEmail}
+      </Link>
+      .
+    </Text>
+  </BrandedEmail>
 );
 
 export const template = {
   component: Email,
-  subject: "Welcome to Procschedule 🎉",
+  subject: "Welcome to ProcSchedule",
   displayName: "Welcome (new signup)",
   previewData: {
     firstName: "Melanie",
     businessName: "Dolliimarie Hair Studio",
-    dashboardUrl: "https://procschedule.com/dashboard/home",
-    supportEmail: "admin@procschedule.com",
+    dashboardUrl: BRAND.dashboardUrl,
+    supportEmail: BRAND.supportEmail,
   },
 } satisfies TemplateEntry;
-
-const main = { backgroundColor: "#ffffff", fontFamily: "Arial, Helvetica, sans-serif" };
-const container = { maxWidth: "560px", margin: "0 auto", padding: "24px 16px" };
-const header = { borderRadius: "12px 12px 0 0", padding: "28px 32px", backgroundColor: "#141414" };
-const eyebrow = {
-  margin: "0",
-  color: "#ffffff",
-  opacity: 0.85,
-  fontSize: "12px",
-  letterSpacing: "0.08em",
-  textTransform: "uppercase" as const,
-};
-const headerTitle = { margin: "6px 0 0", color: "#ffffff", fontSize: "22px" };
-const body = {
-  border: "1px solid #e2e8f0",
-  borderTop: "none",
-  borderRadius: "0 0 12px 12px",
-  padding: "28px 32px",
-};
-const paragraph = { margin: "0 0 14px", fontSize: "15px", lineHeight: "1.55", color: "#334155" };
-const card = { border: "1px solid #e2e8f0", borderRadius: "10px", padding: "6px 16px", margin: "8px 0 18px" };
-const featureRow = { borderBottom: "1px solid #eef2f6", padding: "12px 0" };
-const featureTitle = { margin: 0, fontSize: "15px", fontWeight: 600, color: "#0f172a" };
-const featureDesc = { margin: "3px 0 0", fontSize: "13px", lineHeight: "1.5", color: "#64748b" };
-const cta = {
-  backgroundColor: "#141414",
-  color: "#ffffff",
-  fontSize: "15px",
-  fontWeight: 600,
-  padding: "12px 26px",
-  borderRadius: "8px",
-  textDecoration: "none",
-};
-const hr = { borderColor: "#e2e8f0", margin: "18px 0" };
-const sectionLabel = {
-  margin: "0 0 6px",
-  fontSize: "11px",
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.06em",
-  color: "#64748b",
-  fontWeight: 700,
-};
-const emailLink = { color: "#141414", fontWeight: 600 };
