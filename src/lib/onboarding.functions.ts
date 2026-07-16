@@ -337,6 +337,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       }> = [];
       data.services.forEach((s, i) => {
         const cid = (s.categoryId && catIdMap.get(s.categoryId)) || defaultCatId;
+        if (!cid) return;
         variantRows.push({
           workspace_id: workspaceId,
           category_id: cid,
