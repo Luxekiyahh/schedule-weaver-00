@@ -192,6 +192,13 @@ export function formatTimeLabel(value: string): string {
 }
 
 export type ServiceOption = { id: string; label: string; price: string };
+export type ServiceAddOn = {
+  id: string;
+  name: string;
+  price: string;
+  duration: string;
+};
+export type ServiceCategory = { id: string; name: string };
 export type ServiceDraft = {
   id: string;
   name: string;
@@ -200,6 +207,8 @@ export type ServiceDraft = {
   customDuration: string;
   price: string;
   options: ServiceOption[];
+  categoryId: string | null;
+  addOns: ServiceAddOn[];
 };
 export type DayHours = { dow: number; open: boolean; start: string; end: string };
 export type LocationType = "studio" | "mobile" | "home";
