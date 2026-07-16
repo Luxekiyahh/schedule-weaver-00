@@ -7,12 +7,16 @@ import {
   ArrowRight,
   Check,
   Loader2,
+  LogOut,
   Plus,
   Star,
   Trash2,
   Upload,
+  UserCheck,
   X,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { resolveHomePathForUser, signOutAndReset } from "@/lib/auth-signout";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
