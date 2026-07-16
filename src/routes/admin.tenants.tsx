@@ -32,7 +32,7 @@ const STATUS_STYLES: Record<string, string> = {
   trial: "bg-blue-100 text-blue-700",
   past_due: "bg-amber-100 text-amber-700",
   suspended: "bg-rose-100 text-rose-700",
-  no_subscription: "bg-slate-100 text-slate-600",
+  no_subscription: "bg-muted text-muted-foreground",
 };
 
 function TenantsPage() {
@@ -75,7 +75,7 @@ function TenantsBody() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-slate-400">
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
@@ -84,20 +84,20 @@ function TenantsBody() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-          Tenants <span className="text-slate-400">({filtered.length})</span>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Tenants <span className="text-muted-foreground">({filtered.length})</span>
         </h1>
         <Input
           placeholder="Search name, subdomain, or owner…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="max-w-xs bg-white"
+          className="max-w-xs bg-card"
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-background text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Subdomain</th>
@@ -109,31 +109,31 @@ function TenantsBody() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filtered.map((t) => (
-              <tr key={t.id} className="hover:bg-slate-50">
+              <tr key={t.id} className="hover:bg-background">
                 <td className="px-4 py-3">
                   <Link
                     to="/admin/tenants/$id"
                     params={{ id: t.id }}
-                    className="font-medium text-slate-900 hover:text-indigo-600"
+                    className="font-medium text-foreground hover:text-primary"
                   >
                     {t.name}
                   </Link>
                   {t.owner_email && (
-                    <div className="text-xs text-slate-400">{t.owner_email}</div>
+                    <div className="text-xs text-muted-foreground">{t.owner_email}</div>
                   )}
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                   {t.slug}.{TENANT_ROOT_DOMAIN}
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[t.status] ?? "bg-slate-100 text-slate-600"}`}
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[t.status] ?? "bg-muted text-muted-foreground"}`}
                   >
                     {t.status.replace("_", " ")}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-slate-600">{t.plan_tier ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-500">
+                <td className="px-4 py-3 text-muted-foreground">{t.plan_tier ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">
                   {new Date(t.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -141,7 +141,7 @@ function TenantsBody() {
                     href={`https://${t.slug}.${TENANT_ROOT_DOMAIN}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-indigo-600"
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
                   >
                     Storefront <ExternalLink className="h-3 w-3" />
                   </a>
@@ -150,7 +150,7 @@ function TenantsBody() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                   No tenants match your search.
                 </td>
               </tr>

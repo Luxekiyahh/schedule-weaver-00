@@ -228,39 +228,39 @@ function PaymentsPage() {
   }, [provider, connectionStatus]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-[820px] px-6 py-6">
         <button
           onClick={() => navigate({ to: "/dashboard/home" })}
-          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" /> Back to Dashboard
         </button>
 
         <div className="mb-6 flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-slate-900 text-white">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Wallet className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wider text-slate-400">{workspaceName}</p>
-            <h1 className="text-lg font-semibold text-slate-900">Payments</h1>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{workspaceName}</p>
+            <h1 className="text-lg font-semibold text-foreground">Payments</h1>
           </div>
         </div>
 
         {loading ? (
           <div className="grid place-items-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <div className="space-y-6">
             {/* Provider selection */}
-            <section className="rounded-2xl border bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-900">
+                  <h2 className="text-sm font-semibold text-foreground">
                     Where do your payments go?
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     Choose the provider that collects payments from your clients.
                   </p>
                 </div>
@@ -278,18 +278,18 @@ function PaymentsPage() {
                       onClick={() => setProvider(p)}
                       className={`relative rounded-xl border p-4 text-left transition ${
                         active
-                          ? "border-slate-900 ring-2 ring-slate-900/10"
-                          : "border-slate-200 hover:border-slate-300"
+                          ? "border-primary ring-2 ring-slate-900/10"
+                          : "border-border hover:border-border"
                       }`}
                     >
                       {meta.badge && (
-                        <span className="absolute right-3 top-3 rounded-full bg-slate-900 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white">
+                        <span className="absolute right-3 top-3 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
                           {meta.badge}
                         </span>
                       )}
-                      <CreditCard className="mb-2 h-5 w-5 text-slate-700" />
-                      <p className="text-sm font-semibold text-slate-900">{meta.label}</p>
-                      <p className="mt-1 text-xs text-slate-500">{meta.blurb}</p>
+                      <CreditCard className="mb-2 h-5 w-5 text-foreground" />
+                      <p className="text-sm font-semibold text-foreground">{meta.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{meta.blurb}</p>
                     </button>
                   );
                 })}
@@ -300,7 +300,7 @@ function PaymentsPage() {
                   type="button"
                   onClick={() => setProvider("none")}
                   className={`text-xs font-medium ${
-                    provider === "none" ? "text-slate-900" : "text-slate-400 hover:text-slate-600"
+                    provider === "none" ? "text-foreground" : "text-muted-foreground hover:text-muted-foreground"
                   }`}
                 >
                   Don't collect payments online (book without payment)
@@ -308,8 +308,8 @@ function PaymentsPage() {
               </div>
 
               {provider !== "none" && (
-                <div className="mt-5 flex items-center justify-between rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-600">
+                <div className="mt-5 flex items-center justify-between rounded-xl bg-background p-4">
+                  <p className="text-xs text-muted-foreground">
                     {connectionStatus === "connected"
                       ? `Your ${PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label} account is connected and ready to accept payments.`
                       : `Add your ${PROVIDER_META[provider as Exclude<PaymentProvider, "none">].label} API keys so payouts go directly to you.`}
@@ -341,9 +341,9 @@ function PaymentsPage() {
 
 
             {/* Deposit policy */}
-            <section className="rounded-2xl border bg-white p-6 shadow-sm">
-              <h2 className="mb-1 text-sm font-semibold text-slate-900">Upfront payment</h2>
-              <p className="mb-4 text-xs text-slate-500">
+            <section className="rounded-2xl border bg-card p-6 shadow-sm">
+              <h2 className="mb-1 text-sm font-semibold text-foreground">Upfront payment</h2>
+              <p className="mb-4 text-xs text-muted-foreground">
                 Decide how much guests pay when they book.
               </p>
 
@@ -363,12 +363,12 @@ function PaymentsPage() {
                       onClick={() => setDepositType(val)}
                       className={`rounded-xl border p-4 text-left transition ${
                         active
-                          ? "border-slate-900 ring-2 ring-slate-900/10"
-                          : "border-slate-200 hover:border-slate-300"
+                          ? "border-primary ring-2 ring-slate-900/10"
+                          : "border-border hover:border-border"
                       }`}
                     >
-                      <p className="text-sm font-semibold text-slate-900">{label}</p>
-                      <p className="mt-1 text-xs text-slate-500">{sub}</p>
+                      <p className="text-sm font-semibold text-foreground">{label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
                     </button>
                   );
                 })}
@@ -377,7 +377,7 @@ function PaymentsPage() {
               {depositType === "deposit" && (
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="mb-1 block text-xs font-medium text-slate-600">
+                    <span className="mb-1 block text-xs font-medium text-muted-foreground">
                       Fixed amount ({currency})
                     </span>
                     <input
@@ -386,11 +386,11 @@ function PaymentsPage() {
                       step="0.01"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-1 block text-xs font-medium text-slate-600">
+                    <span className="mb-1 block text-xs font-medium text-muted-foreground">
                       …or percentage of total (%)
                     </span>
                     <input
@@ -400,21 +400,21 @@ function PaymentsPage() {
                       step="1"
                       value={depositPercent}
                       onChange={(e) => setDepositPercent(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
                     />
                   </label>
-                  <p className="text-[11px] text-slate-400 sm:col-span-2">
+                  <p className="text-[11px] text-muted-foreground sm:col-span-2">
                     If both are set, the fixed amount takes priority.
                   </p>
                 </div>
               )}
 
               <label className="mt-4 block max-w-[200px]">
-                <span className="mb-1 block text-xs font-medium text-slate-600">Currency</span>
+                <span className="mb-1 block text-xs font-medium text-muted-foreground">Currency</span>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 >
                   {["USD", "CAD", "EUR", "GBP", "AUD"].map((c) => (
                     <option key={c} value={c}>
@@ -426,7 +426,7 @@ function PaymentsPage() {
             </section>
 
             <div className="flex justify-end">
-              <Button className="bg-slate-900 hover:bg-slate-800" onClick={handleSave} disabled={saving}>
+              <Button className="bg-primary hover:bg-primary" onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                 Save settings
               </Button>
@@ -449,14 +449,14 @@ function PaymentsPage() {
 
           <div className="space-y-4 py-2">
             {provider === "square" ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Square runs in live mode — deposits are charged to your real Square account.
               </p>
             ) : (
               <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-500">Environment</Label>
+                <Label className="text-xs text-muted-foreground">Environment</Label>
                 <select
-                  className="rounded-md border border-slate-200 px-2 py-1 text-sm"
+                  className="rounded-md border border-border px-2 py-1 text-sm"
                   value={credEnv}
                   onChange={(e) => setCredEnv(e.target.value as "sandbox" | "live")}
                 >
@@ -530,7 +530,7 @@ function PaymentsPage() {
               Cancel
             </Button>
             <Button
-              className="bg-slate-900 hover:bg-slate-800"
+              className="bg-primary hover:bg-primary"
               onClick={handleSaveCredentials}
               disabled={connecting}
             >

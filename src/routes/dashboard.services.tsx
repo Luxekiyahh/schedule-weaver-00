@@ -111,7 +111,7 @@ function ServicesPage() {
   };
 
   if (!ctx) {
-    return <div className="min-h-screen grid place-items-center bg-slate-50"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+    return <div className="min-h-screen grid place-items-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
 
   return (
@@ -119,17 +119,17 @@ function ServicesPage() {
       <div className="mx-auto max-w-[1280px] px-6 py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <button onClick={() => navigate({ to: "/dashboard/home" })} className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">
+            <button onClick={() => navigate({ to: "/dashboard/home" })} className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
               <ChevronLeft className="h-3.5 w-3.5" /> Back to Dashboard
             </button>
 
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Services</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Services</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               {isAdmin ? "Manage your bookable offerings and pricing." : "Browse workspace services and choose which ones you offer."}
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={openNew} className="bg-slate-900 hover:bg-slate-800">
+            <Button onClick={openNew} className="bg-primary hover:bg-primary">
               <Plus className="h-4 w-4" /> New service
             </Button>
           )}
@@ -138,20 +138,20 @@ function ServicesPage() {
         {loading ? (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-44 animate-pulse rounded-2xl border bg-white shadow-sm" />
+              <div key={i} className="h-44 animate-pulse rounded-2xl border bg-card shadow-sm" />
             ))}
           </div>
         ) : services.length === 0 ? (
-          <div className="mt-12 rounded-2xl border bg-white py-16 text-center shadow-sm">
+          <div className="mt-12 rounded-2xl border bg-card py-16 text-center shadow-sm">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#141414]/5">
               <Briefcase className="h-6 w-6 text-[#141414]" />
             </div>
-            <p className="mt-4 text-sm font-medium text-slate-900">No services yet</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-4 text-sm font-medium text-foreground">No services yet</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               {isAdmin ? "Create your first offering to start accepting bookings." : "Ask an admin to add services to this workspace."}
             </p>
             {isAdmin && (
-              <Button onClick={openNew} className="mt-4 bg-slate-900 hover:bg-slate-800">
+              <Button onClick={openNew} className="mt-4 bg-primary hover:bg-primary">
                 <Plus className="h-4 w-4" /> New service
               </Button>
             )}
@@ -161,19 +161,19 @@ function ServicesPage() {
             {services.map((s) => {
               const linked = myLinks.has(s.id);
               return (
-                <div key={s.id} className="group flex flex-col rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md">
+                <div key={s.id} className="group flex flex-col rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-base font-semibold text-slate-900">{s.name}</p>
-                      {s.description && <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{s.description}</p>}
+                      <p className="truncate text-base font-semibold text-foreground">{s.name}</p>
+                      {s.description && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{s.description}</p>}
                     </div>
                     {!s.is_active && (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">Inactive</span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">Inactive</span>
                     )}
                   </div>
-                  <div className="mt-4 flex items-center gap-4 text-sm text-slate-600">
-                    <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4 text-slate-400" /> {s.duration_minutes} min</span>
-                    <span className="inline-flex items-center gap-1.5"><DollarSign className="h-4 w-4 text-slate-400" /> {money(s.price_cents, s.currency)}</span>
+                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4 text-muted-foreground" /> {s.duration_minutes} min</span>
+                    <span className="inline-flex items-center gap-1.5"><DollarSign className="h-4 w-4 text-muted-foreground" /> {money(s.price_cents, s.currency)}</span>
                   </div>
                   <div className="mt-4 flex items-center justify-between border-t pt-3">
                     {isAdmin ? (
@@ -186,7 +186,7 @@ function ServicesPage() {
                         </Button>
                       </>
                     ) : (
-                      <label className="flex w-full cursor-pointer items-center justify-between text-xs font-medium text-slate-600">
+                      <label className="flex w-full cursor-pointer items-center justify-between text-xs font-medium text-muted-foreground">
                         <span className="inline-flex items-center gap-1.5">
                           <Link2 className="h-3.5 w-3.5" /> I offer this
                         </span>
@@ -358,14 +358,14 @@ function ServiceDialog({
                   <button
                     type="button"
                     onClick={() => setImageUrl(null)}
-                    className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full bg-slate-900 text-white shadow"
+                    className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-foreground shadow"
                     aria-label="Remove image"
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               ) : (
-                <div className="grid h-16 w-16 place-items-center rounded-lg border border-dashed text-slate-400">
+                <div className="grid h-16 w-16 place-items-center rounded-lg border border-dashed text-muted-foreground">
                   <ImagePlus className="h-5 w-5" />
                 </div>
               )}
@@ -381,7 +381,7 @@ function ServiceDialog({
                   {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
                   {imageUrl ? "Replace image" : "Add image"}
                 </Button>
-                <p className="mt-1 text-xs text-slate-500">Shown on your booking page. PNG or JPG, up to 5MB.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Shown on your booking page. PNG or JPG, up to 5MB.</p>
               </div>
             </div>
           </div>
@@ -398,15 +398,15 @@ function ServiceDialog({
           </div>
           <label className="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <p className="text-sm font-medium text-slate-900">Active</p>
-              <p className="text-xs text-slate-500">Inactive services can't be booked.</p>
+              <p className="text-sm font-medium text-foreground">Active</p>
+              <p className="text-xs text-muted-foreground">Inactive services can't be booked.</p>
             </div>
             <Switch checked={active} onCheckedChange={setActive} />
           </label>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={save} disabled={saving} className="bg-slate-900 hover:bg-slate-800">
+          <Button onClick={save} disabled={saving} className="bg-primary hover:bg-primary">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             {editing ? "Save changes" : "Create service"}
           </Button>

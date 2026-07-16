@@ -103,7 +103,7 @@ function DetailBody() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-slate-400">
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
@@ -115,22 +115,22 @@ function DetailBody() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
-      <Link to="/admin/tenants" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
+      <Link to="/admin/tenants" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> All tenants
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{w.name}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{w.name}</h1>
           <a
             href={`https://${w.slug}.${TENANT_ROOT_DOMAIN}`}
             target="_blank"
             rel="noreferrer"
-            className="font-mono text-sm text-indigo-600 hover:underline"
+            className="font-mono text-sm text-primary hover:underline"
           >
             {w.slug}.{TENANT_ROOT_DOMAIN}
           </a>
-          <div className="mt-1 text-sm text-slate-500">{w.owner_email}</div>
+          <div className="mt-1 text-sm text-muted-foreground">{w.owner_email}</div>
           {suspended && (
             <div className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
               Suspended{w.suspended_reason ? `: ${w.suspended_reason}` : ""}
@@ -189,10 +189,10 @@ function DetailBody() {
           {detail.services.length === 0 && <Empty text="No services." />}
           {detail.services.slice(0, 8).map((s: any) => (
             <div key={s.id} className="flex justify-between py-1 text-sm">
-              <span className="text-slate-700">
-                {s.name} {!s.is_active && <span className="text-slate-400">(inactive)</span>}
+              <span className="text-foreground">
+                {s.name} {!s.is_active && <span className="text-muted-foreground">(inactive)</span>}
               </span>
-              <span className="text-slate-500">{money(s.price_cents, s.currency)}</span>
+              <span className="text-muted-foreground">{money(s.price_cents, s.currency)}</span>
             </div>
           ))}
         </Card>
@@ -201,11 +201,11 @@ function DetailBody() {
       <Card title={`Recent bookings (${detail.appointments.length})`} className="mt-6">
         {detail.appointments.length === 0 && <Empty text="No bookings yet." />}
         {detail.appointments.map((a: any) => (
-          <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 py-2 text-sm last:border-0">
+          <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2 text-sm last:border-0">
             <div>
-              <span className="font-medium text-slate-800">{a.customer?.full_name ?? "Unknown"}</span>
-              <span className="text-slate-400"> · {a.service_name ?? "—"}</span>
-              <div className="text-xs text-slate-400">
+              <span className="font-medium text-foreground">{a.customer?.full_name ?? "Unknown"}</span>
+              <span className="text-muted-foreground"> · {a.service_name ?? "—"}</span>
+              <div className="text-xs text-muted-foreground">
                 {new Date(a.start_at).toLocaleString()} · <span className="capitalize">{a.status}</span>
               </div>
             </div>
@@ -236,9 +236,9 @@ function DetailBody() {
           {detail.emailLogs.length === 0 && <Empty text="No matching email logs." />}
           {detail.emailLogs.map((e: any) => (
             <div key={e.id} className="py-1 text-xs">
-              <span className="font-medium text-slate-700">{e.template_name}</span>
+              <span className="font-medium text-foreground">{e.template_name}</span>
               <span className={e.status === "sent" ? "text-emerald-600" : "text-rose-600"}> · {e.status}</span>
-              <span className="text-slate-400"> · {new Date(e.created_at).toLocaleDateString()}</span>
+              <span className="text-muted-foreground"> · {new Date(e.created_at).toLocaleDateString()}</span>
             </div>
           ))}
         </Card>
@@ -246,9 +246,9 @@ function DetailBody() {
           {detail.smsLogs.length === 0 && <Empty text="No SMS logs yet." />}
           {detail.smsLogs.map((s: any) => (
             <div key={s.id} className="py-1 text-xs">
-              <span className="font-medium text-slate-700">{s.purpose ?? "sms"}</span>
+              <span className="font-medium text-foreground">{s.purpose ?? "sms"}</span>
               <span className={s.status === "sent" ? "text-emerald-600" : "text-rose-600"}> · {s.status}</span>
-              <span className="text-slate-400"> · {new Date(s.created_at).toLocaleDateString()}</span>
+              <span className="text-muted-foreground"> · {new Date(s.created_at).toLocaleDateString()}</span>
             </div>
           ))}
         </Card>
@@ -259,8 +259,8 @@ function DetailBody() {
 
 function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
-      <h2 className="mb-3 text-sm font-semibold text-slate-900">{title}</h2>
+    <div className={`rounded-xl border border-border bg-card p-5 shadow-sm ${className}`}>
+      <h2 className="mb-3 text-sm font-semibold text-foreground">{title}</h2>
       {children}
     </div>
   );
@@ -268,11 +268,11 @@ function Card({ title, children, className = "" }: { title: string; children: Re
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between py-1 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium capitalize text-slate-800">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium capitalize text-foreground">{value}</span>
     </div>
   );
 }
 function Empty({ text }: { text: string }) {
-  return <div className="py-2 text-sm text-slate-400">{text}</div>;
+  return <div className="py-2 text-sm text-muted-foreground">{text}</div>;
 }

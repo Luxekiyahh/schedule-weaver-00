@@ -183,10 +183,10 @@ function CatalogAdminPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen grid place-items-center bg-slate-50"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+    return <div className="min-h-screen grid place-items-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
   if (!data || !data.workspace) {
-    return <div className="min-h-screen grid place-items-center bg-slate-50 text-slate-500">No workspace found.</div>;
+    return <div className="min-h-screen grid place-items-center bg-background text-muted-foreground">No workspace found.</div>;
   }
 
   const catName = (id: string | null) => data.categories.find((c) => c.id === id)?.name ?? UNCATEGORIZED;
@@ -194,14 +194,14 @@ function CatalogAdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <div className="mx-auto max-w-[1100px] px-6 py-10">
-        <Link to="/dashboard/home" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
+        <Link to="/dashboard/home" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back to dashboard
         </Link>
 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Categories & Providers</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Categories & Providers</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Organize your menu and choose who provides each service. Changes stay in sync with your storefront and booking page.
             </p>
           </div>
@@ -209,17 +209,17 @@ function CatalogAdminPage() {
             href={`/${data.workspace.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <Store className="h-4 w-4" /> View storefront <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
 
         {/* Categories */}
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-              <Layers className="h-5 w-5 text-slate-400" /> Categories
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+              <Layers className="h-5 w-5 text-muted-foreground" /> Categories
             </h2>
             <Button size="sm" onClick={openNew} disabled={busy}>
               <Plus className="mr-1.5 h-4 w-4" /> Add category
@@ -228,24 +228,24 @@ function CatalogAdminPage() {
 
           <div className="mt-4 divide-y divide-slate-100">
             {data.categories.length === 0 && (
-              <p className="py-6 text-center text-sm text-slate-400">No categories yet.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">No categories yet.</p>
             )}
             {data.categories.map((c, i) => (
               <div key={c.id} className="flex items-center gap-3 py-3">
                 <div className="flex flex-col">
-                  <button className="text-slate-400 hover:text-slate-900 disabled:opacity-30" disabled={busy || i === 0} onClick={() => move(i, -1)}>
+                  <button className="text-muted-foreground hover:text-foreground disabled:opacity-30" disabled={busy || i === 0} onClick={() => move(i, -1)}>
                     <ArrowUp className="h-4 w-4" />
                   </button>
-                  <button className="text-slate-400 hover:text-slate-900 disabled:opacity-30" disabled={busy || i === data.categories.length - 1} onClick={() => move(i, 1)}>
+                  <button className="text-muted-foreground hover:text-foreground disabled:opacity-30" disabled={busy || i === data.categories.length - 1} onClick={() => move(i, 1)}>
                     <ArrowDown className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900">{c.name}</span>
+                    <span className="font-medium text-foreground">{c.name}</span>
                     {!c.active && <Badge variant="secondary" className="text-xs">Hidden</Badge>}
                   </div>
-                  {c.description && <p className="truncate text-sm text-slate-500">{c.description}</p>}
+                  {c.description && <p className="truncate text-sm text-muted-foreground">{c.description}</p>}
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => openEdit(c)} disabled={busy}>
                   <Pencil className="h-4 w-4" />
@@ -259,18 +259,18 @@ function CatalogAdminPage() {
         </section>
 
         {/* Storefront menu items */}
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <Store className="h-5 w-5 text-slate-400" /> Storefront menu items
+        <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+            <Store className="h-5 w-5 text-muted-foreground" /> Storefront menu items
           </h2>
-          <p className="mt-1 text-sm text-slate-500">These appear on your public page. Assign each to a category.</p>
+          <p className="mt-1 text-sm text-muted-foreground">These appear on your public page. Assign each to a category.</p>
           <div className="mt-4 divide-y divide-slate-100">
-            {data.variants.length === 0 && <p className="py-6 text-center text-sm text-slate-400">No menu items.</p>}
+            {data.variants.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No menu items.</p>}
             {data.variants.map((v) => (
               <div key={v.id} className="flex flex-wrap items-center gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <span className="font-medium text-slate-900">{v.name}</span>
-                  <span className="ml-2 text-sm text-slate-500">{money(v.price_cents)} · {v.duration_min}m</span>
+                  <span className="font-medium text-foreground">{v.name}</span>
+                  <span className="ml-2 text-sm text-muted-foreground">{money(v.price_cents)} · {v.duration_min}m</span>
                 </div>
                 <Select value={v.category_id ?? undefined} onValueChange={(val) => changeVariantCategory(v.id, val)} disabled={busy}>
                   <SelectTrigger className="w-52"><SelectValue placeholder="Choose category" /></SelectTrigger>
@@ -284,27 +284,27 @@ function CatalogAdminPage() {
         </section>
 
         {/* Bookable services + providers */}
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <Users className="h-5 w-5 text-slate-400" /> Bookable services & providers
+        <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+            <Users className="h-5 w-5 text-muted-foreground" /> Bookable services & providers
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Choose the category and which providers offer each service. A service is only bookable when at least one provider is assigned.
           </p>
           <div className="mt-4 space-y-3">
-            {data.services.length === 0 && <p className="py-6 text-center text-sm text-slate-400">No services.</p>}
+            {data.services.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No services.</p>}
             {data.services.map((s) => {
               const assigned = new Set(data.links.filter((l) => l.service_id === s.id).map((l) => l.member_id));
               return (
-                <div key={s.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                <div key={s.id} className="rounded-xl border border-border bg-background/50 p-4">
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-900">{s.name}</span>
+                        <span className="font-medium text-foreground">{s.name}</span>
                         {!s.is_active && <Badge variant="secondary" className="text-xs">Inactive</Badge>}
                         {assigned.size === 0 && s.is_active && <Badge variant="destructive" className="text-xs">No provider</Badge>}
                       </div>
-                      <span className="text-sm text-slate-500">{money(s.price_cents)} · {s.duration_minutes}m · {catName(s.category_id)}</span>
+                      <span className="text-sm text-muted-foreground">{money(s.price_cents)} · {s.duration_minutes}m · {catName(s.category_id)}</span>
                     </div>
                     <Select value={s.category_id ?? undefined} onValueChange={(val) => changeServiceCategory(s.id, val)} disabled={busy}>
                       <SelectTrigger className="w-52"><SelectValue placeholder="Choose category" /></SelectTrigger>
@@ -313,10 +313,10 @@ function CatalogAdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-4 border-t border-slate-100 pt-3">
-                    {data.providers.length === 0 && <span className="text-sm text-slate-400">No team members yet.</span>}
+                  <div className="mt-3 flex flex-wrap gap-4 border-t border-border pt-3">
+                    {data.providers.length === 0 && <span className="text-sm text-muted-foreground">No team members yet.</span>}
                     {data.providers.map((p) => (
-                      <label key={p.member_id} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                      <label key={p.member_id} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
                         <Checkbox
                           checked={assigned.has(p.member_id)}
                           disabled={busy}
@@ -349,10 +349,10 @@ function CatalogAdminPage() {
               <Label htmlFor="cat-desc">Description</Label>
               <Textarea id="cat-desc" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description shown under the category" rows={2} />
             </div>
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
               <div>
-                <p className="text-sm font-medium text-slate-900">Visible on storefront</p>
-                <p className="text-xs text-slate-500">Hidden categories stay saved but don't show publicly.</p>
+                <p className="text-sm font-medium text-foreground">Visible on storefront</p>
+                <p className="text-xs text-muted-foreground">Hidden categories stay saved but don't show publicly.</p>
               </div>
               <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
             </div>

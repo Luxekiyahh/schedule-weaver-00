@@ -7,6 +7,7 @@ import { syncWorkspaceSubscription } from "@/utils/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { ThemeProvider, ThemeToggle } from "@/components/theme/ThemeProvider";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -61,11 +62,22 @@ function DashboardLayout() {
   // While we resolve subscription state, avoid flashing protected content.
   if ((sub.loading || !synced) && !allowed) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
+      <ThemeProvider>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </ThemeProvider>
     );
   }
 
-  return <Outlet />;
+  return (
+    <ThemeProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="fixed bottom-5 right-5 z-50">
+          <ThemeToggle />
+        </div>
+        <Outlet />
+      </div>
+    </ThemeProvider>
+  );
 }
