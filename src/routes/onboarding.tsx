@@ -146,31 +146,53 @@ function OnboardingWizard() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [hasAccount, setHasAccount] = useState(false);
 
+  // Identity gate: if a session is already sitting in this browser, we do NOT
+  // silently drop the visitor into that account's dashboard. Show a card and
+  // require an explicit "Continue" or "Sign out" click.
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [existingUser, setExistingUser] = useState<{ id: string; email: string | null } | null>(null);
+  const [existingOnboarded, setExistingOnboarded] = useState(false);
+
   const getCtx = useServerFn(getOnboardingContext);
 
-  // If the visitor is already signed in, skip the account step and load context.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return; // brand-new visitor → start at the Account step
-      getCtx()
-        .then((ctx) => {
-          // Already set up? The wizard would overwrite the existing site,
-          // so send them to the dashboard instead.
-          if (ctx.onboarded) {
-            navigate({ to: "/dashboard" });
-            return;
-          }
+    let cancelled = false;
+    // getUser() revalidates with the auth server — do not trust a raw session.
+    supabase.auth.getUser().then(async ({ data, error: userErr }) => {
+      if (cancelled) return;
+      if (userErr || !data.user) {
+        setExistingUser(null);
+        setCheckingSession(false);
+        return;
+      }
+      const user = { id: data.user.id, email: data.user.email ?? null };
+      try {
+        const ctx = await getCtx();
+        if (cancelled) return;
+        if (ctx.onboarded) {
+          // Signed in AND already onboarded — show the identity gate rather
+          // than silently redirecting into that account's dashboard.
+          setExistingUser(user);
+          setExistingOnboarded(true);
+        } else {
+          // Same person mid-setup — skip the account step and continue.
           setWorkspaceId(ctx.workspaceId);
           setHasAccount(true);
           setWizard((w) => (w.businessName ? w : { ...w, businessName: ctx.name ?? "" }));
           setStep((s) => (s === 1 ? 2 : s));
-        })
-        .catch(() => {
-          /* signed in but no workspace yet — keep them on the account step */
-        });
+        }
+      } catch {
+        // Signed in but no workspace yet — keep them on the account step.
+      } finally {
+        if (!cancelled) setCheckingSession(false);
+      }
     });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const patch = (p: Partial<WizardState>) => setWizard((w) => ({ ...w, ...p }));
 
