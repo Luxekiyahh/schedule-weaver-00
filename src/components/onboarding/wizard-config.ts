@@ -281,6 +281,7 @@ export type WizardState = {
   primaryColor: string;
   secondaryColor: string;
   portfolio: PortfolioPhoto[];
+  categories: ServiceCategory[];
   services: ServiceDraft[];
   hours: DayHours[];
   locationType: LocationType;
