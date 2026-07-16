@@ -120,7 +120,7 @@ function AvailabilityPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen grid place-items-center bg-slate-50"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+    return <div className="min-h-screen grid place-items-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
 
   return (
@@ -128,38 +128,38 @@ function AvailabilityPage() {
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <Link to="/dashboard/home" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">
+            <Link to="/dashboard/home" className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
               <ArrowLeft className="h-3.5 w-3.5" /> Back to home
             </Link>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Weekly availability</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Weekly availability</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Set the recurring hours when clients can book you. Use exceptions on the calendar for one-off changes.
             </p>
           </div>
           <div className="hidden sm:block">
-            <Button onClick={save} disabled={!dirty || saving} className="bg-slate-900 hover:bg-slate-800">
+            <Button onClick={save} disabled={!dirty || saving} className="bg-primary hover:bg-primary">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save changes
             </Button>
           </div>
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-2xl border bg-white shadow-sm">
+        <div className="mt-8 overflow-hidden rounded-2xl border bg-card shadow-sm">
           {DAYS.map(({ dow, label }, idx) => {
             const s = state[dow];
             return (
               <div
                 key={dow}
-                className={`flex flex-wrap items-center gap-4 px-5 py-4 ${idx !== DAYS.length - 1 ? "border-b" : ""} ${s.active ? "" : "bg-slate-50/40"}`}
+                className={`flex flex-wrap items-center gap-4 px-5 py-4 ${idx !== DAYS.length - 1 ? "border-b" : ""} ${s.active ? "" : "bg-background/40"}`}
               >
                 <div className="flex min-w-[160px] items-center gap-3">
                   <Switch checked={s.active} onCheckedChange={(v) => update(dow, { active: v })} />
-                  <span className={`text-sm font-medium ${s.active ? "text-slate-900" : "text-slate-400"}`}>{label}</span>
+                  <span className={`text-sm font-medium ${s.active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
                 </div>
                 {s.active ? (
                   <div className="flex flex-1 flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs uppercase tracking-wider text-slate-400">Start</span>
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground">Start</span>
                       <Input
                         type="time"
                         value={s.start}
@@ -168,7 +168,7 @@ function AvailabilityPage() {
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs uppercase tracking-wider text-slate-400">End</span>
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground">End</span>
                       <Input
                         type="time"
                         value={s.end}
@@ -178,7 +178,7 @@ function AvailabilityPage() {
                     </div>
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-400">Unavailable</span>
+                  <span className="text-xs text-muted-foreground">Unavailable</span>
                 )}
               </div>
             );
@@ -193,9 +193,9 @@ function AvailabilityPage() {
 
       {/* Floating save bar (mobile + sticky reminder when dirty) */}
       {dirty && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/90 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/90 backdrop-blur">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-6 py-3">
-            <p className="text-xs text-slate-600">You have unsaved changes.</p>
+            <p className="text-xs text-muted-foreground">You have unsaved changes.</p>
             <div className="flex gap-2">
               <Button
                 variant="ghost"
@@ -204,7 +204,7 @@ function AvailabilityPage() {
               >
                 Discard
               </Button>
-              <Button onClick={save} disabled={saving} className="bg-slate-900 hover:bg-slate-800">
+              <Button onClick={save} disabled={saving} className="bg-primary hover:bg-primary">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Save changes
               </Button>

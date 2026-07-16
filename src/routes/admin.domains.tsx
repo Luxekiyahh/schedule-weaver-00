@@ -92,7 +92,7 @@ function AdminDomainsPanel() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-slate-400">
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
@@ -102,10 +102,10 @@ function AdminDomainsPanel() {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 text-center">
         <ShieldAlert className="h-10 w-10 text-amber-500" />
-        <h1 className="mt-4 text-lg font-semibold text-slate-900">
+        <h1 className="mt-4 text-lg font-semibold text-foreground">
           Platform admin access required
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           This page is only available to platform operators.
         </p>
       </div>
@@ -118,14 +118,14 @@ function AdminDomainsPanel() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-8">
-        <div className="mb-1 inline-flex items-center gap-2 text-sm font-medium text-indigo-600">
+        <div className="mb-1 inline-flex items-center gap-2 text-sm font-medium text-primary">
           <Globe className="h-4 w-4" />
           Platform operations
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Subdomains to register
         </h1>
-        <p className="mt-1 max-w-2xl text-sm text-slate-500">
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           Each tenant subdomain needs to be connected as a custom domain so a TLS
           certificate is issued. Connect{" "}
           <span className="font-mono">{`<slug>.${TENANT_ROOT_DOMAIN}`}</span> in
@@ -187,10 +187,10 @@ function Section({
 }) {
   return (
     <section className="mb-8">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
         {icon}
         {title}
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
           {count}
         </span>
       </h2>
@@ -201,7 +201,7 @@ function Section({
 
 function Empty({ text }: { text: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
+    <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
       {text}
     </div>
   );
@@ -220,9 +220,9 @@ function TenantRow({
   const isActive = tenant.domain_status === "active";
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
       <div className="min-w-0">
-        <div className="truncate text-sm font-medium text-slate-900">
+        <div className="truncate text-sm font-medium text-foreground">
           {tenant.name}
         </div>
         <button
@@ -231,7 +231,7 @@ function TenantRow({
             navigator.clipboard?.writeText(host);
             toast.success("Subdomain copied");
           }}
-          className="mt-0.5 inline-flex items-center gap-1.5 font-mono text-xs text-slate-500 hover:text-slate-800"
+          className="mt-0.5 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-foreground"
         >
           {host}
           <Copy className="h-3 w-3" />
@@ -243,7 +243,7 @@ function TenantRow({
         disabled={saving}
         onClick={onToggle}
         className={
-          isActive ? "" : "bg-slate-900 text-white hover:bg-slate-800"
+          isActive ? "" : "bg-primary text-primary-foreground hover:bg-primary"
         }
       >
         {saving ? (

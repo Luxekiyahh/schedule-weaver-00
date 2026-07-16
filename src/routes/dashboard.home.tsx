@@ -46,7 +46,7 @@ const STATUS_STYLES: Record<Status, string> = {
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
   confirmed: "bg-[#141414]/5 text-[#141414] ring-[#141414]/20",
   completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  cancelled: "bg-slate-100 text-slate-500 ring-slate-200",
+  cancelled: "bg-muted text-muted-foreground ring-slate-200",
 };
 
 function money(cents: number, ccy = "USD") {
@@ -170,8 +170,8 @@ function HomePage() {
 
   if (!ctx) {
     return (
-      <div className="min-h-screen grid place-items-center bg-slate-50">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+      <div className="min-h-screen grid place-items-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -187,34 +187,34 @@ function HomePage() {
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-[#141414]">
               <Sparkles className="h-3.5 w-3.5" /> {greeting()}
             </div>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
               Welcome back, {ctx.firstName}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Here's what's happening at <span className="font-medium text-slate-700">{ctx.workspaceName}</span> today.
+            <p className="mt-1 text-sm text-muted-foreground">
+              Here's what's happening at <span className="font-medium text-foreground">{ctx.workspaceName}</span> today.
             </p>
           </div>
           <Link
             to="/dashboard/calendar"
-            className="inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-background"
           >
             <Calendar className="h-4 w-4" /> Open calendar
           </Link>
         </div>
 
         {/* Public link share */}
-        <div className="mt-6 overflow-hidden rounded-2xl border bg-[#141414] p-5 text-white shadow-lg">
+        <div className="mt-6 overflow-hidden rounded-2xl border bg-[#141414] p-5 text-primary-foreground shadow-lg">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-wider text-[#f8f7f4]/60">Your public booking link</p>
-              <p className="mt-1 truncate font-mono text-sm text-white/90">{bookingUrl || "—"}</p>
+              <p className="mt-1 truncate font-mono text-sm text-primary-foreground/90">{bookingUrl || "—"}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={copy}
                 disabled={!hasSlug}
                 className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                  copied ? "bg-emerald-400 text-emerald-950" : "bg-white text-slate-900 hover:bg-slate-100"
+                  copied ? "bg-emerald-400 text-emerald-950" : "bg-card text-foreground hover:bg-muted"
                 }`}
               >
                 {copied ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy link</>}
@@ -224,7 +224,7 @@ function HomePage() {
                   href={bookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-card/10 px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-card/20"
                 >
                   <ExternalLink className="h-4 w-4" /> View Live Site
                 </a>
@@ -255,15 +255,15 @@ function HomePage() {
         {/* Split layout */}
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           {/* Today's lineup */}
-          <section className="rounded-2xl border bg-white shadow-sm">
+          <section className="rounded-2xl border bg-card shadow-sm">
             <div className="flex items-center justify-between border-b px-5 py-4">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">Today's lineup</h2>
-                <p className="text-xs text-slate-500">
+                <h2 className="text-base font-semibold text-foreground">Today's lineup</h2>
+                <p className="text-xs text-muted-foreground">
                   {new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
                 </p>
               </div>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                 {today.length} {today.length === 1 ? "booking" : "bookings"}
               </span>
             </div>
@@ -271,10 +271,10 @@ function HomePage() {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex animate-pulse items-center gap-4 px-5 py-4">
-                    <div className="h-10 w-20 rounded bg-slate-100" />
+                    <div className="h-10 w-20 rounded bg-muted" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 w-1/2 rounded bg-slate-100" />
-                      <div className="h-3 w-1/3 rounded bg-slate-100" />
+                      <div className="h-3 w-1/2 rounded bg-muted" />
+                      <div className="h-3 w-1/3 rounded bg-muted" />
                     </div>
                   </div>
                 ))
@@ -283,23 +283,23 @@ function HomePage() {
                   <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#141414]/5">
                     <CalendarX2 className="h-6 w-6 text-[#141414]" />
                   </div>
-                  <p className="mt-4 text-sm font-medium text-slate-900">You're clear for today!</p>
-                  <p className="mt-1 text-xs text-slate-500">No bookings scheduled. Enjoy the breathing room.</p>
+                  <p className="mt-4 text-sm font-medium text-foreground">You're clear for today!</p>
+                  <p className="mt-1 text-xs text-muted-foreground">No bookings scheduled. Enjoy the breathing room.</p>
                 </div>
               ) : (
                 today.map((a) => (
-                  <div key={a.id} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50">
+                  <div key={a.id} className="flex items-center gap-4 px-5 py-4 transition hover:bg-background">
                     <div className="w-24 shrink-0">
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-sm font-semibold text-foreground">
                         {new Date(a.start_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                       </p>
-                      <p className="text-[11px] text-slate-400">{fmtTimeRange(a.start_at, a.end_at)}</p>
+                      <p className="text-[11px] text-muted-foreground">{fmtTimeRange(a.start_at, a.end_at)}</p>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">
+                      <p className="truncate text-sm font-medium text-foreground">
                         {a.customer?.full_name ?? "Client"}
                       </p>
-                      <p className="truncate text-xs text-slate-500">{a.service?.name ?? "Service"}</p>
+                      <p className="truncate text-xs text-muted-foreground">{a.service?.name ?? "Service"}</p>
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ring-1 ${STATUS_STYLES[a.status]}`}>
                       {a.status}
@@ -312,7 +312,7 @@ function HomePage() {
 
           {/* Quick actions */}
           <section>
-            <h2 className="mb-3 px-1 text-base font-semibold text-slate-900">Quick actions</h2>
+            <h2 className="mb-3 px-1 text-base font-semibold text-foreground">Quick actions</h2>
             <div className="grid grid-cols-2 gap-3">
               
               <ActionCard to="/dashboard/calendar" icon={<Plus className="h-5 w-5" />} title="Book appointment" desc="Manually create a booking" tone="indigo" />
@@ -325,11 +325,11 @@ function HomePage() {
 
             </div>
 
-            <div className="mt-4 rounded-2xl border bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-500">
+            <div className="mt-4 rounded-2xl border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Users className="h-3.5 w-3.5" /> Tip
               </div>
-              <p className="mt-2 text-sm text-slate-700">
+              <p className="mt-2 text-sm text-foreground">
                 Share your booking link on social or in your email signature — every new client starts there.
               </p>
             </div>
@@ -390,50 +390,50 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
   };
 
   return (
-    <section className="mt-4 rounded-2xl border bg-white p-5 shadow-sm">
-      <div className="mb-1 flex items-center gap-2 text-base font-semibold text-slate-900">
+    <section className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
+      <div className="mb-1 flex items-center gap-2 text-base font-semibold text-foreground">
         <MapPin className="h-4 w-4 text-[#141414]" /> Business info
       </div>
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-muted-foreground">
         Shown to clients on their booking confirmation email so they know where to go and how to reach you.
       </p>
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading…
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="sm:col-span-2 block">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Address</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Address</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="123 Main St, Suite 4, City, ST 00000"
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Phone</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Phone</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(555) 123-4567"
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Contact email</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Contact email</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="hello@yourbusiness.com"
             />
           </label>
           <label className="sm:col-span-2 block">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">Website</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Website</span>
             <input
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="www.yourbusiness.com"
@@ -443,7 +443,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
             <button
               onClick={onSave}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#141414] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#141414]/90 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#141414] px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-[#141414]/90 disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Save business info
@@ -466,25 +466,25 @@ function Metric({
   icon, label, value, hint, accent,
 }: { icon: React.ReactNode; label: string; value: string; hint?: string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md ${accent ? "ring-1 ring-[#141414]/10" : ""}`}>
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-        <span className={`grid h-6 w-6 place-items-center rounded-md ${accent ? "bg-[#141414]/5 text-[#141414]" : "bg-slate-100 text-slate-600"}`}>
+    <div className={`rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md ${accent ? "ring-1 ring-[#141414]/10" : ""}`}>
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <span className={`grid h-6 w-6 place-items-center rounded-md ${accent ? "bg-[#141414]/5 text-[#141414]" : "bg-muted text-muted-foreground"}`}>
           {icon}
         </span>
         {label}
       </div>
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-slate-400">{hint}</p>}
+      <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+      {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-2xl border bg-white p-5 shadow-sm">
-      <div className="h-3 w-24 rounded bg-slate-100" />
-      <div className="mt-4 h-7 w-20 rounded bg-slate-100" />
-      <div className="mt-2 h-2 w-32 rounded bg-slate-100" />
+    <div className="animate-pulse rounded-2xl border bg-card p-5 shadow-sm">
+      <div className="h-3 w-24 rounded bg-muted" />
+      <div className="mt-4 h-7 w-20 rounded bg-muted" />
+      <div className="mt-2 h-2 w-32 rounded bg-muted" />
     </div>
   );
 }
@@ -503,12 +503,12 @@ function ActionCard({
   return (
     <Link
       to={to}
-      className="group flex flex-col gap-3 rounded-2xl border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+      className="group flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
       <span className={`grid h-10 w-10 place-items-center rounded-xl transition ${TONES[tone]}`}>{icon}</span>
       <div>
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        <p className="text-xs text-slate-500">{desc}</p>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground">{desc}</p>
       </div>
     </Link>
   );

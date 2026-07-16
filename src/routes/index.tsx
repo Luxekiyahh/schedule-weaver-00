@@ -114,31 +114,31 @@ function Nav() {
       className="sticky top-0 z-40 backdrop-blur-xl border-b border-[#33302A]/60"
       style={{ background: "rgba(10,9,11,0.75)" }}
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="relative w-9 h-9 rounded-[10px] bg-[#1A181C] border border-[#33302A] flex items-center justify-center shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] group-hover:border-[#9C7A3C] transition">
-            <Signet className="w-5 h-5" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-3">
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 shrink-0">
+          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-[#1A181C] border border-[#33302A] flex items-center justify-center shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] group-hover:border-[#9C7A3C] transition shrink-0">
+            <Signet className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <Wordmark />
+          <div className="hidden xs:block sm:block"><Wordmark /></div>
         </Link>
         <nav className="hidden md:flex items-center gap-9 text-[11px] uppercase tracking-[0.2em] text-[#9C9488]">
           <a href="#features" className="hover:text-[#F3EEE6] transition">Features</a>
           <a href="#dashboard" className="hover:text-[#F3EEE6] transition">Preview</a>
           <Link to="/pricing" className="hover:text-[#F3EEE6] transition">Pricing</Link>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <Link
             to="/login"
-            className="hidden sm:inline-flex px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-[#9C9488] hover:text-[#F3EEE6] transition rounded-md"
+            className="inline-flex items-center px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#9C9488] hover:text-[#F3EEE6] transition rounded-md whitespace-nowrap"
           >
             Sign In
           </Link>
           <Link
             to="/onboarding"
-            className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-[11px] uppercase tracking-[0.2em] font-bold text-[#0A090B] hover:brightness-110 transition"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.2em] font-bold text-[#0A090B] hover:brightness-110 transition whitespace-nowrap"
             style={{ background: "linear-gradient(to right, #E7C989, #C9A15A, #9C7A3C)" }}
           >
-            Get Started <ArrowRight className="w-3.5 h-3.5" />
+            Get Started <ArrowRight className="hidden sm:inline w-3.5 h-3.5" />
           </Link>
         </div>
       </div>

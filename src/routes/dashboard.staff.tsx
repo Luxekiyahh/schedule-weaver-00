@@ -67,27 +67,27 @@ function StaffPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-[1000px] px-6 py-6">
         <button
           onClick={() => navigate({ to: "/dashboard/home" })}
-          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" /> Back to Dashboard
         </button>
 
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-slate-900 text-white">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
               <Users className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wider text-slate-400">{workspaceName}</p>
-              <h1 className="text-lg font-semibold text-slate-900">Team &amp; Providers</h1>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">{workspaceName}</p>
+              <h1 className="text-lg font-semibold text-foreground">Team &amp; Providers</h1>
             </div>
           </div>
           <Button
-            className="bg-slate-900 hover:bg-slate-800"
+            className="bg-primary hover:bg-primary"
             onClick={() => toast.info("Invites coming soon")}
           >
             <UserPlus className="h-4 w-4" /> Invite provider
@@ -96,24 +96,24 @@ function StaffPage() {
 
         {loading ? (
           <div className="grid place-items-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : members.length === 0 ? (
-          <div className="rounded-2xl border bg-white p-10 text-center text-slate-500 shadow-sm">
+          <div className="rounded-2xl border bg-card p-10 text-center text-muted-foreground shadow-sm">
             No team members yet.
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {members.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 rounded-2xl border bg-white p-5 shadow-sm">
-                <UserCircle2 className="h-10 w-10 shrink-0 text-slate-300" />
+              <div key={m.id} className="flex items-center gap-3 rounded-2xl border bg-card p-5 shadow-sm">
+                <UserCircle2 className="h-10 w-10 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">
+                  <p className="truncate text-sm font-semibold text-foreground">
                     {m.profile?.full_name ?? m.profile?.email ?? "Member"}
                   </p>
-                  <p className="truncate text-xs text-slate-500">{m.profile?.email ?? "—"}</p>
+                  <p className="truncate text-xs text-muted-foreground">{m.profile?.email ?? "—"}</p>
                 </div>
-                <span className="ml-auto rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                <span className="ml-auto rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                   {m.role}
                 </span>
               </div>

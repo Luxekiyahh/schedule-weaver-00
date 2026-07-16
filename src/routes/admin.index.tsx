@@ -43,7 +43,7 @@ function OverviewBody() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-slate-400">
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
@@ -51,7 +51,7 @@ function OverviewBody() {
 
   const s = stats ?? {};
   const tiles = [
-    { label: "Total tenants", value: s.total_tenants ?? 0, icon: Users, color: "text-indigo-600" },
+    { label: "Total tenants", value: s.total_tenants ?? 0, icon: Users, color: "text-primary" },
     { label: "Suspended", value: s.suspended_tenants ?? 0, icon: Ban, color: "text-rose-600" },
     { label: "Bookings (7d)", value: s.bookings_7d ?? 0, icon: CalendarCheck, color: "text-emerald-600" },
     { label: "Bookings (30d)", value: s.bookings_30d ?? 0, icon: CalendarCheck, color: "text-emerald-600" },
@@ -61,13 +61,13 @@ function OverviewBody() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-slate-900">Overview</h1>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-foreground">Overview</h1>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {tiles.map((t) => (
-          <div key={t.label} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div key={t.label} className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <t.icon className={`h-5 w-5 ${t.color}`} />
-            <div className="mt-3 text-3xl font-semibold text-slate-900">{t.value}</div>
-            <div className="mt-1 text-sm text-slate-500">{t.label}</div>
+            <div className="mt-3 text-3xl font-semibold text-foreground">{t.value}</div>
+            <div className="mt-1 text-sm text-muted-foreground">{t.label}</div>
           </div>
         ))}
       </div>

@@ -151,7 +151,7 @@ function BillingPage() {
   const currentTier = sub.isActive ? sub.tier : null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <PaymentTestModeBanner />
       <div className="max-w-5xl mx-auto p-6 space-y-8">
         <div className="flex items-center justify-between">
@@ -202,18 +202,18 @@ function BillingPage() {
 
         {/* Billing period toggle */}
         <div className="flex justify-center">
-          <div className="inline-flex items-center rounded-full border border-slate-200 bg-white p-1 text-sm font-medium">
+          <div className="inline-flex items-center rounded-full border border-border bg-card p-1 text-sm font-medium">
             <button
               type="button"
               onClick={() => setPeriod("monthly")}
-              className={`rounded-full px-4 py-1.5 transition ${period === "monthly" ? "bg-[#141414] text-white" : "text-slate-600"}`}
+              className={`rounded-full px-4 py-1.5 transition ${period === "monthly" ? "bg-[#141414] text-primary-foreground" : "text-muted-foreground"}`}
             >
               Monthly
             </button>
             <button
               type="button"
               onClick={() => setPeriod("yearly")}
-              className={`rounded-full px-4 py-1.5 transition ${period === "yearly" ? "bg-[#141414] text-white" : "text-slate-600"}`}
+              className={`rounded-full px-4 py-1.5 transition ${period === "yearly" ? "bg-[#141414] text-primary-foreground" : "text-muted-foreground"}`}
             >
               Annual
               <span className={`ml-1.5 text-xs ${period === "yearly" ? "text-[#f8f7f4]/60" : "text-emerald-600"}`}>2 months free</span>
@@ -285,7 +285,7 @@ function BillingPage() {
           <Card className="border-[#141414]/20 bg-[#141414]/[0.04]">
             <CardContent className="pt-6 md:flex md:items-center md:justify-between md:gap-6">
               <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-[#141414] p-2.5 text-white shrink-0">
+                <div className="rounded-xl bg-[#141414] p-2.5 text-primary-foreground shrink-0">
                   <Wand2 className="h-5 w-5" />
                 </div>
                 <div>
