@@ -122,10 +122,27 @@ const serviceSchema = z.object({
   description: z.string().trim().max(1000).optional().default(""),
   durationMinutes: z.number().int().min(1).max(1440),
   priceCents: z.number().int().min(0).max(100_000_000),
+  categoryId: z.string().nullable().optional().default(null),
   options: z
     .array(z.object({ label: z.string().trim().max(120), price: z.number().min(0).max(1_000_000) }))
     .max(20)
     .default([]),
+  addOns: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(120),
+        priceCents: z.number().int().min(0).max(100_000_000),
+        durationMinutes: z.number().int().min(0).max(1440).default(0),
+      }),
+    )
+    .max(20)
+    .default([]),
+});
+
+const categorySchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().trim().min(1).max(120),
+  sort: z.number().int().min(0).max(200).default(0),
 });
 
 const completeSchema = z.object({
@@ -138,6 +155,7 @@ const completeSchema = z.object({
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   portfolioUrls: z.array(z.string().url()).max(9).default([]),
+  categories: z.array(categorySchema).max(20).default([]),
   services: z.array(serviceSchema).max(50).default([]),
   hours: z
     .array(
