@@ -1,87 +1,69 @@
-## Goal
+## 1. Lock the paywall bypass to takiyah472@gmail.com only
 
-Rework the /onboarding wizard so it matches the ProcSchedule "Horological precision" theme applied to the rest of the app, cuts friction (fewer / clearer steps), lets users step back at any point, and expands the Services step with Categories and Add-ons.
+Right now `isPlatformAdmin` returns true for anyone in the `platform_admins` table, and `dashboard.tsx` uses that flag to skip the paywall. That's broader than intended — any future admin (or an admin row added by mistake) would also bypass billing.
 
-## 1. Visual redesign (theme parity)
+**Change:** make the bypass a hard-coded email allowlist that is separate from platform-admin authority.
 
-- Rebuild the header/progress bar using semantic tokens (`bg-background`, `border-border`, `text-foreground`, `primary`) so it reads like the rest of the site instead of the generic purple/pink defaults still hardcoded in `initialWizard` (`primaryColor: "#6d28d9"`, `secondaryColor: "#ec4899"`).
-- Replace the segmented progress bars with a single slim horologe-style progress rail plus "Step X of N — {label}" so mobile isn't just unlabeled bars.
-- Card container: rounded-2xl, ink surface, subtle gold hairline border on active section; consistent with `/login` and `/dashboard`.
-- Default `primaryColor` / `secondaryColor` in `initialWizard` to the brand ink/gold pair so the LivePreview starts on-brand.
-- Tighten spacing on mobile (padding, typography scale, sticky action bar on small screens).
+- `src/lib/platform-admin.functions.ts` — add a new server fn `isBillingBypassed` (guarded by `requireSupabaseAuth`) that returns `{ bypassed: context.claims?.email?.toLowerCase() === "takiyah472@gmail.com" }`. Leave `isPlatformAdmin` alone so the /admin console still works for anyone in `platform_admins`.
+- `src/routes/dashboard.tsx` — replace the `isPlatformAdmin` call used for the paywall gate with `isBillingBypassed`. Rename local state `isAdmin`/`adminChecked` → `isBypassed`/`bypassChecked` so the flag can't accidentally be reused elsewhere. All other admin UI keeps using `isPlatformAdmin`.
 
-## 2. Always-available Back button
+Result: only the signed-in session whose Supabase JWT email is `takiyah472@gmail.com` skips the paywall. Rows in `platform_admins`, custom user metadata, spoofed `full_name`, etc. cannot trigger it.
 
-Current behavior: Back only appears on `step > 2`, and there is no way to leave step 2 back to step 1 or exit the flow.
+## 2. Upload ProcSchedule brand assets to the CDN
 
-- Add a persistent top-left Back control in the sticky header on every step:
-  - Step 1: "Back to home" → navigates to `/`.
-  - Step 2+: "Back" → previous step (already-account users still can't re-enter account creation — floor stays at step 2 when `hasAccount`).
-- Keep the existing bottom Back/Continue pair for steps 3–8, but move the sticky-top Back so it's reachable without scrolling on mobile.
-- Preview step (9): top Back returns to Intake; bottom action becomes "Publish".
+Upload the files from `/mnt/user-uploads/` via `lovable-assets create` and commit `.asset.json` pointers under `src/assets/brand/`:
 
-## 3. Simplify the flow (9 steps → 6)
+- `procschedule-logo-light.svg` → used on dark email header
+- `procschedule-logo-dark.svg` → used on light in-app surfaces (already themed, but pointer is useful)
+- `procschedule-icon-192.png` → square mark for email footer + favicons
+- `procschedule-favicon-32.png`, `procschedule-favicon-16.png`, `procschedule-icon-180.png` → wire into `src/routes/__root.tsx` `<link rel="icon"/apple-touch-icon>` head tags
 
-Merge closely-related steps so the wizard feels shorter without losing data:
-
-```text
-Old:  Account → Industry → Identity → Photos → Services → Hours → Policies → Intake → Preview
-New:  Account → Industry → Brand (Identity + Photos + colors)
-      → Services (Categories + Services + Add-ons)
-      → Availability (Hours + Location + Policies)
-      → Review & Publish (Intake shown inline, then Publish)
-```
-
-- Brand: name, tagline, bio, logo upload, photos, primary/secondary color, all in one scrollable card with subheadings.
-- Availability: weekly hours + location + policies (deposit, cancellation, grace, custom note) in one card.
-- Review & Publish: LivePreview promoted to full width, Intake questions collapsed by default ("Advanced: pre-booking questions"), single Publish CTA. Confetti + redirect unchanged.
-- Step labels shrink to 6, progress bar recalculated. Validation rules migrate 1:1 (industry required at step 2, business name required at Brand).
-
-## 4. Services step: Categories + Add-ons
-
-Extend `WizardState.services` and the Services step UI:
-
-### Data (wizard-config.ts)
-
+Emails cannot reference the `/__l5e/...` relative URL — they need absolute URLs. Add a small helper `src/lib/email-templates/brand.ts` exporting:
 ```ts
-type ServiceCategory = { id: string; name: string };
-type ServiceAddOn = {
-  id: string;
-  name: string;
-  price: string;      // dollars, string for the same input UX
-  duration: string;   // minutes as string, optional
+export const BRAND = {
+  logoLightUrl: "https://procschedule.com" + logoLight.url, // absolute
+  iconUrl: "https://procschedule.com" + icon192.url,
+  ink: "#141414",
+  gold: "#C9A961",   // pulled from the current theme accent
+  paper: "#ffffff",
+  muted: "#64748b",
+  supportEmail: "admin@procschedule.com",
 };
-type ServiceDraft = {
-  ...existing fields,
-  categoryId: string | null;
-  addOns: ServiceAddOn[];
-};
-type WizardState = { ...; categories: ServiceCategory[]; ... };
 ```
 
-Seed one default category from the picked industry (e.g. "Barber Services") so single-category users don't have to think about it. `emptyService` sets `categoryId` to the first category and `addOns: []`.
+## 3. Rebrand existing transactional templates
 
-### UI
+Update the three templates in `src/lib/email-templates/` so they share a common branded header/footer:
 
-- Top of Services step: "Categories" strip — chips per category, inline add/rename/delete, drag-to-reorder skipped for v1.
-- Services list is grouped under each category with an "Add service" button per group.
-- Each service card gets a new "Add-ons" section (below the existing size/tier "Options") with rows of {name, +$price, +min duration, delete} and an "+ Add-on" button. Existing `options` array kept as-is (used for variants/tiers).
-- Empty state: if the user leaves the default category alone, the UI still looks like a single flat list (category header hidden when only one exists and it hasn't been renamed).
+- `welcome.tsx`, `booking-confirmation.tsx`, `booking-alert.tsx`
+- Header band: ink `#141414` background, centered `<Img src={BRAND.logoLightUrl} width="180" alt="ProcSchedule" />`, gold underline rule
+- Body: keep white background, switch primary button + link colors to `BRAND.ink` with gold hover-equivalent border
+- Footer: small mark + "ProcSchedule · Booking, payments, and reminders for pros" + support email + unsubscribe placeholder that dispatcher already injects
 
-### Persistence (`src/lib/onboarding.functions.ts`)
+Extract the shared header/footer to `src/lib/email-templates/_layout.tsx` to avoid drift between templates.
 
-- Extend `serviceSchema` with `categoryId`, `addOns`.
-- On complete: create rows in `service_categories` for each wizard category (replacing the current "{industry} Services" auto-category). Map each service's `categoryId` to the created category id when writing `services` and `service_variants`.
-- Add-ons: persist as extra rows in `service_variants` under the same category, tagged with a `metadata`/naming convention like `"{Service} — {Add-on name}"` and their own price/duration, OR (preferred if the column exists) store them in a dedicated column. Confirm the storefront read path treats them as bookable extras. If no add-on schema exists, add a migration introducing `public.service_add_ons (id, workspace_id, service_id, name, price_cents, duration_min, sort_order, active)` with GRANTs + RLS following the project's role rules, and write to it here.
+## 4. Scaffold + brand auth emails
 
-## 5. Verification
+Currently no auth templates exist. In build mode:
+
+1. Call `email_domain--scaffold_auth_email_templates` (domain already verified — no setup dialog needed).
+2. Rewrite the six generated templates (`signup`, `magiclink`, `recovery`, `invite`, `email_change`, `reauthentication`) under `supabase/functions/_shared/email-templates/` to use the same `_layout.tsx`-style header/footer, ink + gold palette, and ProcSchedule logo (absolute URL, since edge-function templates ship separately from the app bundle — duplicate the small `BRAND` constants there).
+3. Keep template copy short and on-brand: subject lines start with "ProcSchedule —", CTA buttons use ink background, magic-link expiry note in muted gray.
+4. Deploy with `supabase--deploy_edge_functions function_names: ["auth-email-hook"]`.
+
+## 5. Favicons / head metadata
+
+`src/routes/__root.tsx` — replace any placeholder favicon links with the uploaded 16/32/180/192 assets and ensure `og:image` on the marketing home route uses `procschedule-icon-1024.png` (absolute URL).
+
+## 6. Verify
 
 - `bunx tsgo --noEmit` clean.
-- Manual walk-through in preview (mobile 390px + desktop): each step, Back at every step, category add/rename, service under category, add-on add/remove, publish completes and dashboard opens.
-- Confirm existing tenants who resume mid-onboarding still land on step 2 with their name prefilled.
+- Preview `/lovable/email/transactional/preview?template=welcome` and confirm the logo renders + colors match.
+- After deploy, trigger a test password reset from `/auth` and confirm the branded email lands.
+- Sign in as `takiyah472@gmail.com` → dashboard loads without paywall. Sign in as any other user (even a platform admin added to the table) → paywall behaves normally.
 
-## Out of scope
+## Technical notes
 
-- Reordering categories/services via drag.
-- Editing categories/add-ons from the dashboard (existing catalog page already handles categories; add-ons dashboard UI is a follow-up).
-- Any change to `/login`, `/admin`, `/dashboard` visuals — theme was set in the previous turn.
+- `context.claims.email` comes from the Supabase JWT, which is signed by Supabase Auth — it can't be spoofed by client code. Comparing lowercase is enough; no need to also check `email_confirmed_at` because Supabase only issues a JWT after confirmation for password/OAuth flows already in use here.
+- The gold accent `#C9A961` should be pulled from the actual `--brand-gold` token in `src/styles.css` when I open build mode, in case the palette was tweaked; the plan value is a placeholder.
+- Auth email templates live in `supabase/functions/_shared/email-templates/` (edge function bundle) — they cannot import from `src/`, so brand constants + logo URL are duplicated there intentionally.
