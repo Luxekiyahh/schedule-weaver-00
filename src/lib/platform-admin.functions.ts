@@ -24,6 +24,18 @@ export const isPlatformAdmin = createServerFn({ method: "GET" })
     return { isPlatformAdmin: data === true };
   });
 
+// Paywall bypass is intentionally restricted to a single, verified master
+// account email. It is *not* tied to platform_admins so future admins added
+// to that table cannot silently skip billing.
+const BILLING_BYPASS_EMAILS = new Set<string>(["takiyah472@gmail.com"]);
+
+export const isBillingBypassed = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const email = (context.claims?.email as string | undefined)?.toLowerCase() ?? "";
+    return { bypassed: email !== "" && BILLING_BYPASS_EMAILS.has(email) };
+  });
+
 // ---- Existing subdomain tooling -------------------------------------------
 
 export const listTenantDomains = createServerFn({ method: "GET" })
