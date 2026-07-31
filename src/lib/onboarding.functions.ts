@@ -222,6 +222,19 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
     const slug = await uniqueSlug(slugify(data.businessName), workspaceId);
 
+    // Merge booking-page background images into the existing theme_config
+    // (read-modify-write so no other theme keys get clobbered).
+    const { data: wsTheme } = await supabaseAdmin
+      .from("workspaces")
+      .select("theme_config")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    const theme_config = {
+      ...((wsTheme?.theme_config as Record<string, unknown> | null) ?? {}),
+      background_image_url: data.backgroundUrl ?? null,
+      slot_background_image_url: data.slotBgUrl ?? null,
+    };
+
     // 1. Workspace fields
     const { error: updErr } = await supabaseAdmin
       .from("workspaces")
@@ -237,6 +250,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         business_phone: data.businessPhone || null,
         business_email: data.businessEmail || null,
         business_website: data.businessWebsite || null,
+        theme_config,
       })
       .eq("id", workspaceId);
     if (updErr) throw new Error(updErr.message);
