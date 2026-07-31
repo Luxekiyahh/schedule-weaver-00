@@ -327,8 +327,10 @@ export function AlluringDollsBookingFlow({
               We just texted {form.phone || "your phone"}. Reply <strong>YES</strong> (with the code in the message) to confirm your appointment. A confirmation email will go to {form.email} once confirmed.
             </p>
             <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--ad-smoke)" }}>
-              A $25 non-refundable deposit secures your spot — remaining balance is cash only. Come
-              with hair completely blown out, dry &amp; product-free. You're allowed 15 minutes
+              {depositRequired
+                ? "A $25 non-refundable deposit secures your spot — remaining balance is cash only. "
+                : ""}
+              Come with hair completely blown out, dry &amp; product-free. You're allowed 15 minutes
               grace; after that the appointment may be rescheduled or canceled.
             </p>
           </motion.div>
@@ -673,7 +675,7 @@ export function AlluringDollsBookingFlow({
                     >
                       {depositRequired
                         ? "A deposit is required now to hold this appointment; the remaining balance is due at your visit."
-                        : "A $25 non-refundable deposit is required to hold this appointment; remaining balance is cash only."}
+                        : "Payment is due at your appointment; cash only."}
                     </div>
                   </div>
 
