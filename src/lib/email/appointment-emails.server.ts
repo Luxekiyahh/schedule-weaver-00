@@ -124,34 +124,10 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
     );
   }
 
-  if (prefs.client_sms && customer.phone) {
-    tasks.push(
-      (async () => {
-        try {
-          const { sendSms, buildConfirmationSms } = await import("@/lib/sms/twilio.server");
-          await sendSms({
-            to: customer.phone!,
-            body: buildConfirmationSms({
-              businessName: workspace.name,
-              firstName,
-              serviceName: service.name,
-              dateLabel,
-              timeLabel,
-              priceLabel,
-              addOns,
-              notes: cleanNotes,
-              businessAddress: workspace.business_address ?? "",
-              businessPhone: workspace.business_phone ?? "",
-              businessEmail: workspace.business_email ?? "",
-              businessWebsite: workspace.business_website ?? "",
-            }),
-          });
-        } catch (err) {
-          console.error("[appointment-emails] SMS send failed", err);
-        }
-      })(),
-    );
-  }
+  // NOTE: confirmation SMS is handled separately by
+  // sendBookingConfirmedSms (src/lib/sms/booking-sms.server.ts), which is
+  // invoked by the callers of this function. SMS is Pro/Enterprise-gated and
+  // logged to sms_send_log there — do not re-add an inline send here.
 
   await Promise.allSettled(tasks);
 }

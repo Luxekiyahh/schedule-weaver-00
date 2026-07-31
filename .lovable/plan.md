@@ -1,69 +1,42 @@
-## 1. Lock the paywall bypass to takiyah472@gmail.com only
+# SMS Workflow for Pro Plans — Fix Coverage, Gate to Pro, Test Live
 
-Right now `isPlatformAdmin` returns true for anyone in the `platform_admins` table, and `dashboard.tsx` uses that flag to skip the paywall. That's broader than intended — any future admin (or an admin row added by mistake) would also bypass billing.
+## Why texts aren't going out today
 
-**Change:** make the bypass a hard-coded email allowlist that is separate from platform-admin authority.
+- The booking SMS (client YES/NO text + owner alert) only fires on the **free booking** path (`createBooking`). Alluring Dolls — the only Pro tenant — takes **$25 Square deposits (live mode)**, and both deposit-confirmation paths (`confirmDepositBooking` for Stripe, `confirmSquareDepositBooking` for Square) send **emails only, never SMS**. Result: `sms_send_log` has zero rows and no Pro customer or owner has ever received a booking text.
+- SMS is currently **ungated** — every plan would get it. Per your decision, booking SMS becomes a **Pro/Enterprise-only** feature.
+- The YES/NO inbound endpoint exists (`/api/public/sms/inbound`), but we can't tell from here whether the Twilio number's webhook URL points at it.
 
-- `src/lib/platform-admin.functions.ts` — add a new server fn `isBillingBypassed` (guarded by `requireSupabaseAuth`) that returns `{ bypassed: context.claims?.email?.toLowerCase() === "takiyah472@gmail.com" }`. Leave `isPlatformAdmin` alone so the /admin console still works for anyone in `platform_admins`.
-- `src/routes/dashboard.tsx` — replace the `isPlatformAdmin` call used for the paywall gate with `isBillingBypassed`. Rename local state `isAdmin`/`adminChecked` → `isBypassed`/`bypassChecked` so the flag can't accidentally be reused elsewhere. All other admin UI keeps using `isPlatformAdmin`.
+## Phase 1 — Code fixes
 
-Result: only the signed-in session whose Supabase JWT email is `takiyah472@gmail.com` skips the paywall. Rows in `platform_admins`, custom user metadata, spoofed `full_name`, etc. cannot trigger it.
+1. **Plan gating (migration)**: extend the `workspace_has_feature(uuid, text, text)` database function with a new `sms_booking_confirmations` feature that returns true only for `pro`/`enterprise` subscriptions (matching the workspace's environment).
+2. **`src/lib/sms/booking-sms.server.ts`**:
+   - Add a plan gate at the top of the SMS sender: workspaces without the feature get no SMS, and a `sms_send_log` row with status `skipped` (reason recorded) is written so skips are visible in the admin console.
+   - Honor the tenant's existing `client_sms` notification toggle (skip the client text only if they switched it off; owner alert still sends).
+   - Add `sendBookingConfirmedSms(appointmentId)`: client gets a "your appointment is confirmed" text (service, date/time, price, business address — no YES/NO, since payment already confirms it) and the owner gets a "New booking confirmed" alert.
+3. **`src/lib/sms/twilio.server.ts`**: parameterize the owner-alert first line ("awaiting client confirmation" vs "confirmed").
+4. **`src/lib/booking.functions.ts`**: call `sendBookingConfirmedSms` (best-effort, alongside the existing email dispatch) in both `confirmDepositBooking` (Stripe) and `confirmSquareDepositBooking` (Square).
+5. **Twilio webhook visibility/auto-fix**: new admin server function that reads the Twilio number's configured inbound SMS webhook via the Twilio API, reports it on `/admin/health`, and can set it to `https://procschedule.com/api/public/sms/inbound` if missing or wrong (one click, no console spelunking).
 
-## 2. Upload ProcSchedule brand assets to the CDN
+## Phase 2 — Preview verification
 
-Upload the files from `/mnt/user-uploads/` via `lovable-assets create` and commit `.asset.json` pointers under `src/assets/brand/`:
+- Build/typecheck passes.
+- Gating check: Kandii Krowns (Basic) SMS is skipped + logged; Alluring Dolls (Pro) is eligible.
 
-- `procschedule-logo-light.svg` → used on dark email header
-- `procschedule-logo-dark.svg` → used on light in-app surfaces (already themed, but pointer is useful)
-- `procschedule-icon-192.png` → square mark for email footer + favicons
-- `procschedule-favicon-32.png`, `procschedule-favicon-16.png`, `procschedule-icon-180.png` → wire into `src/routes/__root.tsx` `<link rel="icon"/apple-touch-icon>` head tags
+## Phase 3 — Publish + live end-to-end test on Alluring Dolls
 
-Emails cannot reference the `/__l5e/...` relative URL — they need absolute URLs. Add a small helper `src/lib/email-templates/brand.ts` exporting:
-```ts
-export const BRAND = {
-  logoLightUrl: "https://procschedule.com" + logoLight.url, // absolute
-  iconUrl: "https://procschedule.com" + icon192.url,
-  ink: "#141414",
-  gold: "#C9A961",   // pulled from the current theme accent
-  paper: "#ffffff",
-  muted: "#64748b",
-  supportEmail: "admin@procschedule.com",
-};
-```
+1. Publish the app so `procschedule.com` runs the fix.
+2. Verify/auto-set the Twilio inbound webhook (step 5 above).
+3. Send a connectivity test SMS to your number **561-905-7383**.
+4. Create a **real test booking** on the live Alluring Dolls storefront with your number as the client phone → expect: client "thank you for booking… reply YES <code>" text to you, owner alert to **561-975-8519**, and matching `sms_send_log` rows with Twilio SIDs.
+5. **Reply YES** from your phone → appointment flips to `confirmed`, confirmation email fires, and you get the "confirmed" reply text.
+6. Deposit path: skip the real $25 charge — instead invoke the new confirmed-SMS sender directly on the test appointment and verify delivery/content, which is the exact code path Square confirmation will now call.
+7. Negative test: trigger a booking SMS on Kandii Krowns (Basic) → confirm it is skipped and logged as such.
+8. Cleanup: cancel the test appointment and confirm nothing else was disturbed.
 
-## 3. Rebrand existing transactional templates
+## Technical details
 
-Update the three templates in `src/lib/email-templates/` so they share a common branded header/footer:
-
-- `welcome.tsx`, `booking-confirmation.tsx`, `booking-alert.tsx`
-- Header band: ink `#141414` background, centered `<Img src={BRAND.logoLightUrl} width="180" alt="ProcSchedule" />`, gold underline rule
-- Body: keep white background, switch primary button + link colors to `BRAND.ink` with gold hover-equivalent border
-- Footer: small mark + "ProcSchedule · Booking, payments, and reminders for pros" + support email + unsubscribe placeholder that dispatcher already injects
-
-Extract the shared header/footer to `src/lib/email-templates/_layout.tsx` to avoid drift between templates.
-
-## 4. Scaffold + brand auth emails
-
-Currently no auth templates exist. In build mode:
-
-1. Call `email_domain--scaffold_auth_email_templates` (domain already verified — no setup dialog needed).
-2. Rewrite the six generated templates (`signup`, `magiclink`, `recovery`, `invite`, `email_change`, `reauthentication`) under `supabase/functions/_shared/email-templates/` to use the same `_layout.tsx`-style header/footer, ink + gold palette, and ProcSchedule logo (absolute URL, since edge-function templates ship separately from the app bundle — duplicate the small `BRAND` constants there).
-3. Keep template copy short and on-brand: subject lines start with "ProcSchedule —", CTA buttons use ink background, magic-link expiry note in muted gray.
-4. Deploy with `supabase--deploy_edge_functions function_names: ["auth-email-hook"]`.
-
-## 5. Favicons / head metadata
-
-`src/routes/__root.tsx` — replace any placeholder favicon links with the uploaded 16/32/180/192 assets and ensure `og:image` on the marketing home route uses `procschedule-icon-1024.png` (absolute URL).
-
-## 6. Verify
-
-- `bunx tsgo --noEmit` clean.
-- Preview `/lovable/email/transactional/preview?template=welcome` and confirm the logo renders + colors match.
-- After deploy, trigger a test password reset from `/auth` and confirm the branded email lands.
-- Sign in as `takiyah472@gmail.com` → dashboard loads without paywall. Sign in as any other user (even a platform admin added to the table) → paywall behaves normally.
-
-## Technical notes
-
-- `context.claims.email` comes from the Supabase JWT, which is signed by Supabase Auth — it can't be spoofed by client code. Comparing lowercase is enough; no need to also check `email_confirmed_at` because Supabase only issues a JWT after confirmation for password/OAuth flows already in use here.
-- The gold accent `#C9A961` should be pulled from the actual `--brand-gold` token in `src/styles.css` when I open build mode, in case the palette was tweaked; the plan value is a placeholder.
-- Auth email templates live in `supabase/functions/_shared/email-templates/` (edge function bundle) — they cannot import from `src/`, so brand constants + logo URL are duplicated there intentionally.
+- Migration: `CREATE OR REPLACE FUNCTION public.workspace_has_feature(uuid, text, text)` adding `WHEN 'sms_booking_confirmations' THEN s.plan_tier IN ('pro','enterprise')` (grants preserved on replace).
+- Gate + skip logging live in `booking-sms.server.ts` (single choke point used by both the free and deposit paths).
+- No new secrets needed — `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` are already configured.
+- All SMS sends remain best-effort: a Twilio failure never blocks a booking or a payment confirmation.
+- Test touches one live tenant (Alluring Dolls) as approved; test appointment is cancelled afterward.

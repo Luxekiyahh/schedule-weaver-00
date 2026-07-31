@@ -61,9 +61,19 @@ export const Route = createFileRoute("/api/public/appointment-confirmation")({
             "@/lib/email/appointment-emails.server"
           );
           await sendAppointmentEmails(appt.id);
+        } catch (err) {
+          console.error("[appointment-confirmation] email failed", err);
+          return Response.json({ ok: false, error: String(err) }, { status: 200 });
+        }
+
+        try {
+          const { sendBookingConfirmedSms } = await import(
+            "@/lib/sms/booking-sms.server"
+          );
+          await sendBookingConfirmedSms(appt.id);
           return Response.json({ ok: true });
         } catch (err) {
-          console.error("[appointment-confirmation] failed", err);
+          console.error("[appointment-confirmation] sms failed", err);
           return Response.json({ ok: false, error: String(err) }, { status: 200 });
         }
       },

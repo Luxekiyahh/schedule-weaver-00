@@ -104,16 +104,20 @@ export function buildBookingRequestSms(d: {
 }
 
 // Builds the new-booking alert SMS sent to the business owner/tenant.
-export function buildOwnerAlertSms(d: {
-  businessName?: string;
-  customerName?: string;
-  customerPhone?: string;
-  serviceName?: string;
-  dateLabel?: string;
-  timeLabel?: string;
-}): string {
+export function buildOwnerAlertSms(
+  d: {
+    businessName?: string;
+    customerName?: string;
+    customerPhone?: string;
+    serviceName?: string;
+    dateLabel?: string;
+    timeLabel?: string;
+  },
+  opts?: { confirmed?: boolean },
+): string {
   const lines: string[] = [];
-  lines.push(`New booking${d.businessName ? ` at ${d.businessName}` : ""} (awaiting client confirmation):`);
+  const state = opts?.confirmed ? "confirmed" : "awaiting client confirmation";
+  lines.push(`New booking${d.businessName ? ` at ${d.businessName}` : ""} (${state}):`);
   if (d.customerName) lines.push(`Client: ${d.customerName}`);
   if (d.customerPhone) lines.push(`Phone: ${d.customerPhone}`);
   if (d.serviceName) lines.push(`Service: ${d.serviceName}`);

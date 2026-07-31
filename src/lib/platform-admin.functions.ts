@@ -550,20 +550,29 @@ export const getSystemHealth = createServerFn({ method: "GET" })
       stripeError = e instanceof Error ? e.message : String(e);
     }
 
-    // Live Twilio: recent messages with failed/undelivered status.
+    // Live Twilio: recent messages with failed/undelivered status, plus the
+    // inbound SMS webhook config on our sending number (YES/NO replies).
     let twilioFailed: any[] = [];
     let twilioError: string | null = null;
+    let twilioNumber: { phoneNumber: string; smsUrl: string | null } | null = null;
     try {
       const sid = process.env.TWILIO_ACCOUNT_SID;
       const token = process.env.TWILIO_AUTH_TOKEN;
+      const fromNumber = process.env.TWILIO_PHONE_NUMBER;
       if (sid && token) {
         const auth = Buffer.from(`${sid}:${token}`).toString("base64");
-        const res = await fetch(
-          `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json?PageSize=50`,
-          { headers: { Authorization: `Basic ${auth}` } },
-        );
-        if (res.ok) {
-          const body = (await res.json()) as { messages?: any[] };
+        const [msgRes, numRes] = await Promise.all([
+          fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json?PageSize=50`,
+            { headers: { Authorization: `Basic ${auth}` } },
+          ),
+          fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers.json?PageSize=50`,
+            { headers: { Authorization: `Basic ${auth}` } },
+          ),
+        ]);
+        if (msgRes.ok) {
+          const body = (await msgRes.json()) as { messages?: any[] };
           twilioFailed = (body.messages ?? [])
             .filter((m) => m.status === "failed" || m.status === "undelivered")
             .map((m) => ({
@@ -574,7 +583,19 @@ export const getSystemHealth = createServerFn({ method: "GET" })
               date_sent: m.date_sent,
             }));
         } else {
-          twilioError = `Twilio API ${res.status}`;
+          twilioError = `Twilio API ${msgRes.status}`;
+        }
+        if (numRes.ok) {
+          const body = (await numRes.json()) as { incoming_phone_numbers?: any[] };
+          const nums = body.incoming_phone_numbers ?? [];
+          const ours =
+            nums.find((n) => n.phone_number === fromNumber) ?? nums[0] ?? null;
+          if (ours) {
+            twilioNumber = {
+              phoneNumber: ours.phone_number,
+              smsUrl: ours.sms_url ?? null,
+            };
+          }
         }
       }
     } catch (e) {
@@ -585,7 +606,71 @@ export const getSystemHealth = createServerFn({ method: "GET" })
       stats: statsRes.data ?? null,
       cron: cronRes.data ?? [],
       stripe: { failedCharges: stripeFailedCharges, pastDueSubscriptions: subsRes.data ?? [], error: stripeError },
-      twilio: { failed: twilioFailed, recentFailedLogs: smsRes.data ?? [], error: twilioError },
+      twilio: {
+        failed: twilioFailed,
+        recentFailedLogs: smsRes.data ?? [],
+        error: twilioError,
+        number: twilioNumber,
+        expectedSmsUrl: TWILIO_INBOUND_WEBHOOK_URL,
+      },
       email: { recentFailures: emailRes.data ?? [] },
     };
+  });
+
+// Canonical inbound SMS webhook (YES/NO replies). Uses the stable production
+// URL so it survives project renames and does not depend on the custom domain.
+const TWILIO_INBOUND_WEBHOOK_URL =
+  "https://project--b242ffaf-aba9-404d-ae2f-439da5daa84a.lovable.app/api/public/sms/inbound";
+
+/** Points the Twilio sending number's inbound SMS webhook at our handler. */
+export const fixTwilioSmsWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertPlatformAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const sid = process.env.TWILIO_ACCOUNT_SID;
+    const token = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+    if (!sid || !token || !fromNumber) {
+      throw new Error("Twilio is not configured.");
+    }
+    const auth = Buffer.from(`${sid}:${token}`).toString("base64");
+
+    const listRes = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers.json?PageSize=50`,
+      { headers: { Authorization: `Basic ${auth}` } },
+    );
+    if (!listRes.ok) throw new Error(`Twilio API ${listRes.status} listing numbers`);
+    const listBody = (await listRes.json()) as { incoming_phone_numbers?: any[] };
+    const ours = (listBody.incoming_phone_numbers ?? []).find(
+      (n) => n.phone_number === fromNumber,
+    );
+    if (!ours) throw new Error(`Twilio number ${fromNumber} not found on the account.`);
+
+    const updateRes = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers/${ours.sid}.json`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${auth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          SmsUrl: TWILIO_INBOUND_WEBHOOK_URL,
+          SmsMethod: "POST",
+        }).toString(),
+      },
+    );
+    if (!updateRes.ok) {
+      const errBody = await updateRes.text();
+      throw new Error(`Twilio API ${updateRes.status}: ${errBody}`);
+    }
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      actor_id: context.userId,
+      action: "fix_twilio_sms_webhook",
+      detail: { phone_number: fromNumber, sms_url: TWILIO_INBOUND_WEBHOOK_URL },
+    });
+    return { ok: true, smsUrl: TWILIO_INBOUND_WEBHOOK_URL };
   });
