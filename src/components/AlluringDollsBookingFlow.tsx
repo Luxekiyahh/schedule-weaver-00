@@ -457,6 +457,12 @@ export function AlluringDollsBookingFlow({
                     onSelect={setSelectedDate}
                   />
                   <div className="mt-6">
+                    <div
+                      className={slotBackgroundUrl ? "relative overflow-hidden rounded-2xl p-4" : undefined}
+                      style={slotBackgroundUrl ? { backgroundImage: `url(${slotBackgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+                    >
+                      {slotBackgroundUrl && <div aria-hidden className="absolute inset-0 bg-black/55" />}
+                      <div className="relative">
                     {!selectedDate ? (
                       <p className="text-sm" style={{ color: "var(--ad-smoke)" }}>
                         Select a date to see open times.
@@ -494,6 +500,8 @@ export function AlluringDollsBookingFlow({
                         })}
                       </div>
                     )}
+                      </div>
+                    </div>
                   </div>
                   <AdFooterNav
                     onBack={() => setStep(2)}
