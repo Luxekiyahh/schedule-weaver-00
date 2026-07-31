@@ -173,7 +173,56 @@ export const saveBusinessInfo = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Read the booking-page background images for the design page. */
+export const getBookingDesign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertMember(context.userId, data.workspaceId);
+    const { data: ws } = await supabaseAdmin
+      .from("workspaces")
+      .select("theme_config, slug")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    const tc = (ws?.theme_config as Record<string, unknown> | null) ?? {};
+    return {
+      slug: ws?.slug ?? "",
+      backgroundUrl: typeof tc.background_image_url === "string" ? tc.background_image_url : null,
+      slotBackgroundUrl: typeof tc.slot_background_image_url === "string" ? tc.slot_background_image_url : null,
+    };
+  });
 
+/** Save booking-page background images into theme_config (merge, don't clobber). */
+export const updateBookingDesign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        backgroundUrl: z.string().url().nullable(),
+        slotBackgroundUrl: z.string().url().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.userId, data.workspaceId);
+    const { data: ws } = await supabaseAdmin
+      .from("workspaces")
+      .select("theme_config")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    const theme_config = {
+      ...((ws?.theme_config as Record<string, unknown> | null) ?? {}),
+      background_image_url: data.backgroundUrl,
+      slot_background_image_url: data.slotBackgroundUrl,
+    };
+    const { error } = await supabaseAdmin
+      .from("workspaces")
+      .update({ theme_config })
+      .eq("id", data.workspaceId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
 
 async function seedDolliimarie(workspaceId: string, userId: string) {
   // Skip if already seeded.
