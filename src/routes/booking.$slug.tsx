@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { normalizeTheme, fontClass, cardRadius, layoutPadding } from "@/lib/theme";
+import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
 import { AlluringDollsBookingFlow } from "@/components/AlluringDollsBookingFlow";
 
 export const Route = createFileRoute("/booking/$slug")({
@@ -582,11 +583,22 @@ function BookingPage() {
                         type="tel"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        onBlur={() => {
+                          const e164 = normalizePhoneToE164(form.phone);
+                          if (e164 && e164 !== form.phone) setForm({ ...form, phone: e164 });
+                        }}
                         placeholder="e.g. (555) 123-4567"
+                        aria-invalid={Boolean(form.phone.trim()) && !isValidPhoneNumber(form.phone)}
                       />
-                      <p className="mt-1 text-xs text-slate-500">
-                        We'll text you to confirm — reply YES to confirm or NO to cancel.
-                      </p>
+                      {form.phone.trim() && !isValidPhoneNumber(form.phone) ? (
+                        <p className="mt-1 text-xs text-red-500">
+                          Enter a valid mobile number, e.g. (555) 123-4567 or +1 555 123 4567.
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-slate-500">
+                          We'll text you to confirm — reply YES to confirm or NO to cancel.
+                        </p>
+                      )}
                     </Field>
                   </div>
                   <div className="sm:col-span-2">
@@ -663,7 +675,7 @@ function BookingPage() {
                   <Button
                     style={{ backgroundColor: primary }}
                     className="text-white hover:opacity-90"
-                    disabled={submitting || !form.firstName || !form.lastName || !form.email || !form.phone || !selectedSlot || !service}
+                    disabled={submitting || !form.firstName || !form.lastName || !form.email || !isValidPhoneNumber(form.phone) || !selectedSlot || !service}
                     onClick={handleSubmit}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}

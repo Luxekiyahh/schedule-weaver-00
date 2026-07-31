@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
 
 /**
  * ALLURING DOLLS — bespoke booking-flow skin.
@@ -531,8 +532,18 @@ export function AlluringDollsBookingFlow({
                           type="tel"
                           value={form.phone}
                           onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          onBlur={() => {
+                            const e164 = normalizePhoneToE164(form.phone);
+                            if (e164 && e164 !== form.phone) setForm({ ...form, phone: e164 });
+                          }}
                           placeholder="e.g. (555) 123-4567"
+                          aria-invalid={Boolean(form.phone.trim()) && !isValidPhoneNumber(form.phone)}
                         />
+                        {Boolean(form.phone.trim()) && !isValidPhoneNumber(form.phone) && (
+                          <p className="mt-1 text-xs text-red-400">
+                            Enter a valid mobile number, e.g. (555) 123-4567 or +1 555 123 4567.
+                          </p>
+                        )}
                       </AdField>
                     </div>
                     <div className="sm:col-span-2">
@@ -695,7 +706,7 @@ export function AlluringDollsBookingFlow({
                         !form.firstName ||
                         !form.lastName ||
                         !form.email ||
-                        !form.phone ||
+                        !isValidPhoneNumber(form.phone) ||
                         !selectedSlot ||
                         !service
                       }
