@@ -105,11 +105,18 @@ export const Route = createFileRoute("/api/public/sms/inbound")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // Find the customer(s) with this phone.
-        const { data: customers } = await supabaseAdmin
-          .from("customers")
-          .select("id")
-          .in("phone", phoneVariants(from));
+        // Find the customer(s) with this phone. Stored numbers may be
+        // formatted ("(561) 905-7383"), so compare digit-normalized values
+        // via a security-definer RPC (service_role only).
+        const fromDigits = from.replace(/\D/g, "");
+        const localDigits =
+          fromDigits.length === 11 && fromDigits.startsWith("1")
+            ? fromDigits.slice(1)
+            : fromDigits;
+        const { data: customers } = await supabaseAdmin.rpc(
+          "find_customers_by_phone",
+          { _digits: localDigits },
+        );
         const customerIds = (customers ?? []).map((c) => c.id);
         if (!customerIds.length) {
           return twiml("We couldn't find a matching appointment for this number.");
