@@ -1,41 +1,64 @@
-# Enforce Strict SMS Sequence: Pending → YES/NO Text → Wait → YES → Confirmation Text
+# Booking-page background images (onboarding + dashboard design page)
 
-## Root cause (verified in code)
+Let tenants upload two images — a **main background** for the whole booking site and a **background for the time-slots section** — both during onboarding and later from a new dashboard Design page. Both render edge-to-edge at any screen size on the public booking page.
 
-- `createBooking` (`src/lib/booking.functions.ts:369`) already does Step 1 right: inserts the appointment as `pending` and sends **only** the pre-confirmation YES/NO text (`sendBookingSms`) plus the owner alert.
-- **The break is at Step 3**: the YES-reply handler (`src/routes/api/public/sms/inbound.ts:157-171`) flips the appointment to `confirmed` and sends the confirmation **emails**, but never calls `sendBookingConfirmedSms` — so the full confirmation text (service, date/time, price, business address) and the owner "confirmed" alert never fire after a YES. The client only gets a short auto-reply ("Your appointment is confirmed. See you soon!").
-- The confirmation texts you already received came from the confirmed-path (`sendBookingConfirmedSms` via the appointment webhook / direct test invocation) firing **without** any YES gate — which is why messages arrived out of order.
+No database migration needed: both URLs live in the existing `workspaces.theme_config` JSONB column, which the booking page already reads.
 
-## Plan
+## 1. Storage & data model
 
-### 1. Code fix — gate the confirmation SMS behind the YES reply
-In `src/routes/api/public/sms/inbound.ts`, YES branch only:
-- After updating status to `confirmed`, call `sendBookingConfirmedSms(appointmentId)` (dynamic import, best-effort — same pattern as the email call beside it). This sends:
-  - Client: the full confirmation text — service, date, time, price, add-ons, business address (Pro-gated, honors the tenant's client_sms toggle).
-  - Owner: the "confirmed" alert text.
-- NO branch stays as-is (cancel + free the slot). No pending appointment → "no appointment awaiting confirmation" reply, so duplicate YES replies can't double-send.
-- No changes to the pending insert or the pre-confirmation text — Step 1 already behaves correctly.
+**`src/lib/theme.ts`** — extend `ThemeConfig` with two optional fields:
+- `background_image_url?: string`
+- `slot_background_image_url?: string`
 
-### 2. Reset the Alluring Dolls test data
-- Appointment `0f1aa144-daf8-4236-b428-40ac02fd0e0e` (DeAsia Holmes, Aug 8): status → `pending`, clear `cancelled_at`/`cancelled_by`. Its YES/NO code is **0F1AA1**.
-- Appointment `55c63612-931c-41ed-8af1-6c4d3acbcc72` (duplicate pending for the same phone): status → `cancelled`, so exactly one pending booking exists for that number and the YES test is unambiguous.
+`normalizeTheme` already spreads, so the values pass through; the booking page's `getBookingWorkspace` query already selects `theme_config`, so no read-path changes.
 
-### 3. Verify the Twilio inbound webhook
-Check the Twilio tile on `/admin/health` — the number's SMS webhook must point to the production inbound handler (`…/api/public/sms/inbound`). If not, run **Fix now** (`fixTwilioSmsWebhook`). Without this, YES/NO replies never reach the app.
+**`src/lib/onboarding.functions.ts`** — extend the `uploadOnboardingImage` `kind` enum with `"background"` and `"slot-background"` (reuses the existing `branding` storage bucket, owner verification, and 5 MB limit). Extend `completeOnboarding` to merge both URLs into `workspaces.theme_config` via read-modify-write so no existing theme keys get clobbered.
 
-### 4. End-to-end test of the strict sequence
-1. Trigger `sendBookingSms` for the reset appointment → verify the client (+1 561 905-7383) receives **only** the YES/NO pre-confirmation text (with code 0F1AA1, appointment details, business address) and the owner (+1 561 975-8519) gets the "awaiting confirmation" alert. Confirm `sms_send_log` shows delivered — this also re-validates that the trial-mode failures from 18:07 UTC are resolved.
-2. You reply **YES 0F1AA1** (or plain YES — only one pending) from the client phone. Fallback: I simulate a properly Twilio-signed POST to the inbound webhook.
-3. Verify the full chain:
-   - Appointment flips `pending` → `confirmed` in the database.
-   - Client receives the **final confirmation SMS** (new gated path) and the confirmation email.
-   - Owner receives the "confirmed" alert.
-   - `sms_send_log` shows all delivered, in the right order (booking_request → client_confirmed → owner_alert).
-4. Open the Alluring Dolls dashboard calendar and confirm the Aug 8 appointment displays as confirmed (pending before the YES, confirmed after).
-5. Cleanup: cancel/remove the test appointment afterward if you want it off the live calendar.
+## 2. Onboarding wizard — Step 3 "Your brand"
 
-## Technical details
-- Files changed: `src/routes/api/public/sms/inbound.ts` only (one dynamic import + one call in the YES branch).
-- Data changes: two UPDATEs on the two DeAsia Holmes test appointments — no schema changes, no migration.
-- Deposit/payment confirmation paths (`confirmDepositBooking`, `confirmSquareDepositBooking`) are untouched — payment-confirmed bookings intentionally skip YES/NO since payment is the confirmation.
-- Publish is required before the live test so `procschedule.com` runs the fixed inbound handler.
+**`src/components/onboarding/wizard-config.ts`** — add to `WizardState`/`initialWizard`: `backgroundDataUrl`, `backgroundUrl`, `slotBgDataUrl`, `slotBgUrl`.
+
+**`src/routes/onboarding.tsx`** (`StepBrand`) — new "Booking page backgrounds" section with two upload tiles, following the existing logo/portfolio pattern (upload → base64 → `uploadOnboardingImage` → local data-URL preview + CDN URL saved in wizard state):
+- **Main site background** — wide aspect-video tile previewing the image.
+- **Time-slots background** — tile previewing a mock time-slot grid over the image, so tenants see how times sit on it.
+- Each tile gets a remove button and uploading spinner, same as portfolio.
+
+**`src/components/onboarding/LivePreview.tsx`** — apply the page background image to the preview frame (`background-size: cover`, centered, with a dark scrim) so tenants see the effect live while picking.
+
+## 3. Booking page rendering — `src/routes/booking.$slug.tsx`
+
+- **Page wrapper**: when `background_image_url` is set, render it with `background-size: cover; background-position: center` (plus `background-attachment: fixed` on desktop for a stable, edge-to-edge fill) and a theme-aware scrim overlay (dark for dark themes, light for light themes) so text stays readable. Content card gets a solid/blurred background on top.
+- **Time-slots section (step 3)**: the chosen image sits **behind the whole slots section** — a rounded container with the image (cover, centered) and a subtle dark overlay so time buttons stay legible.
+- **"Wraps perfectly"**: cover + center guarantees the image fills its container at any aspect ratio or screen width with no distortion, tiling, or empty gaps.
+
+**`src/components/AlluringDollsBookingFlow.tsx`** — add optional `backgroundUrl` / `slotBackgroundUrl` props (passed from the booking route's `theme_config`) and apply the same treatment to its page wrapper and slot grid, so the luxury storefront variant behaves identically.
+
+## 4. Dashboard "Design" page for existing tenants
+
+**`src/routes/dashboard.customize.tsx`** — build out the current empty stub into a Booking page design screen:
+- Shows current background + slot-background images with previews.
+- Upload/replace/remove each image (reusing `uploadOnboardingImage` with the new kinds).
+- Saves via a new **`updateBookingDesign`** server function in `src/lib/tenant.functions.ts` (`requireSupabaseAuth`, verifies caller owns/admins the workspace, merges the two URLs into `theme_config`).
+- Proper `head()` metadata; wrapped in the existing `ThemeProvider` layout so it matches the ink-and-gold theme in both light and dark mode.
+
+**`src/routes/dashboard.home.tsx`** — add a "Design & backgrounds" ActionCard linking to `/dashboard/customize`.
+
+## 5. Verification
+
+- TypeScript check + production build pass.
+- Visual check in preview: booking page with/without images, slot-section overlay legibility, onboarding previews.
+
+## Files touched
+
+| File | Change |
+|---|---|
+| `src/lib/theme.ts` | New optional theme fields |
+| `src/lib/onboarding.functions.ts` | New upload kinds; persist URLs in `theme_config` |
+| `src/lib/tenant.functions.ts` | New `updateBookingDesign` server fn |
+| `src/components/onboarding/wizard-config.ts` | New wizard state fields |
+| `src/routes/onboarding.tsx` | Two background upload tiles in Step 3 |
+| `src/components/onboarding/LivePreview.tsx` | Background in live preview |
+| `src/routes/booking.$slug.tsx` | Page + slots-section background rendering |
+| `src/components/AlluringDollsBookingFlow.tsx` | Same rendering for the luxury flow |
+| `src/routes/dashboard.customize.tsx` | New tenant Design page |
+| `src/routes/dashboard.home.tsx` | New ActionCard link |
