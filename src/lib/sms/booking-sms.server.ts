@@ -1,59 +1,130 @@
 /**
  * Booking SMS orchestration.
  *
- * Fires after a booking is created (request/YES-NO flow) and after a booking
- * is confirmed by payment (deposit flows). Sends:
- *   1) a client text to the customer (request with YES/NO code, or a plain
- *      confirmation once paid), and
- *   2) an alert to the business owner's mobile (workspaces.notify_mobile,
- *      falling back to business_phone).
+ * Two flows:
+ *  - sendBookingSms: fires after a free booking is created. Client gets a
+ *    "thank you for booking" text with a YES/NO confirmation code; the owner
+ *    gets a new-booking alert.
+ *  - sendBookingConfirmedSms: fires when a booking becomes confirmed (deposit
+ *    payment, dashboard-created booking, etc.). Client gets a plain
+ *    confirmation text (no YES/NO — payment already confirmed); the owner
+ *    gets a confirmed alert.
  *
  * Booking SMS is a Pro/Enterprise feature — gated via the
- * `sms_booking_confirmations` flag in workspace_has_feature. Skipped sends
- * (plan gate or the tenant's client_sms toggle) are written to sms_send_log
- * with status "skipped" so they are visible in the admin console.
+ * `sms_booking_confirmations` flag in workspace_has_feature. The tenant's
+ * `client_sms` preference (workspaces.notification_settings jsonb) can disable
+ * the client text. Skipped sends are written to sms_send_log with status
+ * "skipped" so they are visible in the admin console.
  *
- * Never throws: SMS delivery must not break the booking flow.
+ * Server-only. Best-effort: never throws so booking/payment flows never break.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { logAndSendSms } from "@/lib/sms/log-and-send.server";
 import {
   buildBookingRequestSms,
   buildConfirmationSms,
   buildOwnerAlertSms,
-  formatDateLabel,
-  formatTimeLabel,
-  type BookingSmsDetails,
-} from "@/lib/sms/twilio.server";
+} from "./twilio.server";
+import { logAndSendSms } from "./log-and-send.server";
 
-type WorkspaceSmsContext = {
+type BookingContext = {
+  appointmentId: string;
+  workspaceId: string;
   workspaceName: string;
   ownerPhone: string | null;
-  timezone: string;
   clientSmsEnabled: boolean;
+  customerName: string;
+  firstName: string;
+  customerPhone: string | null;
+  serviceName: string;
+  dateLabel: string;
+  timeLabel: string;
+  priceLabel: string;
+  addOns: string;
+  businessAddress: string;
+  businessPhone: string;
+  businessEmail: string;
+  businessWebsite: string;
+  confirmCode: string;
 };
 
-async function loadWorkspaceContext(workspaceId: string): Promise<WorkspaceSmsContext | null> {
-  const [{ data: ws }, { data: notif }] = await Promise.all([
+async function loadBookingContext(appointmentId: string): Promise<BookingContext | null> {
+  const { data: appt } = await supabaseAdmin
+    .from("appointments")
+    .select("id, workspace_id, service_id, customer_id, start_at, end_at, notes")
+    .eq("id", appointmentId)
+    .maybeSingle();
+  if (!appt) return null;
+
+  const [customerRes, workspaceRes, serviceRes] = await Promise.all([
+    supabaseAdmin
+      .from("customers")
+      .select("full_name, phone")
+      .eq("id", appt.customer_id)
+      .maybeSingle(),
     supabaseAdmin
       .from("workspaces")
-      .select("name, notify_mobile, business_phone, timezone")
-      .eq("id", workspaceId)
+      .select(
+        "name, business_address, business_phone, business_email, business_website, notify_mobile, timezone, notification_settings",
+      )
+      .eq("id", appt.workspace_id)
       .maybeSingle(),
     supabaseAdmin
-      .from("notification_settings")
-      .select("client_sms")
-      .eq("workspace_id", workspaceId)
+      .from("services")
+      .select("name, price_cents, currency")
+      .eq("id", appt.service_id)
       .maybeSingle(),
   ]);
-  if (!ws) return null;
-  type Row = { name?: string; notify_mobile?: string | null; business_phone?: string | null; timezone?: string };
-  const row = ws as Row;
+
+  const customer = customerRes.data;
+  const workspace = workspaceRes.data;
+  const service = serviceRes.data;
+  if (!customer || !workspace || !service) return null;
+
+  const prefs = (workspace.notification_settings as Record<string, boolean> | null) ?? {};
+  const tz = workspace.timezone || "UTC";
+  const start = new Date(appt.start_at);
+  const end = new Date(appt.end_at);
+  const dateLabel = start.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: tz,
+  });
+  const timeLabel = `${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })} – ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })}`;
+  const priceLabel = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: service.currency || "USD",
+  }).format((service.price_cents || 0) / 100);
+
+  // Add-ons are appended to the appointment notes as "Add-ons: ..." by the
+  // booking flow; extract them for display.
+  let addOns = "";
+  const match = /Add-ons:\s*(.+)/i.exec(appt.notes ?? "");
+  if (match) addOns = match[1].trim();
+
   return {
-    workspaceName: row.name ?? "your business",
-    ownerPhone: row.notify_mobile ?? row.business_phone ?? null,
-    timezone: row.timezone ?? "UTC",
-    clientSmsEnabled: (notif as { client_sms?: boolean } | null)?.client_sms !== false,
+    appointmentId,
+    workspaceId: appt.workspace_id,
+    workspaceName: workspace.name,
+    // Owner alert target: dedicated notify mobile first, else business phone.
+    ownerPhone: workspace.notify_mobile || workspace.business_phone || null,
+    clientSmsEnabled: prefs.client_sms === true,
+    customerName: customer.full_name ?? "Customer",
+    firstName: customer.full_name?.split(" ")[0] ?? "there",
+    customerPhone: customer.phone ?? null,
+    serviceName: service.name,
+    dateLabel,
+    timeLabel,
+    priceLabel,
+    addOns,
+    businessAddress: workspace.business_address ?? "",
+    businessPhone: workspace.business_phone ?? "",
+    businessEmail: workspace.business_email ?? "",
+    businessWebsite: workspace.business_website ?? "",
+    // Short per-appointment code used by the YES/NO inbound webhook to scope
+    // the reply to THIS booking.
+    confirmCode: appointmentId.replace(/-/g, "").slice(0, 6).toUpperCase(),
   };
 }
 
@@ -73,7 +144,7 @@ async function isSmsEligible(workspaceId: string): Promise<boolean> {
 
 async function logSkipped(
   workspaceId: string,
-  toNumber: string | null,
+  to: string | null,
   body: string,
   purpose: string,
   reason: string,
@@ -81,7 +152,7 @@ async function logSkipped(
   try {
     await supabaseAdmin.from("sms_send_log").insert({
       workspace_id: workspaceId,
-      to_number: toNumber,
+      to_number: to,
       body,
       purpose,
       status: "skipped",
@@ -92,210 +163,134 @@ async function logSkipped(
   }
 }
 
-async function loadBookingDetails(appointmentId: string): Promise<BookingSmsDetails | null> {
-  const { data: appt } = await supabaseAdmin
-    .from("appointments")
-    .select("id, workspace_id, service_id, start_at, customers(full_name, phone, email), services(name, price_cents, currency)")
-    .eq("id", appointmentId)
-    .maybeSingle();
-  if (!appt) return null;
-
-  type ApptRow = {
-    workspace_id: string;
-    start_at: string;
-    customers?: { full_name?: string | null; phone?: string | null; email?: string | null } | null;
-    services?: { name?: string | null; price_cents?: number | null; currency?: string | null } | null;
-  };
-  const row = appt as unknown as ApptRow;
-
-  const { data: ws } = await supabaseAdmin
-    .from("workspaces")
-    .select("name, business_address")
-    .eq("id", row.workspace_id)
-    .maybeSingle();
-  type WsRow = { name?: string; business_address?: string | null };
-  const wsRow = (ws ?? {}) as WsRow;
-
-  const priceCents = row.services?.price_cents ?? null;
-  const currency = (row.services?.currency ?? "USD").toUpperCase();
-  const priceLabel =
-    priceCents != null
-      ? new Intl.NumberFormat("en-US", { style: "currency", currency }).format(priceCents / 100)
-      : null;
-
-  return {
-    appointmentId,
-    workspaceId: row.workspace_id,
-    businessName: wsRow.name ?? "your business",
-    customerName: row.customers?.full_name ?? "Customer",
-    customerPhone: row.customers?.phone ?? null,
-    customerEmail: row.customers?.email ?? null,
-    serviceName: row.services?.name ?? "Appointment",
-    startAt: row.start_at,
-    priceLabel,
-    businessAddress: wsRow.business_address ?? null,
-    // Short per-appointment code used by the YES/NO inbound webhook to scope
-    // the reply to THIS booking.
-    confirmCode: appointmentId.replace(/-/g, "").slice(0, 6).toUpperCase(),
-  };
+function requestSmsBody(ctx: BookingContext): string {
+  return buildBookingRequestSms({
+    businessName: ctx.workspaceName,
+    firstName: ctx.firstName,
+    serviceName: ctx.serviceName,
+    dateLabel: ctx.dateLabel,
+    timeLabel: ctx.timeLabel,
+    priceLabel: ctx.priceLabel,
+    addOns: ctx.addOns,
+    businessAddress: ctx.businessAddress,
+    confirmCode: ctx.confirmCode,
+  });
 }
 
-/**
- * Sends the booking-request texts (client YES/NO + owner alert) after a free
- * booking is created. Best-effort, never throws.
- */
-export async function sendBookingSms(appointmentId: string): Promise<void> {
+function confirmationSmsBody(ctx: BookingContext): string {
+  return buildConfirmationSms({
+    businessName: ctx.workspaceName,
+    firstName: ctx.firstName,
+    serviceName: ctx.serviceName,
+    dateLabel: ctx.dateLabel,
+    timeLabel: ctx.timeLabel,
+    priceLabel: ctx.priceLabel,
+    addOns: ctx.addOns,
+    businessAddress: ctx.businessAddress,
+    businessPhone: ctx.businessPhone,
+    businessEmail: ctx.businessEmail,
+    businessWebsite: ctx.businessWebsite,
+  });
+}
+
+function ownerAlertBody(ctx: BookingContext, confirmed: boolean): string {
+  return buildOwnerAlertSms(
+    {
+      businessName: ctx.workspaceName,
+      customerName: ctx.customerName,
+      customerPhone: ctx.customerPhone ?? "",
+      serviceName: ctx.serviceName,
+      dateLabel: ctx.dateLabel,
+      timeLabel: ctx.timeLabel,
+    },
+    { confirmed },
+  );
+}
+
+/** Shared client-text send honoring the tenant's client_sms toggle. */
+async function sendClientText(
+  ctx: BookingContext,
+  body: string,
+  purpose: string,
+): Promise<void> {
+  if (!ctx.customerPhone) return;
+  if (!ctx.clientSmsEnabled) {
+    await logSkipped(ctx.workspaceId, ctx.customerPhone, body, purpose, "client_sms_disabled");
+    return;
+  }
   try {
-    const details = await loadBookingDetails(appointmentId);
-    if (!details) {
-      console.warn("[booking-sms] appointment not found", appointmentId);
-      return;
-    }
-    const ctx = await loadWorkspaceContext(details.workspaceId);
-    if (!ctx) {
-      console.warn("[booking-sms] workspace not found", details.workspaceId);
-      return;
-    }
+    await logAndSendSms({
+      to: ctx.customerPhone,
+      workspaceId: ctx.workspaceId,
+      purpose,
+      body,
+    });
+  } catch (err) {
+    console.error("[booking-sms] client SMS failed", err);
+  }
+}
 
-    const dateLabel = formatDateLabel(details.startAt, ctx.timezone);
-    const timeLabel = formatTimeLabel(details.startAt, ctx.timezone);
-
-    if (!(await isSmsEligible(details.workspaceId))) {
-      await logSkipped(
-        details.workspaceId,
-        details.customerPhone,
-        buildBookingRequestSms(details),
-        "client_confirm",
-        "plan_not_eligible",
-      );
-      await logSkipped(
-        details.workspaceId,
-        ctx.ownerPhone,
-        buildOwnerAlertSms({
-          businessName: ctx.workspaceName,
-          customerName: details.customerName,
-          customerPhone: details.customerPhone ?? undefined,
-          serviceName: details.serviceName,
-          dateLabel,
-          timeLabel,
-        }),
-        "owner_alert",
-        "plan_not_eligible",
-      );
-      return;
-    }
-
-    if (details.customerPhone) {
-      if (ctx.clientSmsEnabled) {
-        await logAndSendSms({
-          workspaceId: details.workspaceId,
-          toNumber: details.customerPhone,
-          body: buildBookingRequestSms(details),
-          purpose: "client_confirm",
-        });
-      } else {
-        await logSkipped(
-          details.workspaceId,
-          details.customerPhone,
-          buildBookingRequestSms(details),
-          "client_confirm",
-          "client_sms_disabled",
-        );
-      }
-    }
-
-    if (ctx.ownerPhone) {
-      await logAndSendSms({
-        workspaceId: details.workspaceId,
-        toNumber: ctx.ownerPhone,
-        body: buildOwnerAlertSms({
-          businessName: ctx.workspaceName,
-          customerName: details.customerName,
-          customerPhone: details.customerPhone ?? undefined,
-          serviceName: details.serviceName,
-          dateLabel,
-          timeLabel,
-        }),
-        purpose: "owner_alert",
-      });
-    }
-  } catch (e) {
-    console.warn("[booking-sms] orchestration failed", e);
+async function sendOwnerAlert(ctx: BookingContext, confirmed: boolean): Promise<void> {
+  if (!ctx.ownerPhone) return;
+  try {
+    await logAndSendSms({
+      to: ctx.ownerPhone,
+      workspaceId: ctx.workspaceId,
+      purpose: "owner_alert",
+      body: ownerAlertBody(ctx, confirmed),
+    });
+  } catch (err) {
+    console.error("[booking-sms] owner SMS failed", err);
   }
 }
 
 /**
- * Sends the "booking confirmed" texts after a deposit payment confirms the
- * appointment (Stripe or Square deposit flows). Client gets a plain
- * confirmation (no YES/NO — payment already confirmed); owner gets a
- * confirmed alert. Best-effort, never throws.
+ * Free-booking flow: client "thank you for booking" + YES/NO request, owner
+ * "awaiting client confirmation" alert. Called by createBooking.
+ */
+export async function sendBookingSms(appointmentId: string): Promise<void> {
+  try {
+    const ctx = await loadBookingContext(appointmentId);
+    if (!ctx) {
+      console.warn("[booking-sms] booking context unavailable", appointmentId);
+      return;
+    }
+
+    if (!(await isSmsEligible(ctx.workspaceId))) {
+      await logSkipped(ctx.workspaceId, ctx.customerPhone, requestSmsBody(ctx), "booking_request", "plan_not_eligible");
+      await logSkipped(ctx.workspaceId, ctx.ownerPhone, ownerAlertBody(ctx, false), "owner_alert", "plan_not_eligible");
+      return;
+    }
+
+    await sendClientText(ctx, requestSmsBody(ctx), "booking_request");
+    await sendOwnerAlert(ctx, false);
+  } catch (e) {
+    console.warn("[booking-sms] request orchestration failed", e);
+  }
+}
+
+/**
+ * Confirmed-booking flow: client plain confirmation text (no YES/NO — the
+ * booking is already confirmed) + owner "confirmed" alert. Called by the
+ * Stripe/Square deposit confirmation paths and the appointment webhook for
+ * bookings inserted already-confirmed.
  */
 export async function sendBookingConfirmedSms(appointmentId: string): Promise<void> {
   try {
-    const details = await loadBookingDetails(appointmentId);
-    if (!details) {
-      console.warn("[booking-sms] appointment not found", appointmentId);
-      return;
-    }
-    const ctx = await loadWorkspaceContext(details.workspaceId);
+    const ctx = await loadBookingContext(appointmentId);
     if (!ctx) {
-      console.warn("[booking-sms] workspace not found", details.workspaceId);
+      console.warn("[booking-sms] booking context unavailable", appointmentId);
       return;
     }
 
-    const dateLabel = formatDateLabel(details.startAt, ctx.timezone);
-    const timeLabel = formatTimeLabel(details.startAt, ctx.timezone);
-    const ownerBody = buildOwnerAlertSms(
-      {
-        businessName: ctx.workspaceName,
-        customerName: details.customerName,
-        customerPhone: details.customerPhone ?? undefined,
-        serviceName: details.serviceName,
-        dateLabel,
-        timeLabel,
-      },
-      { confirmed: true },
-    );
-
-    if (!(await isSmsEligible(details.workspaceId))) {
-      await logSkipped(
-        details.workspaceId,
-        details.customerPhone,
-        buildConfirmationSms(details),
-        "client_confirmed",
-        "plan_not_eligible",
-      );
-      await logSkipped(details.workspaceId, ctx.ownerPhone, ownerBody, "owner_alert", "plan_not_eligible");
+    if (!(await isSmsEligible(ctx.workspaceId))) {
+      await logSkipped(ctx.workspaceId, ctx.customerPhone, confirmationSmsBody(ctx), "client_confirmed", "plan_not_eligible");
+      await logSkipped(ctx.workspaceId, ctx.ownerPhone, ownerAlertBody(ctx, true), "owner_alert", "plan_not_eligible");
       return;
     }
 
-    if (details.customerPhone) {
-      if (ctx.clientSmsEnabled) {
-        await logAndSendSms({
-          workspaceId: details.workspaceId,
-          toNumber: details.customerPhone,
-          body: buildConfirmationSms(details),
-          purpose: "client_confirmed",
-        });
-      } else {
-        await logSkipped(
-          details.workspaceId,
-          details.customerPhone,
-          buildConfirmationSms(details),
-          "client_confirmed",
-          "client_sms_disabled",
-        );
-      }
-    }
-
-    if (ctx.ownerPhone) {
-      await logAndSendSms({
-        workspaceId: details.workspaceId,
-        toNumber: ctx.ownerPhone,
-        body: ownerBody,
-        purpose: "owner_alert",
-      });
-    }
+    await sendClientText(ctx, confirmationSmsBody(ctx), "client_confirmed");
+    await sendOwnerAlert(ctx, true);
   } catch (e) {
     console.warn("[booking-sms] confirmed orchestration failed", e);
   }
