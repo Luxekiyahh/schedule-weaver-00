@@ -15,17 +15,6 @@ function toE164(raw: string): string {
   return "+" + digits;
 }
 
-function phoneVariants(e164: string): string[] {
-  // customers.phone may have been stored un-normalized; match a few forms.
-  const digits = e164.replace(/[^\d]/g, "");
-  const variants = new Set<string>([e164, digits]);
-  if (digits.length === 11 && digits.startsWith("1")) {
-    variants.add(digits.slice(1));
-    variants.add("+" + digits);
-  }
-  return Array.from(variants);
-}
-
 async function verifyTwilioSignature(
   url: string,
   params: Record<string, string>,
