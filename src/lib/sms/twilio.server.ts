@@ -3,6 +3,8 @@
 // Worker runtime can inject them per-request. Never import this from client
 // (route component) code — only from other server code / server functions.
 
+import { normalizePhoneToE164 } from "@/lib/phone";
+
 export type SendSmsResult = { sid: string };
 
 // Builds a plain-text SMS that mirrors the booking-confirmation email content.
@@ -131,15 +133,13 @@ export function buildOwnerAlertSms(
 
 
 
+// Strict backstop: recipients should already be E.164 from the booking flow,
+// but legacy rows may hold formatted numbers — normalize and reject anything
+// that cannot form a valid E.164 number instead of letting Twilio 400 it.
 function toE164(raw: string): string {
-  const trimmed = raw.trim();
-  if (trimmed.startsWith("+")) {
-    return "+" + trimmed.slice(1).replace(/[^\d]/g, "");
-  }
-  const digits = trimmed.replace(/[^\d]/g, "");
-  // Assume US/CA when 10 digits and no country code provided.
-  if (digits.length === 10) return "+1" + digits;
-  return "+" + digits;
+  const normalized = normalizePhoneToE164(raw);
+  if (!normalized) throw new Error(`Invalid destination phone number: ${raw}`);
+  return normalized;
 }
 
 export async function sendSms({
@@ -158,9 +158,6 @@ export async function sendSms({
   }
 
   const normalizedTo = toE164(to);
-  if (normalizedTo.replace(/[^\d]/g, "").length < 8) {
-    throw new Error(`Invalid destination phone number: ${to}`);
-  }
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const auth = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
