@@ -518,6 +518,12 @@ export const confirmDepositBooking = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[confirmDepositBooking] email dispatch failed", e);
     }
+    try {
+      const { sendBookingConfirmedSms } = await import("@/lib/sms/booking-sms.server");
+      await sendBookingConfirmedSms(data.appointmentId);
+    } catch (e) {
+      console.error("[confirmDepositBooking] sms dispatch failed", e);
+    }
 
     return { ok: true, start_at: appt.start_at, end_at: appt.end_at };
   });
@@ -724,6 +730,12 @@ export const confirmSquareDepositBooking = createServerFn({ method: "POST" })
       await sendAppointmentEmails(data.appointmentId);
     } catch (e) {
       console.error("[confirmSquareDepositBooking] email dispatch failed", e);
+    }
+    try {
+      const { sendBookingConfirmedSms } = await import("@/lib/sms/booking-sms.server");
+      await sendBookingConfirmedSms(data.appointmentId);
+    } catch (e) {
+      console.error("[confirmSquareDepositBooking] sms dispatch failed", e);
     }
 
     return { ok: true, start_at: appt.start_at, end_at: appt.end_at };
