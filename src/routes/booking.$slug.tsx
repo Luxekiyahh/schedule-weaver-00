@@ -476,8 +476,14 @@ function BookingPage() {
                   onSelect={setSelectedDate}
                 />
                 <div className="mt-6">
+                  <div
+                    className={slotBg ? "relative overflow-hidden rounded-2xl p-4 ring-1 ring-white/20" : undefined}
+                    style={slotBg ? { backgroundImage: `url(${slotBg})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+                  >
+                    {slotBg && <div aria-hidden className="absolute inset-0 bg-black/45" />}
+                    <div className="relative">
                   {!selectedDate ? (
-                    <p className="text-sm text-slate-500">Select a date to see open times.</p>
+                    <p className={`text-sm ${slotBg ? "text-white/80" : "text-slate-500"}`}>Select a date to see open times.</p>
                   ) : slotsLoading ? (
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                       {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-9" />)}
@@ -576,6 +582,8 @@ function BookingPage() {
                       })}
                     </div>
                   )}
+                    </div>
+                  </div>
                 </div>
                 <FooterNav primary={primary} onBack={() => setStep(2)} onNext={() => setStep(4)} nextDisabled={!selectedSlot} />
               </div>
