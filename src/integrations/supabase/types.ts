@@ -1323,6 +1323,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      find_customers_by_phone: {
+        Args: { _digits: string }
+        Returns: {
+          id: string
+          workspace_id: string
+        }[]
+      }
       has_workspace_role: {
         Args: {
           _min_role: Database["public"]["Enums"]["workspace_role"]

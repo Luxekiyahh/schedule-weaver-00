@@ -1,0 +1,1 @@
+UPDATE appointments SET square_order_id = NULL WHERE id = '0f1aa144-daf8-4236-b428-40ac02fd0e0e';
