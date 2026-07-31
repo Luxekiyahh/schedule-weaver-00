@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { normalizeTheme, fontClass, cardRadius, layoutPadding } from "@/lib/theme";
+import { normalizeTheme, fontClass, cardRadius, layoutPadding, isColorDark } from "@/lib/theme";
 import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
 import { AlluringDollsBookingFlow } from "@/components/AlluringDollsBookingFlow";
 
@@ -288,9 +288,12 @@ function BookingPage() {
   const ws = data.workspace;
 
   if (ws.slug === "alluringdolls") {
+    const adTheme = normalizeTheme((ws as { theme_config?: unknown }).theme_config);
     return (
       <AlluringDollsBookingFlow
         workspaceName={ws.name}
+        backgroundUrl={adTheme.background_image_url ?? null}
+        slotBackgroundUrl={adTheme.slot_background_image_url ?? null}
         services={data.services}
         categories={data.categories}
         lengthOptions={data.lengthOptions}
@@ -318,12 +321,29 @@ function BookingPage() {
   const radius = cardRadius(theme.card_style);
   const font = fontClass(theme.font_family);
   const primary = theme.primary_color;
+  const bgImage = theme.background_image_url;
+  const slotBg = theme.slot_background_image_url;
+  const darkBg = isColorDark(theme.background_color);
 
   const stepLabels = ["Service", "Provider", "Time", "Details"];
 
   return (
-    <div className={`min-h-screen ${font}`} style={{ backgroundColor: theme.background_color }}>
-      <div className={`mx-auto max-w-2xl px-6 ${pad.page}`}>
+    <div className={`relative min-h-screen ${font}`} style={{ backgroundColor: theme.background_color }}>
+      {bgImage && (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-0"
+            style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-0"
+            style={{ backgroundColor: darkBg ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.55)" }}
+          />
+        </>
+      )}
+      <div className={`relative mx-auto max-w-2xl px-6 ${pad.page}`}>
         {/* Header */}
         <header className="text-center">
           <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-slate-500 shadow-sm ring-1 ring-slate-200">
