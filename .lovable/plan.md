@@ -1,42 +1,41 @@
-# SMS Workflow for Pro Plans — Fix Coverage, Gate to Pro, Test Live
+# Enforce Strict SMS Sequence: Pending → YES/NO Text → Wait → YES → Confirmation Text
 
-## Why texts aren't going out today
+## Root cause (verified in code)
 
-- The booking SMS (client YES/NO text + owner alert) only fires on the **free booking** path (`createBooking`). Alluring Dolls — the only Pro tenant — takes **$25 Square deposits (live mode)**, and both deposit-confirmation paths (`confirmDepositBooking` for Stripe, `confirmSquareDepositBooking` for Square) send **emails only, never SMS**. Result: `sms_send_log` has zero rows and no Pro customer or owner has ever received a booking text.
-- SMS is currently **ungated** — every plan would get it. Per your decision, booking SMS becomes a **Pro/Enterprise-only** feature.
-- The YES/NO inbound endpoint exists (`/api/public/sms/inbound`), but we can't tell from here whether the Twilio number's webhook URL points at it.
+- `createBooking` (`src/lib/booking.functions.ts:369`) already does Step 1 right: inserts the appointment as `pending` and sends **only** the pre-confirmation YES/NO text (`sendBookingSms`) plus the owner alert.
+- **The break is at Step 3**: the YES-reply handler (`src/routes/api/public/sms/inbound.ts:157-171`) flips the appointment to `confirmed` and sends the confirmation **emails**, but never calls `sendBookingConfirmedSms` — so the full confirmation text (service, date/time, price, business address) and the owner "confirmed" alert never fire after a YES. The client only gets a short auto-reply ("Your appointment is confirmed. See you soon!").
+- The confirmation texts you already received came from the confirmed-path (`sendBookingConfirmedSms` via the appointment webhook / direct test invocation) firing **without** any YES gate — which is why messages arrived out of order.
 
-## Phase 1 — Code fixes
+## Plan
 
-1. **Plan gating (migration)**: extend the `workspace_has_feature(uuid, text, text)` database function with a new `sms_booking_confirmations` feature that returns true only for `pro`/`enterprise` subscriptions (matching the workspace's environment).
-2. **`src/lib/sms/booking-sms.server.ts`**:
-   - Add a plan gate at the top of the SMS sender: workspaces without the feature get no SMS, and a `sms_send_log` row with status `skipped` (reason recorded) is written so skips are visible in the admin console.
-   - Honor the tenant's existing `client_sms` notification toggle (skip the client text only if they switched it off; owner alert still sends).
-   - Add `sendBookingConfirmedSms(appointmentId)`: client gets a "your appointment is confirmed" text (service, date/time, price, business address — no YES/NO, since payment already confirms it) and the owner gets a "New booking confirmed" alert.
-3. **`src/lib/sms/twilio.server.ts`**: parameterize the owner-alert first line ("awaiting client confirmation" vs "confirmed").
-4. **`src/lib/booking.functions.ts`**: call `sendBookingConfirmedSms` (best-effort, alongside the existing email dispatch) in both `confirmDepositBooking` (Stripe) and `confirmSquareDepositBooking` (Square).
-5. **Twilio webhook visibility/auto-fix**: new admin server function that reads the Twilio number's configured inbound SMS webhook via the Twilio API, reports it on `/admin/health`, and can set it to `https://procschedule.com/api/public/sms/inbound` if missing or wrong (one click, no console spelunking).
+### 1. Code fix — gate the confirmation SMS behind the YES reply
+In `src/routes/api/public/sms/inbound.ts`, YES branch only:
+- After updating status to `confirmed`, call `sendBookingConfirmedSms(appointmentId)` (dynamic import, best-effort — same pattern as the email call beside it). This sends:
+  - Client: the full confirmation text — service, date, time, price, add-ons, business address (Pro-gated, honors the tenant's client_sms toggle).
+  - Owner: the "confirmed" alert text.
+- NO branch stays as-is (cancel + free the slot). No pending appointment → "no appointment awaiting confirmation" reply, so duplicate YES replies can't double-send.
+- No changes to the pending insert or the pre-confirmation text — Step 1 already behaves correctly.
 
-## Phase 2 — Preview verification
+### 2. Reset the Alluring Dolls test data
+- Appointment `0f1aa144-daf8-4236-b428-40ac02fd0e0e` (DeAsia Holmes, Aug 8): status → `pending`, clear `cancelled_at`/`cancelled_by`. Its YES/NO code is **0F1AA1**.
+- Appointment `55c63612-931c-41ed-8af1-6c4d3acbcc72` (duplicate pending for the same phone): status → `cancelled`, so exactly one pending booking exists for that number and the YES test is unambiguous.
 
-- Build/typecheck passes.
-- Gating check: Kandii Krowns (Basic) SMS is skipped + logged; Alluring Dolls (Pro) is eligible.
+### 3. Verify the Twilio inbound webhook
+Check the Twilio tile on `/admin/health` — the number's SMS webhook must point to the production inbound handler (`…/api/public/sms/inbound`). If not, run **Fix now** (`fixTwilioSmsWebhook`). Without this, YES/NO replies never reach the app.
 
-## Phase 3 — Publish + live end-to-end test on Alluring Dolls
-
-1. Publish the app so `procschedule.com` runs the fix.
-2. Verify/auto-set the Twilio inbound webhook (step 5 above).
-3. Send a connectivity test SMS to your number **561-905-7383**.
-4. Create a **real test booking** on the live Alluring Dolls storefront with your number as the client phone → expect: client "thank you for booking… reply YES <code>" text to you, owner alert to **561-975-8519**, and matching `sms_send_log` rows with Twilio SIDs.
-5. **Reply YES** from your phone → appointment flips to `confirmed`, confirmation email fires, and you get the "confirmed" reply text.
-6. Deposit path: skip the real $25 charge — instead invoke the new confirmed-SMS sender directly on the test appointment and verify delivery/content, which is the exact code path Square confirmation will now call.
-7. Negative test: trigger a booking SMS on Kandii Krowns (Basic) → confirm it is skipped and logged as such.
-8. Cleanup: cancel the test appointment and confirm nothing else was disturbed.
+### 4. End-to-end test of the strict sequence
+1. Trigger `sendBookingSms` for the reset appointment → verify the client (+1 561 905-7383) receives **only** the YES/NO pre-confirmation text (with code 0F1AA1, appointment details, business address) and the owner (+1 561 975-8519) gets the "awaiting confirmation" alert. Confirm `sms_send_log` shows delivered — this also re-validates that the trial-mode failures from 18:07 UTC are resolved.
+2. You reply **YES 0F1AA1** (or plain YES — only one pending) from the client phone. Fallback: I simulate a properly Twilio-signed POST to the inbound webhook.
+3. Verify the full chain:
+   - Appointment flips `pending` → `confirmed` in the database.
+   - Client receives the **final confirmation SMS** (new gated path) and the confirmation email.
+   - Owner receives the "confirmed" alert.
+   - `sms_send_log` shows all delivered, in the right order (booking_request → client_confirmed → owner_alert).
+4. Open the Alluring Dolls dashboard calendar and confirm the Aug 8 appointment displays as confirmed (pending before the YES, confirmed after).
+5. Cleanup: cancel/remove the test appointment afterward if you want it off the live calendar.
 
 ## Technical details
-
-- Migration: `CREATE OR REPLACE FUNCTION public.workspace_has_feature(uuid, text, text)` adding `WHEN 'sms_booking_confirmations' THEN s.plan_tier IN ('pro','enterprise')` (grants preserved on replace).
-- Gate + skip logging live in `booking-sms.server.ts` (single choke point used by both the free and deposit paths).
-- No new secrets needed — `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` are already configured.
-- All SMS sends remain best-effort: a Twilio failure never blocks a booking or a payment confirmation.
-- Test touches one live tenant (Alluring Dolls) as approved; test appointment is cancelled afterward.
+- Files changed: `src/routes/api/public/sms/inbound.ts` only (one dynamic import + one call in the YES branch).
+- Data changes: two UPDATEs on the two DeAsia Holmes test appointments — no schema changes, no migration.
+- Deposit/payment confirmation paths (`confirmDepositBooking`, `confirmSquareDepositBooking`) are untouched — payment-confirmed bookings intentionally skip YES/NO since payment is the confirmation.
+- Publish is required before the live test so `procschedule.com` runs the fixed inbound handler.
