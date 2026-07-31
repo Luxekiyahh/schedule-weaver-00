@@ -72,6 +72,8 @@ const STEP_LABELS = ["Service", "Provider", "Time", "Details"];
 
 export function AlluringDollsBookingFlow({
   workspaceName,
+  backgroundUrl,
+  slotBackgroundUrl,
   services,
   categories,
   lengthOptions,
@@ -104,6 +106,10 @@ export function AlluringDollsBookingFlow({
   onSubmit,
 }: {
   workspaceName: string;
+  /** Optional full-page background image (from theme_config). */
+  backgroundUrl?: string | null;
+  /** Optional image behind the time-slots section (from theme_config). */
+  slotBackgroundUrl?: string | null;
   services: Service[];
   categories: Category[];
   lengthOptions: LengthOption[];
@@ -234,6 +240,16 @@ export function AlluringDollsBookingFlow({
         .ad-ghost-btn:hover { color: var(--ad-ivory) !important; background: transparent !important; }
       `}</style>
 
+      {backgroundUrl && (
+        <>
+          <div
+            aria-hidden
+            className="fixed inset-0 -z-[3]"
+            style={{ backgroundImage: `url(${backgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          />
+          <div aria-hidden className="fixed inset-0 -z-[3] bg-black/40" />
+        </>
+      )}
       <div className="ad-lighting" aria-hidden />
       <div className="ad-leopard" aria-hidden />
 
