@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { getSystemHealth, pokeEmailQueue } from "@/lib/platform-admin.functions";
+import { getSystemHealth, pokeEmailQueue, fixTwilioSmsWebhook } from "@/lib/platform-admin.functions";
 import { AdminGate, AdminNav } from "@/components/admin/AdminGate";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -29,6 +29,7 @@ function HealthPage() {
 function HealthBody() {
   const fetchHealth = useServerFn(getSystemHealth);
   const poke = useServerFn(pokeEmailQueue);
+  const fixTwilio = useServerFn(fixTwilioSmsWebhook);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
@@ -87,6 +88,37 @@ function HealthBody() {
 
         <Card title="Twilio delivery failures" icon={<MessageSquare className="h-4 w-4 text-primary" />}>
           {data.twilio.error && <div className="mb-2 text-xs text-amber-600">{data.twilio.error}</div>}
+          {data.twilio.number && (
+            <div className="mb-3 rounded-lg border border-border bg-muted/40 p-2.5 text-xs">
+              <div className="font-semibold uppercase text-muted-foreground">Inbound SMS webhook (YES/NO replies)</div>
+              <div className="mt-1 text-foreground">{data.twilio.number.phoneNumber}</div>
+              <div className="mt-0.5 break-all text-muted-foreground">
+                {data.twilio.number.smsUrl || "not configured"}
+              </div>
+              {data.twilio.number.smsUrl === data.twilio.expectedSmsUrl ? (
+                <div className="mt-1 text-emerald-600">Points at our inbound handler.</div>
+              ) : (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="text-rose-600">Not pointing at our inbound handler.</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await fixTwilio();
+                        toast.success("Twilio webhook updated");
+                        load();
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Failed");
+                      }
+                    }}
+                  >
+                    Fix now
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
           <div className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Live failed/undelivered ({data.twilio.failed.length})</div>
           {data.twilio.failed.length === 0 && <Empty text="None." />}
           {data.twilio.failed.map((m: any) => (
