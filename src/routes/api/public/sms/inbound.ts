@@ -168,6 +168,17 @@ export const Route = createFileRoute("/api/public/sms/inbound")({
           } catch (err) {
             console.error("[sms-inbound] confirmation emails failed", err);
           }
+          // Strict sequence: the full confirmation SMS (appointment details +
+          // business address) and the owner "confirmed" alert go out ONLY
+          // after this inbound YES — never at booking creation time.
+          try {
+            const { sendBookingConfirmedSms } = await import(
+              "@/lib/sms/booking-sms.server"
+            );
+            await sendBookingConfirmedSms(appt.id);
+          } catch (err) {
+            console.error("[sms-inbound] confirmation SMS failed", err);
+          }
           return twiml("Your appointment is confirmed. See you soon!");
         }
 
