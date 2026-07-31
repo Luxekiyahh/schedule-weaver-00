@@ -1372,6 +1372,8 @@ function StepReview({
         ownerTitle: wizard.ownerTitle,
         bio: wizard.bio,
         logoUrl: wizard.logoUrl ?? null,
+        backgroundUrl: wizard.backgroundUrl ?? null,
+        slotBgUrl: wizard.slotBgUrl ?? null,
         primaryColor: wizard.primaryColor,
         secondaryColor: wizard.secondaryColor,
         portfolioUrls: wizard.portfolio.map((p) => p.url).filter((u): u is string => !!u),
