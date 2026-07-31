@@ -85,7 +85,7 @@ export const uploadOnboardingImage = createServerFn({ method: "POST" })
     z
       .object({
         workspaceId: z.string().uuid(),
-        kind: z.enum(["logo", "portfolio"]),
+        kind: z.enum(["logo", "portfolio", "background", "slot-background"]),
         fileName: z.string().min(1).max(200),
         contentType: z.string().min(1).max(120),
         dataBase64: z.string().min(1).max(12_000_000),
@@ -152,6 +152,8 @@ const completeSchema = z.object({
   ownerTitle: z.string().trim().max(120).optional().default(""),
   bio: z.string().trim().max(200).optional().default(""),
   logoUrl: z.string().url().nullable().optional(),
+  backgroundUrl: z.string().url().nullable().optional(),
+  slotBgUrl: z.string().url().nullable().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   portfolioUrls: z.array(z.string().url()).max(9).default([]),
@@ -220,6 +222,19 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
     const slug = await uniqueSlug(slugify(data.businessName), workspaceId);
 
+    // Merge booking-page background images into the existing theme_config
+    // (read-modify-write so no other theme keys get clobbered).
+    const { data: wsTheme } = await supabaseAdmin
+      .from("workspaces")
+      .select("theme_config")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    const theme_config = {
+      ...((wsTheme?.theme_config as Record<string, unknown> | null) ?? {}),
+      background_image_url: data.backgroundUrl ?? null,
+      slot_background_image_url: data.slotBgUrl ?? null,
+    };
+
     // 1. Workspace fields
     const { error: updErr } = await supabaseAdmin
       .from("workspaces")
@@ -235,6 +250,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         business_phone: data.businessPhone || null,
         business_email: data.businessEmail || null,
         business_website: data.businessWebsite || null,
+        theme_config,
       })
       .eq("id", workspaceId);
     if (updErr) throw new Error(updErr.message);

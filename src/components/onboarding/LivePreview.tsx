@@ -102,10 +102,23 @@ export function LivePreview({ wizard, large = false }: { wizard: WizardState; la
         </div>
 
         <div
-          className={`overflow-y-auto ${large ? "max-h-[70vh]" : "max-h-[60vh]"}`}
+          className={`relative overflow-y-auto ${large ? "max-h-[70vh]" : "max-h-[60vh]"}`}
           style={{ backgroundColor: BASE, color: "#f5f3f0" }}
         >
-          <div className="mx-auto max-w-[460px] px-6 pb-10">
+          {wizard.backgroundDataUrl && (
+            <>
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  backgroundImage: `url(${wizard.backgroundDataUrl})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+              <div className="pointer-events-none absolute inset-0 bg-black/55" />
+            </>
+          )}
+          <div className="relative mx-auto max-w-[460px] px-6 pb-10">
             {/* Hero */}
             <div className="relative mt-8 overflow-hidden rounded-3xl px-6 py-10 text-center" style={cardStyle}>
               <div

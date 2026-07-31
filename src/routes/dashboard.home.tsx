@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, Check, Copy, DollarSign, Sparkles, Clock, Users, Briefcase,
   Plus, Settings2, CalendarClock, UserSquare2, Loader2, CalendarX2, Bell,
-  ExternalLink, Wallet, MapPin,
+  ExternalLink, Wallet, MapPin, Palette,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTenantUrl } from "@/lib/subdomain";
@@ -322,6 +322,7 @@ function HomePage() {
               <ActionCard to="/dashboard/notifications" icon={<Bell className="h-5 w-5" />} title="Notifications" desc="Email & SMS alerts" tone="rose" />
               <ActionCard to="/dashboard/billing" icon={<DollarSign className="h-5 w-5" />} title="Billing & Plan" desc="Manage your subscription" tone="indigo" />
               <ActionCard to="/dashboard/payments" icon={<Wallet className="h-5 w-5" />} title="Payments" desc="Guest checkout & payouts" tone="emerald" />
+              <ActionCard to="/dashboard/customize" icon={<Palette className="h-5 w-5" />} title="Booking page design" desc="Backgrounds & branding" tone="violet" />
 
             </div>
 

@@ -623,9 +623,13 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
   const industry = getIndustry(wizard.industry);
   const upload = useServerFn(uploadOnboardingImage);
   const [uploading, setUploading] = useState(false);
+  const [bgUploading, setBgUploading] = useState(false);
+  const [slotBgUploading, setSlotBgUploading] = useState(false);
   const [detected, setDetected] = useState(false);
   const logoRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
+  const bgRef = useRef<HTMLInputElement>(null);
+  const slotBgRef = useRef<HTMLInputElement>(null);
   const wizardRef = useRef(wizard);
   wizardRef.current = wizard;
 
@@ -667,6 +671,25 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
           /* ignore */
         }
       }
+    }
+  }
+
+  async function onBackground(file: File, kind: "background" | "slot-background") {
+    const isMain = kind === "background";
+    if (isMain) setBgUploading(true); else setSlotBgUploading(true);
+    try {
+      const { base64, dataUrl } = await fileToBase64(file);
+      patch(isMain ? { backgroundDataUrl: dataUrl } : { slotBgDataUrl: dataUrl });
+      if (workspaceId) {
+        const res = await upload({
+          data: { workspaceId, kind, fileName: file.name, contentType: file.type || "image/jpeg", dataBase64: base64 },
+        });
+        patch(isMain ? { backgroundUrl: res.url } : { slotBgUrl: res.url });
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      if (isMain) setBgUploading(false); else setSlotBgUploading(false);
     }
   }
 
@@ -789,6 +812,108 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
                 </button>
               );
             })}
+          </div>
+        </section>
+
+        {/* Booking page backgrounds */}
+        <section className="rounded-xl border border-border p-4">
+          <p className="text-sm font-semibold">Booking page backgrounds</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Optional images for your booking site — they always fill the screen edge-to-edge, no stretching or tiling.
+          </p>
+          <input
+            ref={bgRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onBackground(f, "background");
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={slotBgRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onBackground(f, "slot-background");
+              e.target.value = "";
+            }}
+          />
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            {/* Main site background */}
+            <div>
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Main site background</p>
+              <div className="group relative aspect-video overflow-hidden rounded-xl border border-dashed border-border bg-muted/30">
+                {bgUploading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : wizard.backgroundDataUrl ? (
+                  <>
+                    <img src={wizard.backgroundDataUrl} alt="Site background" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => patch({ backgroundDataUrl: null, backgroundUrl: null })}
+                      className="absolute right-1.5 top-1.5 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => bgRef.current?.click()}
+                    className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground hover:border-primary/60"
+                  >
+                    <Upload className="h-5 w-5" />
+                    <span className="text-[11px]">Upload image</span>
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* Time-slots background */}
+            <div>
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Time-slots background</p>
+              <div className="group relative aspect-video overflow-hidden rounded-xl border border-dashed border-border bg-muted/30">
+                {slotBgUploading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : wizard.slotBgDataUrl ? (
+                  <>
+                    <img src={wizard.slotBgDataUrl} alt="Time-slots background" className="absolute inset-0 h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/45" />
+                    <div className="absolute inset-0 grid grid-cols-4 content-center gap-1.5 p-3">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <span key={i} className="rounded-full bg-white/90 px-1 py-1 text-center text-[9px] font-medium text-slate-700">
+                          {9 + Math.floor(i / 2)}:{i % 2 ? "30" : "00"}
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => patch({ slotBgDataUrl: null, slotBgUrl: null })}
+                      className="absolute right-1.5 top-1.5 z-10 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => slotBgRef.current?.click()}
+                    className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground hover:border-primary/60"
+                  >
+                    <Upload className="h-5 w-5" />
+                    <span className="text-[11px]">Upload image</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1247,6 +1372,8 @@ function StepReview({
         ownerTitle: wizard.ownerTitle,
         bio: wizard.bio,
         logoUrl: wizard.logoUrl ?? null,
+        backgroundUrl: wizard.backgroundUrl ?? null,
+        slotBgUrl: wizard.slotBgUrl ?? null,
         primaryColor: wizard.primaryColor,
         secondaryColor: wizard.secondaryColor,
         portfolioUrls: wizard.portfolio.map((p) => p.url).filter((u): u is string => !!u),

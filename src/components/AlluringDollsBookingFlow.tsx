@@ -72,6 +72,8 @@ const STEP_LABELS = ["Service", "Provider", "Time", "Details"];
 
 export function AlluringDollsBookingFlow({
   workspaceName,
+  backgroundUrl,
+  slotBackgroundUrl,
   services,
   categories,
   lengthOptions,
@@ -104,6 +106,10 @@ export function AlluringDollsBookingFlow({
   onSubmit,
 }: {
   workspaceName: string;
+  /** Optional full-page background image (from theme_config). */
+  backgroundUrl?: string | null;
+  /** Optional image behind the time-slots section (from theme_config). */
+  slotBackgroundUrl?: string | null;
   services: Service[];
   categories: Category[];
   lengthOptions: LengthOption[];
@@ -234,6 +240,16 @@ export function AlluringDollsBookingFlow({
         .ad-ghost-btn:hover { color: var(--ad-ivory) !important; background: transparent !important; }
       `}</style>
 
+      {backgroundUrl && (
+        <>
+          <div
+            aria-hidden
+            className="fixed inset-0 -z-[3]"
+            style={{ backgroundImage: `url(${backgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          />
+          <div aria-hidden className="fixed inset-0 -z-[3] bg-black/40" />
+        </>
+      )}
       <div className="ad-lighting" aria-hidden />
       <div className="ad-leopard" aria-hidden />
 
@@ -441,6 +457,12 @@ export function AlluringDollsBookingFlow({
                     onSelect={setSelectedDate}
                   />
                   <div className="mt-6">
+                    <div
+                      className={slotBackgroundUrl ? "relative overflow-hidden rounded-2xl p-4" : undefined}
+                      style={slotBackgroundUrl ? { backgroundImage: `url(${slotBackgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+                    >
+                      {slotBackgroundUrl && <div aria-hidden className="absolute inset-0 bg-black/55" />}
+                      <div className="relative">
                     {!selectedDate ? (
                       <p className="text-sm" style={{ color: "var(--ad-smoke)" }}>
                         Select a date to see open times.
@@ -478,6 +500,8 @@ export function AlluringDollsBookingFlow({
                         })}
                       </div>
                     )}
+                      </div>
+                    </div>
                   </div>
                   <AdFooterNav
                     onBack={() => setStep(2)}

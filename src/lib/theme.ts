@@ -5,6 +5,10 @@ export type ThemeConfig = {
   font_family: "sans" | "serif" | "mono";
   layout_mode: "clean" | "compact" | "editorial";
   hero_text: string;
+  /** Optional full-page background image for the public booking site. */
+  background_image_url?: string;
+  /** Optional image shown behind the time-slots section. */
+  slot_background_image_url?: string;
 };
 
 export const DEFAULT_THEME: ThemeConfig = {
@@ -27,6 +31,16 @@ export function fontClass(f: ThemeConfig["font_family"]) {
 
 export function cardRadius(c: ThemeConfig["card_style"]) {
   return c === "sharp" ? "rounded-none" : c === "soft" ? "rounded-xl" : "rounded-3xl";
+}
+
+/** Rough luminance check so we can pick a readable scrim over background images. */
+export function isColorDark(hex: string): boolean {
+  const m = (hex || "#ffffff").replace("#", "");
+  if (m.length < 6) return false;
+  const r = parseInt(m.slice(0, 2), 16) / 255;
+  const g = parseInt(m.slice(2, 4), 16) / 255;
+  const b = parseInt(m.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.45;
 }
 
 export function layoutPadding(l: ThemeConfig["layout_mode"]) {
