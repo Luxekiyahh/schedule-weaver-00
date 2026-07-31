@@ -623,9 +623,13 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
   const industry = getIndustry(wizard.industry);
   const upload = useServerFn(uploadOnboardingImage);
   const [uploading, setUploading] = useState(false);
+  const [bgUploading, setBgUploading] = useState(false);
+  const [slotBgUploading, setSlotBgUploading] = useState(false);
   const [detected, setDetected] = useState(false);
   const logoRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
+  const bgRef = useRef<HTMLInputElement>(null);
+  const slotBgRef = useRef<HTMLInputElement>(null);
   const wizardRef = useRef(wizard);
   wizardRef.current = wizard;
 
@@ -667,6 +671,25 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
           /* ignore */
         }
       }
+    }
+  }
+
+  async function onBackground(file: File, kind: "background" | "slot-background") {
+    const isMain = kind === "background";
+    if (isMain) setBgUploading(true); else setSlotBgUploading(true);
+    try {
+      const { base64, dataUrl } = await fileToBase64(file);
+      patch(isMain ? { backgroundDataUrl: dataUrl } : { slotBgDataUrl: dataUrl });
+      if (workspaceId) {
+        const res = await upload({
+          data: { workspaceId, kind, fileName: file.name, contentType: file.type || "image/jpeg", dataBase64: base64 },
+        });
+        patch(isMain ? { backgroundUrl: res.url } : { slotBgUrl: res.url });
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      if (isMain) setBgUploading(false); else setSlotBgUploading(false);
     }
   }
 
