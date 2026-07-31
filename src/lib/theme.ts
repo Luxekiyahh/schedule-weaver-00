@@ -33,6 +33,16 @@ export function cardRadius(c: ThemeConfig["card_style"]) {
   return c === "sharp" ? "rounded-none" : c === "soft" ? "rounded-xl" : "rounded-3xl";
 }
 
+/** Rough luminance check so we can pick a readable scrim over background images. */
+export function isColorDark(hex: string): boolean {
+  const m = (hex || "#ffffff").replace("#", "");
+  if (m.length < 6) return false;
+  const r = parseInt(m.slice(0, 2), 16) / 255;
+  const g = parseInt(m.slice(2, 4), 16) / 255;
+  const b = parseInt(m.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.45;
+}
+
 export function layoutPadding(l: ThemeConfig["layout_mode"]) {
   if (l === "compact") return { page: "py-6 sm:py-8", card: "p-4 sm:p-5", gap: "space-y-2" };
   if (l === "editorial") return { page: "py-16 sm:py-24", card: "p-8 sm:p-12", gap: "space-y-5" };
