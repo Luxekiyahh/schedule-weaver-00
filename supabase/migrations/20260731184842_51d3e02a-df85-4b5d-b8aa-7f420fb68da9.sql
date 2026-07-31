@@ -1,0 +1,1 @@
+UPDATE workspace_payment_settings SET deposit_type = 'deposit' WHERE id = '0b11a33a-8871-4298-9e0c-bc0c3b40da3d';
