@@ -115,7 +115,7 @@ function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-[1280px] px-6 py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -143,8 +143,8 @@ function ServicesPage() {
           </div>
         ) : services.length === 0 ? (
           <div className="mt-12 rounded-2xl border bg-card py-16 text-center shadow-sm">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#141414]/5">
-              <Briefcase className="h-6 w-6 text-[#141414]" />
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-foreground/5">
+              <Briefcase className="h-6 w-6 text-foreground" />
             </div>
             <p className="mt-4 text-sm font-medium text-foreground">No services yet</p>
             <p className="mt-1 text-xs text-muted-foreground">

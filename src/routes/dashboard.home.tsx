@@ -44,7 +44,7 @@ type Appt = {
 
 const STATUS_STYLES: Record<Status, string> = {
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  confirmed: "bg-[#141414]/5 text-[#141414] ring-[#141414]/20",
+  confirmed: "bg-foreground/5 text-foreground ring-foreground/20",
   completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   cancelled: "bg-muted text-muted-foreground ring-slate-200",
 };
@@ -179,12 +179,12 @@ function HomePage() {
   const isAdmin = ctx.role === "owner" || ctx.role === "admin";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-[1280px] px-6 py-10">
         {/* Header */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-[#141414]">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-foreground">
               <Sparkles className="h-3.5 w-3.5" /> {greeting()}
             </div>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
@@ -203,11 +203,11 @@ function HomePage() {
         </div>
 
         {/* Public link share */}
-        <div className="mt-6 overflow-hidden rounded-2xl border bg-[#141414] p-5 text-primary-foreground shadow-lg">
+        <div className="mt-6 overflow-hidden rounded-2xl border bg-foreground p-5 text-background shadow-lg">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wider text-[#f8f7f4]/60">Your public booking link</p>
-              <p className="mt-1 truncate font-mono text-sm text-primary-foreground/90">{bookingUrl || "—"}</p>
+              <p className="text-xs uppercase tracking-wider text-background/60">Your public booking link</p>
+              <p className="mt-1 truncate font-mono text-sm text-background/90">{bookingUrl || "—"}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -224,7 +224,7 @@ function HomePage() {
                   href={bookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-card/10 px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-card/20"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-card/10 px-4 py-2 text-sm font-semibold text-background hover:bg-card/20"
                 >
                   <ExternalLink className="h-4 w-4" /> View Live Site
                 </a>
@@ -280,8 +280,8 @@ function HomePage() {
                 ))
               ) : today.length === 0 ? (
                 <div className="px-5 py-16 text-center">
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#141414]/5">
-                    <CalendarX2 className="h-6 w-6 text-[#141414]" />
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-foreground/5">
+                    <CalendarX2 className="h-6 w-6 text-foreground" />
                   </div>
                   <p className="mt-4 text-sm font-medium text-foreground">You're clear for today!</p>
                   <p className="mt-1 text-xs text-muted-foreground">No bookings scheduled. Enjoy the breathing room.</p>
@@ -392,7 +392,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
   return (
     <section className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-1 flex items-center gap-2 text-base font-semibold text-foreground">
-        <MapPin className="h-4 w-4 text-[#141414]" /> Business info
+        <MapPin className="h-4 w-4 text-foreground" /> Business info
       </div>
       <p className="mb-4 text-sm text-muted-foreground">
         Shown to clients on their booking confirmation email so they know where to go and how to reach you.
@@ -406,7 +406,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="sm:col-span-2 block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Address</span>
             <input
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-foreground focus:outline-none"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="123 Main St, Suite 4, City, ST 00000"
@@ -415,7 +415,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Phone</span>
             <input
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-foreground focus:outline-none"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(555) 123-4567"
@@ -424,7 +424,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Contact email</span>
             <input
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-foreground focus:outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="hello@yourbusiness.com"
@@ -433,7 +433,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           <label className="sm:col-span-2 block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">Website</span>
             <input
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#141414] focus:outline-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-foreground focus:outline-none"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="www.yourbusiness.com"
@@ -443,7 +443,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
             <button
               onClick={onSave}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#141414] px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-[#141414]/90 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:bg-foreground/90 disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Save business info
@@ -466,9 +466,9 @@ function Metric({
   icon, label, value, hint, accent,
 }: { icon: React.ReactNode; label: string; value: string; hint?: string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md ${accent ? "ring-1 ring-[#141414]/10" : ""}`}>
+    <div className={`rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md ${accent ? "ring-1 ring-foreground/10" : ""}`}>
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        <span className={`grid h-6 w-6 place-items-center rounded-md ${accent ? "bg-[#141414]/5 text-[#141414]" : "bg-muted text-muted-foreground"}`}>
+        <span className={`grid h-6 w-6 place-items-center rounded-md ${accent ? "bg-foreground/5 text-foreground" : "bg-muted text-muted-foreground"}`}>
           {icon}
         </span>
         {label}
@@ -490,11 +490,11 @@ function SkeletonCard() {
 }
 
 const TONES: Record<string, string> = {
-  indigo: "bg-[#141414]/5 text-[#141414] group-hover:bg-[#141414]/10",
+  indigo: "bg-foreground/5 text-foreground group-hover:bg-foreground/10",
   emerald: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
   amber: "bg-amber-50 text-amber-600 group-hover:bg-amber-100",
   rose: "bg-rose-50 text-rose-600 group-hover:bg-rose-100",
-  violet: "bg-[#141414]/5 text-[#141414] group-hover:bg-[#141414]/10",
+  violet: "bg-foreground/5 text-foreground group-hover:bg-foreground/10",
 };
 
 function ActionCard({

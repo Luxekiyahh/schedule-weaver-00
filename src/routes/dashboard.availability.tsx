@@ -124,7 +124,7 @@ function AvailabilityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-28">
+    <div className="min-h-screen bg-background pb-28">
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -185,7 +185,7 @@ function AvailabilityPage() {
           })}
         </div>
 
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border bg-[#141414]/5 p-4 text-sm text-[#141414]">
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border bg-foreground/5 p-4 text-sm text-foreground">
           <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
           <p>These hours repeat every week. Need to block a specific date or add extra hours? Use availability exceptions on the calendar.</p>
         </div>

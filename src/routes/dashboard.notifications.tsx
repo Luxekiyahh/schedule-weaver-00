@@ -119,7 +119,7 @@ function NotificationsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-[#141414]/10 text-[#141414] grid place-items-center">
+            <div className="h-9 w-9 rounded-lg bg-foreground/10 text-foreground grid place-items-center">
               <Mail className="h-5 w-5" />
             </div>
             <div>
