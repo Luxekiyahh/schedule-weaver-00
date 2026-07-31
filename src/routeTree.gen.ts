@@ -25,6 +25,7 @@ import { Route as DashboardServicesRouteImport } from './routes/dashboard.servic
 import { Route as DashboardPaymentsRouteImport } from './routes/dashboard.payments'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
+import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
 import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
@@ -126,6 +127,11 @@ const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
 const DashboardHomeRoute = DashboardHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCustomizeRoute = DashboardCustomizeRouteImport.update({
+  id: '/customize',
+  path: '/customize',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardCatalogRoute = DashboardCatalogRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/payments': typeof DashboardPaymentsRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/payments': typeof DashboardPaymentsRoute
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
+  '/dashboard/customize': typeof DashboardCustomizeRoute
   '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/payments': typeof DashboardPaymentsRoute
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/catalog'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/payments'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/catalog'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/payments'
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/calendar'
     | '/dashboard/catalog'
+    | '/dashboard/customize'
     | '/dashboard/home'
     | '/dashboard/notifications'
     | '/dashboard/payments'
@@ -635,6 +647,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHomeRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/customize': {
+      id: '/dashboard/customize'
+      path: '/customize'
+      fullPath: '/dashboard/customize'
+      preLoaderRoute: typeof DashboardCustomizeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/catalog': {
       id: '/dashboard/catalog'
       path: '/catalog'
@@ -797,6 +816,7 @@ interface DashboardRouteChildren {
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardCatalogRoute: typeof DashboardCatalogRoute
+  DashboardCustomizeRoute: typeof DashboardCustomizeRoute
   DashboardHomeRoute: typeof DashboardHomeRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardPaymentsRoute: typeof DashboardPaymentsRoute
@@ -809,6 +829,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardCatalogRoute: DashboardCatalogRoute,
+  DashboardCustomizeRoute: DashboardCustomizeRoute,
   DashboardHomeRoute: DashboardHomeRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardPaymentsRoute: DashboardPaymentsRoute,
