@@ -8,7 +8,16 @@ import { Button } from "@/components/ui/button";
 import { normalizeTheme } from "@/lib/theme";
 import { updateBookingDesign } from "@/lib/tenant.functions";
 import { uploadOnboardingImage } from "@/lib/onboarding.functions";
-import { readFileAsDataUrl } from "@/components/onboarding/wizard-config";
+
+async function fileToBase64(file: File): Promise<{ base64: string; dataUrl: string }> {
+  const dataUrl: string = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(new Error("Could not read image"));
+    r.readAsDataURL(file);
+  });
+  return { base64: dataUrl.split(",")[1] ?? "", dataUrl };
+}
 
 export const Route = createFileRoute("/dashboard/customize")({
   component: CustomizePage,
@@ -73,8 +82,10 @@ function CustomizePage() {
     const setUploading = kind === "background" ? setBgUploading : setSlotBgUploading;
     setUploading(true);
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      const { url } = await uploadImage({ data: { workspaceId: ctx.workspaceId, dataUrl, kind } });
+      const { base64, dataUrl } = await fileToBase64(file);
+      const { url } = await uploadImage({
+        data: { workspaceId: ctx.workspaceId, kind, fileName: file.name, contentType: file.type || "image/jpeg", dataBase64: base64 },
+      });
       if (kind === "background") {
         setBackgroundUrl(url);
         setBackgroundPreview(dataUrl);
