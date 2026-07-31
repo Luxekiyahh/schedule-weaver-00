@@ -278,6 +278,12 @@ export type WizardState = {
   bio: string;
   logoDataUrl: string | null;
   logoUrl: string | null;
+  /** Main background image for the whole booking site. */
+  backgroundDataUrl: string | null;
+  backgroundUrl: string | null;
+  /** Background image shown behind the time-slots section. */
+  slotBgDataUrl: string | null;
+  slotBgUrl: string | null;
   primaryColor: string;
   secondaryColor: string;
   portfolio: PortfolioPhoto[];
@@ -332,6 +338,10 @@ export function initialWizard(): WizardState {
     bio: "",
     logoDataUrl: null,
     logoUrl: null,
+    backgroundDataUrl: null,
+    backgroundUrl: null,
+    slotBgDataUrl: null,
+    slotBgUrl: null,
     primaryColor: "#C9A15A",
     secondaryColor: "#0A090B",
     portfolio: [],

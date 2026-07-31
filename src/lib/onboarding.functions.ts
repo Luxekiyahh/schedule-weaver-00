@@ -85,7 +85,7 @@ export const uploadOnboardingImage = createServerFn({ method: "POST" })
     z
       .object({
         workspaceId: z.string().uuid(),
-        kind: z.enum(["logo", "portfolio"]),
+        kind: z.enum(["logo", "portfolio", "background", "slot-background"]),
         fileName: z.string().min(1).max(200),
         contentType: z.string().min(1).max(120),
         dataBase64: z.string().min(1).max(12_000_000),
@@ -152,6 +152,8 @@ const completeSchema = z.object({
   ownerTitle: z.string().trim().max(120).optional().default(""),
   bio: z.string().trim().max(200).optional().default(""),
   logoUrl: z.string().url().nullable().optional(),
+  backgroundUrl: z.string().url().nullable().optional(),
+  slotBgUrl: z.string().url().nullable().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   portfolioUrls: z.array(z.string().url()).max(9).default([]),

@@ -5,6 +5,10 @@ export type ThemeConfig = {
   font_family: "sans" | "serif" | "mono";
   layout_mode: "clean" | "compact" | "editorial";
   hero_text: string;
+  /** Optional full-page background image for the public booking site. */
+  background_image_url?: string;
+  /** Optional image shown behind the time-slots section. */
+  slot_background_image_url?: string;
 };
 
 export const DEFAULT_THEME: ThemeConfig = {
