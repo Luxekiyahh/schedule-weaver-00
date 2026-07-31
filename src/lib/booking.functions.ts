@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { normalizePhoneToE164 } from "@/lib/phone";
 
 export const getBookingWorkspace = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
@@ -237,6 +238,14 @@ type BookingInput = z.infer<typeof bookingInput>;
 // Validates availability, resolves the customer, and inserts the appointment
 // with the given status. Shared by the direct-confirm and deposit flows.
 async function prepareAndInsertAppointment(data: BookingInput, status: "confirmed" | "pending") {
+  // Normalize the customer number to E.164 up front so the stored record is
+  // always Twilio-ready; reject anything that can't form a valid number
+  // before any payment redirect or appointment insert happens.
+  const phoneE164 = normalizePhoneToE164(data.phone);
+  if (!phoneE164) {
+    throw new Error("Please enter a valid mobile number (e.g. (555) 123-4567 or +1 555 123 4567).");
+  }
+
   const { data: wsRow } = await supabaseAdmin
     .from("workspaces")
     .select("suspended_at")
@@ -306,14 +315,15 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   if (!customerId) {
     const { data: ins, error: insErr } = await supabaseAdmin
       .from("customers")
-      .insert({ workspace_id: data.workspaceId, full_name: fullName, email: data.email, phone: data.phone })
+      .insert({ workspace_id: data.workspaceId, full_name: fullName, email: data.email, phone: phoneE164 })
       .select("id")
       .single();
     if (insErr) throw new Error(insErr.message);
     customerId = ins.id;
-  } else if (data.phone && !existing?.phone) {
-    // Backfill phone on returning customers who never had one saved.
-    await supabaseAdmin.from("customers").update({ phone: data.phone }).eq("id", customerId);
+  } else if (existing?.phone !== phoneE164) {
+    // Keep the stored number in sync with what the customer just entered —
+    // backfills missing numbers and upgrades legacy formatted values to E.164.
+    await supabaseAdmin.from("customers").update({ phone: phoneE164 }).eq("id", customerId);
   }
 
   // No-show prepay only applies on Enterprise workspaces with the feature.
