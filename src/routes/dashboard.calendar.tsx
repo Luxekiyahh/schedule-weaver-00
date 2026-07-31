@@ -85,7 +85,7 @@ function money(cents: number, ccy = "USD") {
 
 const STATUS_STYLES: Record<Status, string> = {
   pending: "bg-amber-50 border-l-4 border-amber-400 text-amber-900",
-  confirmed: "bg-[#141414]/5 border-l-4 border-[#141414] text-[#141414]",
+  confirmed: "bg-foreground/5 border-l-4 border-foreground text-foreground",
   cancelled: "bg-muted border-l-4 border-border text-muted-foreground line-through",
   completed: "bg-emerald-50 border-l-4 border-emerald-500 text-emerald-900",
   no_show: "bg-rose-50 border-l-4 border-rose-500 text-rose-900",
@@ -679,11 +679,11 @@ function TimeGridView({
           {days.map((d) => {
             const isToday = startOfDay(d).getTime() === today;
             return (
-              <div key={d.toISOString()} className={`px-3 py-2 text-center ${isToday ? "bg-[#141414]/5" : ""}`}>
+              <div key={d.toISOString()} className={`px-3 py-2 text-center ${isToday ? "bg-foreground/5" : ""}`}>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   {d.toLocaleDateString([], { weekday: "short" })}
                 </p>
-                <p className={`text-lg font-semibold ${isToday ? "text-[#141414]" : "text-foreground"}`}>
+                <p className={`text-lg font-semibold ${isToday ? "text-foreground" : "text-foreground"}`}>
                   {d.getDate()}
                 </p>
               </div>
@@ -769,7 +769,7 @@ function MonthView({ cursor, appointments, onSelect }: { cursor: Date; appointme
           const isToday = d.toDateString() === today;
           return (
             <div key={d.toISOString()} className={`min-h-[110px] border-b border-l p-1.5 ${inMonth ? "" : "bg-background/60"}`}>
-              <div className={`mb-1 text-right text-xs ${isToday ? "font-bold text-[#141414]" : "text-muted-foreground"}`}>
+              <div className={`mb-1 text-right text-xs ${isToday ? "font-bold text-foreground" : "text-muted-foreground"}`}>
                 {d.getDate()}
               </div>
               <div className="space-y-1">
@@ -989,7 +989,7 @@ function NewApptSheet({
               <button
                 type="button"
                 onClick={() => setNewClient((v) => !v)}
-                className="text-xs font-medium text-[#141414] hover:text-[#141414]"
+                className="text-xs font-medium text-foreground hover:text-foreground"
               >
                 {newClient ? "← Pick existing" : "+ Create new"}
               </button>

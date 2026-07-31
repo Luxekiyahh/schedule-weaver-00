@@ -192,7 +192,7 @@ function CatalogAdminPage() {
   const catName = (id: string | null) => data.categories.find((c) => c.id === id)?.name ?? UNCATEGORIZED;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-[1100px] px-6 py-10">
         <Link to="/dashboard/home" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back to dashboard
