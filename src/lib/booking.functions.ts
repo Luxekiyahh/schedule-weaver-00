@@ -9,21 +9,23 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: ws, error } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug, timezone, theme_config")
+      .select("id, name, slug, timezone, theme_config, owner_id")
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!ws)
-      return {
-        workspace: null,
-        services: [],
-        providers: [],
-        serviceProviders: [],
-        categories: [],
-        lengthOptions: [],
-        hairColors: [],
-        payment: null,
-      };
+    const empty = {
+      workspace: null,
+      services: [],
+      providers: [],
+      serviceProviders: [],
+      categories: [],
+      lengthOptions: [],
+      hairColors: [],
+      payment: null,
+    };
+    if (!ws) return empty;
+    // Platform-admin (master operator) workspaces never take public bookings.
+    if (await isOwnerPlatformAdmin(supabaseAdmin, ws.owner_id)) return empty;
 
     const [
       { data: services },
