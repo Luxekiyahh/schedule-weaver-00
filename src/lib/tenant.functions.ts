@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isOwnerPlatformAdmin } from "@/lib/platform-admin-guard";
 
 const slugSchema = z
   .string()
@@ -317,6 +318,8 @@ export const getStorefront = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!ws) return { workspace: null };
     if (ws.suspended_at) return { workspace: null, suspended: true };
+    // Platform-admin (master operator) workspaces are not tenants — no storefront.
+    if (await isOwnerPlatformAdmin(supabaseAdmin, ws.owner_id)) return { workspace: null };
 
     const [branding, categories, variants, lengthOptions, hairColors] = await Promise.all([
       supabaseAdmin.from("workspace_branding").select("*").eq("workspace_id", ws.id).maybeSingle(),
