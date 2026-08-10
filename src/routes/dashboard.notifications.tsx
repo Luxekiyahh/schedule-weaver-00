@@ -123,6 +123,7 @@ function NotificationsPage() {
     setInitial(settings);
     setInitialNotifyMobile(notifyMobile.trim());
     toast.success("Notification preferences saved");
+    void refreshRouting();
   }
 
   if (loading) {
