@@ -148,6 +148,16 @@ export const getBookingSlots = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data }) => {
+    // Every wall-clock time below is interpreted in the workspace's timezone,
+    // not the (UTC) server clock.
+    const { data: wsTz } = await supabaseAdmin
+      .from("workspaces")
+      .select("timezone")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    const tz = wsTz?.timezone || "UTC";
+    const dayStart = zonedTimeToUtc(data.date, "00:00", tz);
+    const dayEnd = new Date(zonedTimeToUtc(data.date, "00:00", tz).getTime() + 24 * 3600_000);
     const dow = new Date(`${data.date}T12:00:00Z`).getUTCDay();
     const [{ data: avail }, { data: appts }, { data: exceptions }] = await Promise.all([
       supabaseAdmin
@@ -161,8 +171,10 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         .select("provider_id, start_at, end_at, status")
         .eq("workspace_id", data.workspaceId)
         .in("provider_id", data.memberIds)
-        .gte("start_at", `${data.date}T00:00:00Z`)
-        .lt("start_at", `${data.date}T23:59:59Z`)
+        // Widen by a day on each side so long appointments crossing the local
+        // day boundary are still considered for conflicts.
+        .gte("end_at", new Date(dayStart.getTime() - 24 * 3600_000).toISOString())
+        .lt("start_at", dayEnd.toISOString())
         .neq("status", "cancelled"),
       supabaseAdmin
         .from("schedule_exceptions")
@@ -170,6 +182,7 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         .eq("workspace_id", data.workspaceId)
         .eq("block_date", data.date),
     ]);
+
 
 
     const toMin = (t: string) => {
