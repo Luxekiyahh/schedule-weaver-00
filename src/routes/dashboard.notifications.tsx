@@ -204,6 +204,12 @@ function NotificationsPage() {
               onChange={(e) => setNotifyMobile(e.target.value)}
             />
           </div>
+          <RoutingPanel
+            routing={routing}
+            notifyMobileDraft={notifyMobile}
+            clientSmsDraft={settings.client_sms}
+          />
+
           <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
             <Label htmlFor="test_sms" className="text-sm font-medium">Send a test SMS</Label>
             <p className="text-sm text-muted-foreground">Verify Twilio delivery by texting your own phone.</p>
