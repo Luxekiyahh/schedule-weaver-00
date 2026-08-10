@@ -162,14 +162,14 @@ function NotificationsPage() {
           <Row
             id="client_sms"
             title="Send text message alert to clients"
-            desc="A 160-character confirmation text to the client's phone number."
+            desc="Short status texts to the client's phone. Booking confirmation requests (reply YES) are always sent."
             checked={settings.client_sms}
             onChange={(v) => setSettings((s) => ({ ...s, client_sms: v }))}
           />
           <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
             <Label htmlFor="notify_mobile" className="text-sm font-medium">Owner mobile for booking alerts</Label>
             <p className="text-sm text-muted-foreground">
-              We'll text this number when a new booking comes in. Used when no business phone is set.
+              We'll text this number when a new booking comes in. If it's blank, we use your business phone instead.
             </p>
             <Input
               id="notify_mobile"

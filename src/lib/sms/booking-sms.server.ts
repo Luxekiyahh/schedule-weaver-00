@@ -212,11 +212,12 @@ async function sendClientText(
   ctx: BookingContext,
   body: string,
   purpose: string,
-): Promise<void> {
-  if (!ctx.customerPhone) return;
-  if (!ctx.clientSmsEnabled) {
+  opts: { ignoreToggle?: boolean } = {},
+): Promise<boolean> {
+  if (!ctx.customerPhone) return false;
+  if (!ctx.clientSmsEnabled && !opts.ignoreToggle) {
     await logSkipped(ctx.workspaceId, ctx.customerPhone, body, purpose, "client_sms_disabled");
-    return;
+    return false;
   }
   try {
     await logAndSendSms({
@@ -225,8 +226,10 @@ async function sendClientText(
       purpose,
       body,
     });
+    return true;
   } catch (err) {
     console.error("[booking-sms] client SMS failed", err);
+    return false;
   }
 }
 
@@ -248,24 +251,28 @@ async function sendOwnerAlert(ctx: BookingContext, confirmed: boolean): Promise<
  * Free-booking flow: client "thank you for booking" + YES/NO request, owner
  * "awaiting client confirmation" alert. Called by createBooking.
  */
-export async function sendBookingSms(appointmentId: string): Promise<void> {
+export async function sendBookingSms(appointmentId: string): Promise<boolean> {
   try {
     const ctx = await loadBookingContext(appointmentId);
     if (!ctx) {
       console.warn("[booking-sms] booking context unavailable", appointmentId);
-      return;
+      return false;
     }
 
     if (!(await isSmsEligible(ctx.workspaceId))) {
       await logSkipped(ctx.workspaceId, ctx.customerPhone, requestSmsBody(ctx), "booking_request", "plan_not_eligible");
       await logSkipped(ctx.workspaceId, ctx.ownerPhone, ownerAlertBody(ctx, false), "owner_alert", "plan_not_eligible");
-      return;
+      return false;
     }
 
-    await sendClientText(ctx, requestSmsBody(ctx), "booking_request");
+    // The YES/NO prompt is the only way a free booking can reach "confirmed",
+    // so it is transactional and ignores the client_sms marketing toggle.
+    const sent = await sendClientText(ctx, requestSmsBody(ctx), "booking_request", { ignoreToggle: true });
     await sendOwnerAlert(ctx, false);
+    return sent;
   } catch (e) {
     console.warn("[booking-sms] request orchestration failed", e);
+    return false;
   }
 }
 
