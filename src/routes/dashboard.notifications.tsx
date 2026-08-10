@@ -101,8 +101,9 @@ function NotificationsPage() {
       setNotifyMobile(ws?.notify_mobile ?? "");
       setInitialNotifyMobile(ws?.notify_mobile ?? "");
       setLoading(false);
+      void refreshRouting();
     })();
-  }, []);
+  }, [refreshRouting]);
 
   const dirty =
     settings.client_email !== initial.client_email ||
