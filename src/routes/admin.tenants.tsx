@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin/tenants")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
-  head: () => ({ meta: [{ title: "Tenants — Procschedule Admin" }] }),
+  head: () => ({ meta: [{ title: "Tenants - Procschedule Admin" }] }),
 });
 
 type Tenant = {
@@ -132,7 +132,7 @@ function TenantsBody() {
                     {t.status.replace("_", " ")}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{t.plan_tier ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{t.plan_tier ?? "-"}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {new Date(t.created_at).toLocaleDateString()}
                 </td>

@@ -70,11 +70,11 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingWizard,
   head: () => ({
     meta: [
-      { title: "Create your account & booking site — ProcSchedule" },
+      { title: "Create your account & booking site - ProcSchedule" },
       {
         name: "description",
         content:
-          "Sign up and build your branded booking site in a few quick steps — account, industry, brand, services, availability, and publish.",
+          "Sign up and build your branded booking site in a few quick steps - account, industry, brand, services, availability, and publish.",
       },
     ],
   }),
@@ -696,7 +696,7 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Your brand</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">Name, photos, and colors — all in one place.</p>
+      <p className="mt-1.5 text-sm text-muted-foreground">Name, photos, and colors - all in one place.</p>
 
       <div className="mt-6 space-y-6">
         {/* Identity */}
@@ -758,14 +758,14 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
               )}
             </button>
             <div className="text-xs text-muted-foreground">
-              Upload a logo — we'll pull your brand colors automatically.
+              Upload a logo - we'll pull your brand colors automatically.
             </div>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-6">
             <ColorField label="Primary" value={wizard.primaryColor} onChange={(v) => patch({ primaryColor: v })} />
             <ColorField label="Secondary" value={wizard.secondaryColor} onChange={(v) => patch({ secondaryColor: v })} />
-            {detected && <span className="self-center text-xs text-muted-foreground">Detected from logo — tweak if needed.</span>}
+            {detected && <span className="self-center text-xs text-muted-foreground">Detected from logo - tweak if needed.</span>}
           </div>
         </section>
 
@@ -819,7 +819,7 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
         <section className="rounded-xl border border-border p-4">
           <p className="text-sm font-semibold">Booking page backgrounds</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Optional images for your booking site — they always fill the screen edge-to-edge, no stretching or tiling.
+            Optional images for your booking site - they always fill the screen edge-to-edge, no stretching or tiling.
           </p>
           <input
             ref={bgRef}
@@ -920,7 +920,7 @@ function StepBrand({ wizard, patch, workspaceId }: StepProps & { workspaceId: st
         {/* Theme */}
         <section className="rounded-xl border border-border p-4">
           <p className="text-sm font-semibold">Storefront theme</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Pre-selected for your industry — change anytime.</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Pre-selected for your industry - change anytime.</p>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {THEMES.map((t) => {
               const active = wizard.themeId === t.id;
@@ -1453,7 +1453,7 @@ function StepReview({
         >
           <div>
             <p className="text-sm font-semibold">Advanced: pre-booking questions</p>
-            <p className="text-xs text-muted-foreground">Optional — ask clients things before they book.</p>
+            <p className="text-xs text-muted-foreground">Optional - ask clients things before they book.</p>
           </div>
           {intakeOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
@@ -1505,7 +1505,7 @@ function StepReview({
         {lowRated && (
           <div className="mt-6 space-y-3">
             <p className="text-sm text-muted-foreground">
-              No problem — let's make it perfect. Schedule a design session and we'll personally update your site.
+              No problem - let's make it perfect. Schedule a design session and we'll personally update your site.
             </p>
             <div className="flex flex-col items-center gap-2">
               <Button onClick={() => window.open(CALENDLY_URL, "_blank", "noopener,noreferrer")}>Schedule a design call</Button>

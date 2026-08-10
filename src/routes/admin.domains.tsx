@@ -26,7 +26,7 @@ export const Route = createFileRoute("/admin/domains")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
-  head: () => ({ meta: [{ title: "Subdomains to register — Admin" }] }),
+  head: () => ({ meta: [{ title: "Subdomains to register - Admin" }] }),
 });
 
 type Tenant = {
@@ -139,7 +139,7 @@ function AdminDomainsPanel() {
         count={pending.length}
       >
         {pending.length === 0 ? (
-          <Empty text="Nothing waiting — every subdomain is connected." />
+          <Empty text="Nothing waiting - every subdomain is connected." />
         ) : (
           pending.map((t) => (
             <TenantRow

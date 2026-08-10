@@ -9,7 +9,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  * This lets each workspace owner decide *who collects guest payments* on their
  * booking site (Stripe, PayPal, or Square) and *how much* is taken upfront
  * (none, a deposit, or full payment). Connecting a provider account (OAuth /
- * Stripe Connect) and actually charging guests arrives in Phase 2B/2C — for now
+ * Stripe Connect) and actually charging guests arrives in Phase 2B/2C - for now
  * this stores intent and policy so the admin and booking surfaces can render.
  */
 
@@ -101,7 +101,7 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PaymentSettings> => {
     await assertWorkspaceMember(context.userId, data.workspaceId);
 
-    // Switching provider always resets the connection state — a new provider
+    // Switching provider always resets the connection state - a new provider
     // must be reconnected before it can collect payments.
     const { data: existing } = await supabaseAdmin
       .from("workspace_payment_settings")

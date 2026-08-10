@@ -62,7 +62,7 @@
 }
 
 :root {
-  /* Luxury boutique OS — parchment/ink/gold */
+  /* Luxury boutique OS - parchment/ink/gold */
   --radius: 0.75rem;
   --background: oklch(0.965 0.008 75);        /* parchment #F3EEE6 */
   --foreground: oklch(0.18 0.008 60);         /* ink text */

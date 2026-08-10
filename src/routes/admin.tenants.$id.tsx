@@ -23,7 +23,7 @@ export const Route = createFileRoute("/admin/tenants/$id")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
-  head: () => ({ meta: [{ title: "Tenant detail — Procschedule Admin" }] }),
+  head: () => ({ meta: [{ title: "Tenant detail - Procschedule Admin" }] }),
 });
 
 function TenantDetailPage() {
@@ -179,10 +179,10 @@ function DetailBody() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card title="Subscription & payments">
           <Row label="Status" value={detail.subscription?.status ?? "none"} />
-          <Row label="Plan" value={detail.subscription?.plan_tier ?? "—"} />
-          <Row label="Environment" value={detail.subscription?.environment ?? "—"} />
+          <Row label="Plan" value={detail.subscription?.plan_tier ?? "-"} />
+          <Row label="Environment" value={detail.subscription?.environment ?? "-"} />
           <Row label="Payment provider" value={detail.payment?.provider ?? "not connected"} />
-          <Row label="Connection" value={detail.payment?.connection_status ?? "—"} />
+          <Row label="Connection" value={detail.payment?.connection_status ?? "-"} />
         </Card>
 
         <Card title={`Services (${detail.services.length})`}>
@@ -204,7 +204,7 @@ function DetailBody() {
           <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2 text-sm last:border-0">
             <div>
               <span className="font-medium text-foreground">{a.customer?.full_name ?? "Unknown"}</span>
-              <span className="text-muted-foreground"> · {a.service_name ?? "—"}</span>
+              <span className="text-muted-foreground"> · {a.service_name ?? "-"}</span>
               <div className="text-xs text-muted-foreground">
                 {new Date(a.start_at).toLocaleString()} · <span className="capitalize">{a.status}</span>
               </div>

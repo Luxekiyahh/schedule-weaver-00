@@ -53,7 +53,7 @@ export const Route = createFileRoute("/$slug")({
     const description = b?.hero_subhead ?? `Book an appointment with ${ws?.name ?? params.slug}.`;
     return {
       meta: [
-        { title: `${title} — Book online` },
+        { title: `${title} - Book online` },
         { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
@@ -90,7 +90,7 @@ function StorefrontPage() {
 
 
 /**
- * Reusable storefront renderer — used by /$slug route AND by the index route
+ * Reusable storefront renderer - used by /$slug route AND by the index route
  * when a tenant subdomain (e.g. dolliimarie.procschedule.com) is detected.
  */
 export function StorefrontView({ data }: { data: any }) {
@@ -106,7 +106,7 @@ export function StorefrontView({ data }: { data: any }) {
     );
   }
 
-  // Bespoke Alluring Dolls page — dark luxury skin, real catalog data.
+  // Bespoke Alluring Dolls page - dark luxury skin, real catalog data.
   if (ws.slug === "alluringdolls") {
     return (
       <>
@@ -235,7 +235,7 @@ function OwnerAdminOverlay({ ownerId }: { ownerId?: string | null }) {
 
 
 /* ============================================================
-   DOLLIIMARIE — Luxury black + gold, script-driven, mobile-first
+   DOLLIIMARIE - Luxury black + gold, script-driven, mobile-first
    ============================================================ */
 function DolliimarieStorefront({ data }: { data: any }) {
   const { workspace, branding, categories, variants, lengthOptions, hairColors } = data;
@@ -457,7 +457,7 @@ function DolliimarieStorefront({ data }: { data: any }) {
 }
 
 /* ============================================================
-   DEFAULT tenant storefront — AI design-tokens driven, real DB content
+   DEFAULT tenant storefront - AI design-tokens driven, real DB content
    ============================================================ */
 
 type UiTokens = {
@@ -512,7 +512,7 @@ function hoverClasses(a?: UiTokens["button_hover_animation"]) {
 }
 
 /* ============================================================
-   DEFAULT tenant storefront — Luxury baby-pink shell (Dolliimarie-inspired)
+   DEFAULT tenant storefront - Luxury baby-pink shell (Dolliimarie-inspired)
    Pulls workspace name + services dynamically. Editorial copy lives in
    branding.layout_config (JSONB) so owners can edit from the dashboard.
    ============================================================ */
@@ -529,7 +529,7 @@ const DEFAULT_POLICY: EditorialCard[] = [
 
 const DEFAULT_PREP: EditorialCard[] = [
   { title: "Clean, Detangled Hair", body: "Arrive with freshly washed, fully blow-dried and detangled hair. A clean foundation makes every install last longer." },
-  { title: "Bring Inspiration", body: "Save 2–3 reference photos of the look you love. Color, length, parting — the more clarity, the more magic." },
+  { title: "Bring Inspiration", body: "Save 2–3 reference photos of the look you love. Color, length, parting - the more clarity, the more magic." },
   { title: "All Hair Included", body: "Premium braiding hair is provided in every service. No extra trips, no last-minute store runs. Just show up." },
   { title: "Comfort First", body: "Wear something comfortable and bring earbuds, a charger, and a snack. You're in the chair, settle in." },
 ];
@@ -552,7 +552,7 @@ function DefaultStorefront({ data }: { data: any }) {
   const heroHeadline: string = editorial.hero_headline ?? branding?.hero_headline ?? "Your Hair. But, Better.";
   const bio: string = editorial.bio
     ?? branding?.hero_subhead
-    ?? `${workspace.name} is a boutique studio specializing in protective styles that feel as luxurious as they look. Every appointment is a one-on-one experience — no double-bookings, no rushed installs, just careful, intentional work.`;
+    ?? `${workspace.name} is a boutique studio specializing in protective styles that feel as luxurious as they look. Every appointment is a one-on-one experience - no double-bookings, no rushed installs, just careful, intentional work.`;
 
   const policyCards: EditorialCard[] = Array.isArray(editorial.policy) && editorial.policy.length > 0
     ? editorial.policy : DEFAULT_POLICY;

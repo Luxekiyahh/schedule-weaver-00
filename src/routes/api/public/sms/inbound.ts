@@ -112,7 +112,7 @@ export const Route = createFileRoute("/api/public/sms/inbound")({
         }
 
         // Only look at pending appointments that are NOT waiting on a
-        // deposit — those flip to confirmed via the payment webhook, not SMS.
+        // deposit - those flip to confirmed via the payment webhook, not SMS.
         const { data: pendingAppts } = await supabaseAdmin
           .from("appointments")
           .select("id, status, deposit_cents, square_order_id, created_at")
@@ -166,7 +166,7 @@ export const Route = createFileRoute("/api/public/sms/inbound")({
           }
           // Strict sequence: the full confirmation SMS (appointment details +
           // business address) and the owner "confirmed" alert go out ONLY
-          // after this inbound YES — never at booking creation time.
+          // after this inbound YES - never at booking creation time.
           try {
             const { sendBookingConfirmedSms } = await import(
               "@/lib/sms/booking-sms.server"

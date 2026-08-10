@@ -63,7 +63,7 @@ export function useSubscription(): SubscriptionState {
       // Preview/dev runs in the sandbox environment, but real subscribers only
       // ever have a "live" row (checkout targets live). Without a fallback they
       // read as inactive in preview and get bounced to /pricing. Fall back to
-      // the live row for gating in sandbox only — never the reverse, so the
+      // the live row for gating in sandbox only - never the reverse, so the
       // published (live) site is unaffected.
       if (!sub && env === "sandbox") {
         const { data: liveSub } = await supabase

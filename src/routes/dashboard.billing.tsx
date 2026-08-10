@@ -31,7 +31,7 @@ export const Route = createFileRoute("/dashboard/billing")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
-  head: () => ({ meta: [{ title: "Billing & Plan — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Billing & Plan - Dashboard" }] }),
 });
 
 function money(cents: number) {
@@ -72,7 +72,7 @@ function BillingPage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") === "success") {
-      toast.success("Thanks! Your plan is being activated — this can take a few seconds.");
+      toast.success("Thanks! Your plan is being activated - this can take a few seconds.");
       const interval = setInterval(() => sub.refresh(), 3000);
       const stop = setTimeout(() => clearInterval(interval), 15000);
       window.history.replaceState({}, "", "/dashboard/billing");
@@ -102,7 +102,7 @@ function BillingPage() {
         setTimeout(() => clearInterval(interval), 15000);
         return;
       }
-      // New subscribers go straight to checkout — no bundled fee.
+      // New subscribers go straight to checkout - no bundled fee.
       await openCheckout({
         workspaceId: sub.workspaceId,
         priceLookupKeys: [priceIdFor(tier, period)],
@@ -182,7 +182,7 @@ function BillingPage() {
               <CardDescription>
                 {currentTier
                   ? sub.status === "past_due"
-                    ? "Your last payment failed — please update your payment method to keep your features."
+                    ? "Your last payment failed - please update your payment method to keep your features."
                     : `Active${sub.currentPeriodEnd ? ` · renews ${new Date(sub.currentPeriodEnd).toLocaleDateString()}` : ""}.`
                   : "Subscribe to launch your booking site. Your wizard-built site is included free with every plan."}
               </CardDescription>
@@ -289,10 +289,10 @@ function BillingPage() {
                   <Wand2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{DESIGN_FEE_NAME} — optional</h3>
+                  <h3 className="text-lg font-semibold">{DESIGN_FEE_NAME} - optional</h3>
                   <p className="mt-1 text-sm text-muted-foreground max-w-xl">
                     Want us to take your site further? We'll personally build custom layouts, premium design, and brand
-                    consultation. Competitors charge $500–$2,000+ — we do it for a one-time {money(DESIGN_FEE_CENTS)}.
+                    consultation. Competitors charge $500–$2,000+ - we do it for a one-time {money(DESIGN_FEE_CENTS)}.
                   </p>
                 </div>
               </div>

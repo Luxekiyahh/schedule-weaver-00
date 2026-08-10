@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { TEMPLATES } from "@/lib/email-templates/registry";
 
 // Server-only helper that renders a registered transactional template and
-// enqueues it for the email dispatcher — mirroring the logic in
+// enqueues it for the email dispatcher - mirroring the logic in
 // src/routes/lovable/email/transactional/send.ts, but usable from trusted
 // server code (webhooks, server functions) WITHOUT a Supabase user JWT.
 //

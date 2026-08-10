@@ -100,7 +100,7 @@ async function sendWelcomeEmail(workspaceId: string, toEmail: string | null | un
       <p style="margin-top:24px">
         <a href="https://procschedule.com/dashboard/home" style="background:#4f46e5;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Go to dashboard</a>
       </p>
-      <p style="color:#64748b;font-size:13px;margin-top:32px">— The ProcSchedule team</p>
+      <p style="color:#64748b;font-size:13px;margin-top:32px">- The ProcSchedule team</p>
     </div>`;
 
   await getSupabase().rpc("enqueue_email", {
@@ -205,7 +205,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
       POST: async ({ request }) => {
         const url = new URL(request.url);
         const rawEnv = url.searchParams.get("env");
-        // Never silently default the env — a mis-tagged row lands in an
+        // Never silently default the env - a mis-tagged row lands in an
         // environment the billing page doesn't read, so the plan looks inactive.
         if (rawEnv !== "sandbox" && rawEnv !== "live") {
           console.error("[stripe-webhook] invalid or missing env query param:", rawEnv);

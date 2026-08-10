@@ -10,7 +10,7 @@ import { getTenantUrl, getTenantSlugFromHost, WILDCARD_SUBDOMAINS_LIVE } from ".
  *    the subdomain form instead. The assertions adapt to the flag so they stay
  *    valid through the cutover.
  */
-describe("getTenantUrl — production canonical URL", () => {
+describe("getTenantUrl - production canonical URL", () => {
   const slug = "dolliimarie";
   const expected = WILDCARD_SUBDOMAINS_LIVE
     ? `https://${slug}.procschedule.com`
@@ -45,7 +45,7 @@ describe("getTenantUrl — production canonical URL", () => {
   });
 });
 
-describe("getTenantSlugFromHost — subdomain detection", () => {
+describe("getTenantSlugFromHost - subdomain detection", () => {
   it("resolves a tenant subdomain", () => {
     expect(getTenantSlugFromHost("dolliimarie.procschedule.com")).toBe("dolliimarie");
   });

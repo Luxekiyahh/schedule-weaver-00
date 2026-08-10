@@ -7,7 +7,7 @@
  *
  * IMPORTANT: Only real tenant root domains count. Lovable preview/sandbox
  * hosts (e.g. <uuid>.lovableproject.com, id-preview--xxx.lovable.app,
- * project--xxx.lovable.app) must NEVER be treated as tenant storefronts —
+ * project--xxx.lovable.app) must NEVER be treated as tenant storefronts -
  * otherwise the public marketing pages (/, /pricing, ...) get replaced by a
  * "Storefront not found" view.
  */
@@ -74,7 +74,7 @@ export function getTenantSlugFromHost(host?: string | null): string | null {
  * Whether *.procschedule.com wildcard DNS + SSL is live and serving the app.
  *
  * Until the wildcard is confirmed, tenant links MUST use the path form
- * (procschedule.com/<slug>) — the subdomain form 404s because only
+ * (procschedule.com/<slug>) - the subdomain form 404s because only
  * procschedule.com and www are wired up. Flip this to `true` once the wildcard
  * record resolves and serves HTTPS, and the subdomain form turns back on
  * everywhere with no other code changes.
@@ -93,7 +93,7 @@ export const WILDCARD_SUBDOMAINS_LIVE = false;
  *     always the path form so links resolve.
  *
  * `domainStatus` is accepted for call-site compatibility but does NOT change
- * the result — the wildcard cert covers every tenant at once.
+ * the result - the wildcard cert covers every tenant at once.
  */
 export function getTenantUrl(
   slug: string,

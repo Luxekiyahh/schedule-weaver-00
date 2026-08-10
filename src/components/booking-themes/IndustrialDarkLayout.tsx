@@ -5,7 +5,7 @@ import type { StorefrontThemeProps } from "./types";
 import { money } from "./types";
 
 /**
- * Industrial Dark skin — high-contrast, technical, monochrome base. Branding
+ * Industrial Dark skin - high-contrast, technical, monochrome base. Branding
  * tokens (primary_color, font_family, logo_url) are injected dynamically.
  */
 export function IndustrialDarkLayout({

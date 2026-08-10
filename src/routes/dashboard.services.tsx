@@ -21,7 +21,7 @@ export const Route = createFileRoute("/dashboard/services")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Services — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Services - Dashboard" }] }),
 });
 
 type Role = "owner" | "admin" | "staff" | "client";
@@ -310,7 +310,7 @@ function ServiceDialog({
           member_id: ctx.memberId,
         });
         if (linkErr && !/duplicate/i.test(linkErr.message)) {
-          // Non-fatal — surface as warning
+          // Non-fatal - surface as warning
           toast.warning(`Service created, but link failed: ${linkErr.message}`);
         } else {
           toast.success("Service created");

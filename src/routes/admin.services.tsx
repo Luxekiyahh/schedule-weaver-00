@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin/services")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Service Catalog — Admin" }] }),
+  head: () => ({ meta: [{ title: "Service Catalog - Admin" }] }),
 });
 
 type Category = { id: string; name: string; description: string | null; sort_order: number };

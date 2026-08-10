@@ -5,7 +5,7 @@ import type { StorefrontThemeProps } from "./types";
 import { money } from "./types";
 
 /**
- * Default storefront skin — the original /book/$slug presentation, extracted
+ * Default storefront skin - the original /book/$slug presentation, extracted
  * verbatim so workspaces without a theme_id keep today's look.
  */
 export function DefaultStorefrontLayout({

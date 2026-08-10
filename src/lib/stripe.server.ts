@@ -2,7 +2,7 @@
 //
 // Lovable's built-in Stripe integration is reached through the connector
 // gateway (it mirrors the Paddle setup). We never talk to api.stripe.com
-// directly — the gateway injects the real Stripe credentials based on the
+// directly - the gateway injects the real Stripe credentials based on the
 // X-Connection-Api-Key / Lovable-API-Key headers.
 import Stripe from "stripe";
 
@@ -111,7 +111,7 @@ export async function resolvePrice(
 // Webhook signature verification is performed offline (no network call), so we
 // can reuse a single Stripe instance regardless of environment. In the Worker /
 // edge runtime the synchronous crypto path is unavailable, so use the async
-// verifier — sync throws "SubtleCryptoProvider cannot be used in a synchronous
+// verifier - sync throws "SubtleCryptoProvider cannot be used in a synchronous
 // context".
 const verifier = new Stripe("sk_signature_verification_only", {
   httpClient: Stripe.createFetchHttpClient(),

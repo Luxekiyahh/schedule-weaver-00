@@ -27,7 +27,7 @@ export const Route = createFileRoute("/dashboard/calendar")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Calendar — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Calendar - Dashboard" }] }),
 });
 
 type ViewMode = "day" | "week" | "month";
@@ -159,7 +159,7 @@ function Dashboard() {
         supabase.from("services").select("*").eq("workspace_id", workspaceId).eq("is_active", true),
         supabase.from("customers").select("id, full_name, email").eq("workspace_id", workspaceId),
       ]);
-      // Fallback if FK alias not detected — fetch profiles separately
+      // Fallback if FK alias not detected - fetch profiles separately
       let memList: Member[] = [];
       if (mems && mems.length) {
         const userIds = mems.map((m: any) => m.user_id);
@@ -804,10 +804,10 @@ function ApptDialog({ appt, onClose, onStatus, onDelete }: { appt: Appointment |
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 text-sm">
-              <Row label="Client" value={appt.customer?.full_name ?? "—"} />
-              <Row label="Email" value={appt.customer?.email ?? "—"} />
+              <Row label="Client" value={appt.customer?.full_name ?? "-"} />
+              <Row label="Email" value={appt.customer?.email ?? "-"} />
               <Row label="Duration" value={`${appt.service?.duration_minutes ?? 0} min`} />
-              <Row label="Price" value={appt.service ? money(appt.service.price_cents, appt.service.currency) : "—"} />
+              <Row label="Price" value={appt.service ? money(appt.service.price_cents, appt.service.currency) : "-"} />
               <Row label="Time" value={`${fmtTime(new Date(appt.start_at))} – ${fmtTime(new Date(appt.end_at))}`} />
               {appt.notes && <Row label="Notes" value={appt.notes} />}
               <div className="pt-2">

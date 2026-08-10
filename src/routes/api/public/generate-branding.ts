@@ -105,7 +105,7 @@ Rules:
 - All hex colors must produce accessible contrast; primary_hex is reserved for CTAs.
 - Match the vibe holistically: moody/dark luxury → near-black bg + saturated accent + "editorial-stack" + "shadow-xl" + glassmorphism true; soft pastel → cream/pink + "modern-minimalist" + "rounded-full" + "shadow-sm"; bold modern → "bento-grid" + "rounded-xl" + "scale-up".
 - glassmorphism_enabled true works best on darker or vivid backgrounds; avoid on flat white.
-- hero_visuals copy must feel brand-specific — short, evocative, never generic boilerplate.
+- hero_visuals copy must feel brand-specific - short, evocative, never generic boilerplate.
 `;
 
 export const Route = createFileRoute("/api/public/generate-branding")({
@@ -250,7 +250,7 @@ export const Route = createFileRoute("/api/public/generate-branding")({
         );
         if (upErr) {
           console.error("Persist failed", upErr);
-          // Credit already consumed; don't refund — content was generated
+          // Credit already consumed; don't refund - content was generated
           return Response.json({ error: "Could not save branding" }, { status: 500 });
         }
 

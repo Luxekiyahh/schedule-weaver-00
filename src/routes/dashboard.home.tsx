@@ -17,7 +17,7 @@ export const Route = createFileRoute("/dashboard/home")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Home — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Home - Dashboard" }] }),
 });
 
 type Role = "owner" | "admin" | "staff" | "client";
@@ -69,7 +69,7 @@ function HomePage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") === "success") {
-      toast.success("Thanks! Your plan is being activated — this can take a few seconds.");
+      toast.success("Thanks! Your plan is being activated - this can take a few seconds.");
       window.history.replaceState({}, "", "/dashboard/home");
     }
   }, []);
@@ -150,7 +150,7 @@ function HomePage() {
       const n = a.service?.name;
       if (n) counts[n] = (counts[n] ?? 0) + 1;
     });
-    const topService = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+    const topService = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "-";
     return { revenue, hoursToday, topService };
   }, [weekAppts, today]);
 
@@ -207,7 +207,7 @@ function HomePage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-wider text-background/60">Your public booking link</p>
-              <p className="mt-1 truncate font-mono text-sm text-background/90">{bookingUrl || "—"}</p>
+              <p className="mt-1 truncate font-mono text-sm text-background/90">{bookingUrl || "-"}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -331,7 +331,7 @@ function HomePage() {
                 <Users className="h-3.5 w-3.5" /> Tip
               </div>
               <p className="mt-2 text-sm text-foreground">
-                Share your booking link on social or in your email signature — every new client starts there.
+                Share your booking link on social or in your email signature - every new client starts there.
               </p>
             </div>
           </section>
@@ -383,7 +383,7 @@ function BusinessInfoCard({ workspaceId }: { workspaceId: string }) {
           businessWebsite: website,
         },
       });
-      toast.success("Business info saved — it'll appear on booking confirmation emails.");
+      toast.success("Business info saved - it'll appear on booking confirmation emails.");
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't save business info");
     }

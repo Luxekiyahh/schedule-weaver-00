@@ -39,7 +39,7 @@ export function BrandedEmail({ preview, children }: Props) {
           <Section style={footer}>
             <Hr style={hr} />
             <Text style={footerText}>
-              <strong style={{ color: BRAND.ink }}>ProcSchedule</strong> — {BRAND.tagline}
+              <strong style={{ color: BRAND.ink }}>ProcSchedule</strong> - {BRAND.tagline}
             </Text>
             <Text style={footerMeta}>
               Questions? Email{" "}

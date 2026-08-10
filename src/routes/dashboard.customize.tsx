@@ -25,7 +25,7 @@ export const Route = createFileRoute("/dashboard/customize")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Booking page design — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Booking page design - Dashboard" }] }),
 });
 
 type Ctx = { workspaceId: string; slug: string; name: string };
@@ -134,7 +134,7 @@ function CustomizePage() {
           <h1 className="text-2xl font-bold tracking-tight">Booking page design</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Background images for <span className="font-medium text-foreground">{ctx.name}</span>'s booking site.
-            Images always fill the screen edge-to-edge — never stretched or tiled.
+            Images always fill the screen edge-to-edge - never stretched or tiled.
           </p>
         </div>
         <div className="flex gap-2">

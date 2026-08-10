@@ -87,7 +87,7 @@ export function LivePreview({ wizard, large = false }: { wizard: WizardState; la
   return (
     <div className="w-full">
       <p className="mb-2 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        Client view — live preview
+        Client view - live preview
       </p>
 
       {/* Browser frame */}
@@ -198,7 +198,7 @@ export function LivePreview({ wizard, large = false }: { wizard: WizardState; la
               )}
               {wizard.locationType === "mobile" && (
                 <p className="mt-3 flex items-center gap-1 text-xs text-white/55">
-                  <MapPin className="h-3 w-3" style={{ color: accent }} /> Mobile — we come to you
+                  <MapPin className="h-3 w-3" style={{ color: accent }} /> Mobile - we come to you
                 </p>
               )}
             </div>
@@ -233,7 +233,7 @@ export function LivePreview({ wizard, large = false }: { wizard: WizardState; la
                 <div className="rounded-2xl p-4 text-center" style={cardStyle}>
                   <Star className="mx-auto mb-2 h-5 w-5" style={{ color: accent }} />
                   <h4 className="mb-1 text-[10px] uppercase tracking-[0.18em]" style={{ color: hexToRgba(accent, 0.95) }}>Guests</h4>
-                  <p className="text-[11px] leading-relaxed text-white/60">Please arrive alone — no additional guests.</p>
+                  <p className="text-[11px] leading-relaxed text-white/60">Please arrive alone - no additional guests.</p>
                 </div>
               )}
               {wizard.policies.customNote.trim() && (
@@ -297,7 +297,7 @@ export function LivePreview({ wizard, large = false }: { wizard: WizardState; la
                         </p>
                       </div>
                       <span className="text-sm font-semibold" style={{ color: accent }}>
-                        {s.price ? `$${s.price}` : "—"}
+                        {s.price ? `$${s.price}` : "-"}
                       </span>
                     </div>
                     {s.options.filter((o) => o.label.trim()).length > 0 && (
@@ -305,7 +305,7 @@ export function LivePreview({ wizard, large = false }: { wizard: WizardState; la
                         {s.options.filter((o) => o.label.trim()).map((o) => (
                           <div key={o.id} className="flex justify-between">
                             <span className="text-white/55">{o.label}</span>
-                            <span style={{ color: hexToRgba(accent, 0.9) }}>{o.price ? `+$${o.price}` : "—"}</span>
+                            <span style={{ color: hexToRgba(accent, 0.9) }}>{o.price ? `+$${o.price}` : "-"}</span>
                           </div>
                         ))}
                       </div>

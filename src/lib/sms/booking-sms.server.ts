@@ -7,10 +7,10 @@
  *    gets a new-booking alert.
  *  - sendBookingConfirmedSms: fires when a booking becomes confirmed (deposit
  *    payment, dashboard-created booking, etc.). Client gets a plain
- *    confirmation text (no YES/NO — payment already confirmed); the owner
+ *    confirmation text (no YES/NO - payment already confirmed); the owner
  *    gets a confirmed alert.
  *
- * Booking SMS is a Pro/Enterprise feature — gated via the
+ * Booking SMS is a Pro/Enterprise feature - gated via the
  * `sms_booking_confirmations` flag in workspace_has_feature. The tenant's
  * `client_sms` preference (workspaces.notification_settings jsonb) can disable
  * the client text. Skipped sends are written to sms_send_log with status
@@ -277,7 +277,7 @@ export async function sendBookingSms(appointmentId: string): Promise<boolean> {
 }
 
 /**
- * Confirmed-booking flow: client plain confirmation text (no YES/NO — the
+ * Confirmed-booking flow: client plain confirmation text (no YES/NO - the
  * booking is already confirmed) + owner "confirmed" alert. Called by the
  * Stripe/Square deposit confirmation paths and the appointment webhook for
  * bookings inserted already-confirmed.

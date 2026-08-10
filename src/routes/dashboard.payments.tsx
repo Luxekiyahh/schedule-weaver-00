@@ -40,7 +40,7 @@ export const Route = createFileRoute("/dashboard/payments")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Payments — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Payments - Dashboard" }] }),
 });
 
 const PROVIDER_META: Record<
@@ -190,7 +190,7 @@ function PaymentsPage() {
       } else {
         setConnectionStatus("connected");
         setConnectOpen(false);
-        toast.success("Account connected — you can now collect payments from clients.");
+        toast.success("Account connected - you can now collect payments from clients.");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't verify those credentials.");
@@ -450,7 +450,7 @@ function PaymentsPage() {
           <div className="space-y-4 py-2">
             {provider === "square" ? (
               <p className="text-xs text-muted-foreground">
-                Square runs in live mode — deposits are charged to your real Square account.
+                Square runs in live mode - deposits are charged to your real Square account.
               </p>
             ) : (
               <div className="flex items-center gap-2">

@@ -12,13 +12,13 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "ProcSchedule — Scheduling, Refined" },
+      { title: "ProcSchedule - Scheduling, Refined" },
       {
         name: "description",
         content:
           "A boutique booking and retention engine for service professionals. Custom-coded, deposits from day one, flat $100 setup.",
       },
-      { property: "og:title", content: "ProcSchedule — Scheduling, Refined" },
+      { property: "og:title", content: "ProcSchedule - Scheduling, Refined" },
       {
         property: "og:description",
         content:
@@ -198,7 +198,7 @@ function Hero() {
           className="mt-6 max-w-2xl text-base sm:text-lg text-[#9C9488] leading-relaxed font-light"
         >
           Stop routing clients through a generic calendar. We custom-code a boutique booking &
-          retention site for your business — deposits from day one, for a flat
+          retention site for your business - deposits from day one, for a flat
           <span className="text-[#F3EEE6] font-medium"> $100 setup.</span>
         </motion.p>
 
@@ -258,9 +258,9 @@ function TrustItem({ children }: { children: React.ReactNode }) {
 /* ---------------- Pillars ---------------- */
 function Pillars() {
   const items = [
-    { k: "Structure", t: "Flat $100 setup", b: "One transparent initiation fee. We design, code, and launch your bespoke scheduling environment — no hidden layers." },
+    { k: "Structure", t: "Flat $100 setup", b: "One transparent initiation fee. We design, code, and launch your bespoke scheduling environment - no hidden layers." },
     { k: "Cashflow", t: "Deposits from day one", b: "Every appointment is backed by a deposit. Protect your calendar and your craft with intelligent no-show rules." },
-    { k: "Aesthetic", t: "A boutique OS", b: "A quiet, high-end interface that mirrors the premium nature of your service — never template-SaaS clutter." },
+    { k: "Aesthetic", t: "A boutique OS", b: "A quiet, high-end interface that mirrors the premium nature of your service - never template-SaaS clutter." },
   ];
   return (
     <section className="relative px-5 sm:px-8 py-24 border-t border-[#33302A]/60">
@@ -423,9 +423,9 @@ function StatusBadge({ status }: { status: "confirmed" | "pending" }) {
 /* ---------------- Features ---------------- */
 const FEATURES = [
   { icon: Palette, title: "The Done-For-You Booking Site", body: "No clunky templates or coding required. We build a fully branded, conversion-optimized storefront ready to accept deposits on day one." },
-  { icon: Repeat, title: "Smart Lifecycle Automations", body: "Trigger service-specific follow-ups automatically — a quiet retention engine that brings clients back at the right moment." },
+  { icon: Repeat, title: "Smart Lifecycle Automations", body: "Trigger service-specific follow-ups automatically - a quiet retention engine that brings clients back at the right moment." },
   { icon: ShieldCheck, title: "Strict No-Show Protection", body: "Dynamic deposit rules that adapt to client history. Require 100% upfront from clients with a pattern of late cancellations." },
-  { icon: FolderLock, title: "Secure Client Portfolios", body: "Records, project files, and private notes attached directly to each client's booking profile — quietly organized." },
+  { icon: FolderLock, title: "Secure Client Portfolios", body: "Records, project files, and private notes attached directly to each client's booking profile - quietly organized." },
 ];
 
 function Features() {
@@ -441,7 +441,7 @@ function Features() {
           </h2>
           <p className="mt-5 text-[#9C9488] font-light">
             A custom booking site paired with retention tools that turn one-time appointments into
-            loyal, repeat clients — built for consultants, contractors, and creatives.
+            loyal, repeat clients - built for consultants, contractors, and creatives.
           </p>
         </div>
 
@@ -485,11 +485,11 @@ function FinalCta() {
           <Signet className="w-8 h-8" />
         </div>
         <h3 className="text-3xl sm:text-4xl font-light tracking-tight text-[#F3EEE6] leading-tight">
-          Your custom booking site — built for a flat $100 setup.
+          Your custom booking site - built for a flat $100 setup.
         </h3>
         <p className="mt-4 text-[#9C9488] max-w-lg mx-auto font-light">
           Skip the DIY builders. We design, code, and launch a high-converting scheduling site for
-          your business — you just start taking bookings.
+          your business - you just start taking bookings.
         </p>
         <Link
           to="/onboarding"
@@ -525,7 +525,7 @@ function Footer() {
 /* ---------------- Demo Modal ---------------- */
 const DEMO_SCENES = [
   { key: "brand", label: "01 · Your Branded Site", title: "A booking site that looks like your business.", caption: "Custom-coded storefront with your colors, fonts, and voice." },
-  { key: "booking", label: "02 · Effortless Booking", title: "Clients pick a service and pay a deposit.", caption: "Consultations, inspections, and project work — booked in seconds." },
+  { key: "booking", label: "02 · Effortless Booking", title: "Clients pick a service and pay a deposit.", caption: "Consultations, inspections, and project work - booked in seconds." },
   { key: "retention", label: "03 · Automatic Follow-Ups", title: "The right message at the right moment.", caption: "Service-specific rebook nudges keep clients coming back." },
 ] as const;
 
@@ -677,7 +677,7 @@ function DemoScene({ sceneKey }: { sceneKey: string }) {
       <p className="text-[10px] uppercase tracking-[0.3em] text-[#9C9488]">Automated follow-ups</p>
       <div className="mt-4 space-y-2">
         {[
-          { t: "Day 0", msg: "Booking confirmed — deposit received" },
+          { t: "Day 0", msg: "Booking confirmed - deposit received" },
           { t: "Day 1", msg: "Thank-you note + prep details sent" },
           { t: "Day 30", msg: "Service-specific rebook nudge sent" },
           { t: "Day 45", msg: "Review request sent to happy client" },

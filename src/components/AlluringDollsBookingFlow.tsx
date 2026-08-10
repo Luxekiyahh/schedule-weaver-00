@@ -22,12 +22,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
 
 /**
- * ALLURING DOLLS — bespoke booking-flow skin.
+ * ALLURING DOLLS - bespoke booking-flow skin.
  *
  * Mirrors the exact same 4-step shape (Service → Provider → Time → Details)
  * as the shared /booking/$slug flow, with all data-fetching, slot logic,
  * and submission handled by the parent (BookingPage in booking.$slug.tsx)
- * — this component only owns presentation. That keeps the shared booking
+ * - this component only owns presentation. That keeps the shared booking
  * engine completely untouched for every other tenant.
  */
 
@@ -345,7 +345,7 @@ export function AlluringDollsBookingFlow({
             </p>
             <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--ad-smoke)" }}>
               {depositRequired
-                ? "A $25 non-refundable deposit secures your spot — remaining balance is cash only. "
+                ? "A $25 non-refundable deposit secures your spot - remaining balance is cash only. "
                 : ""}
               Come with hair completely blown out, dry &amp; product-free. You're allowed 15 minutes
               grace; after that the appointment may be rescheduled or canceled.

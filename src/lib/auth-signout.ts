@@ -23,7 +23,7 @@ export async function signOutAndReset(queryClient?: QueryClient) {
  * on the identity gate lands in the same place.
  */
 export async function resolveHomePathForUser(userId: string): Promise<string> {
-  // Platform admins (master operator accounts) are not tenants — land them in
+  // Platform admins (master operator accounts) are not tenants - land them in
   // the admin console rather than a tenant dashboard.
   const { data: admin } = await supabase
     .from("platform_admins")

@@ -1,7 +1,7 @@
 // Server-only Twilio SMS helper. Uses the direct Twilio REST API with HTTP
 // Basic auth. Secrets are read from process.env inside the function so the
 // Worker runtime can inject them per-request. Never import this from client
-// (route component) code — only from other server code / server functions.
+// (route component) code - only from other server code / server functions.
 
 import { normalizePhoneToE164 } from "@/lib/phone";
 
@@ -134,7 +134,7 @@ export function buildOwnerAlertSms(
 
 
 // Strict backstop: recipients should already be E.164 from the booking flow,
-// but legacy rows may hold formatted numbers — normalize and reject anything
+// but legacy rows may hold formatted numbers - normalize and reject anything
 // that cannot form a valid E.164 number instead of letting Twilio 400 it.
 function toE164(raw: string): string {
   const normalized = normalizePhoneToE164(raw);

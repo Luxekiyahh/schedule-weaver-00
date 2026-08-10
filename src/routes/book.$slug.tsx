@@ -12,7 +12,7 @@ export const Route = createFileRoute("/book/$slug")({
   component: BookCatalogPage,
   head: ({ params }) => ({
     meta: [
-      { title: `Book — ${params.slug}` },
+      { title: `Book - ${params.slug}` },
       { name: "description", content: "Browse services and book your appointment online." },
     ],
   }),

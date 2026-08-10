@@ -30,7 +30,7 @@ export const Route = createFileRoute("/booking/$slug")({
   component: BookingPage,
   head: ({ params }) => ({
     meta: [
-      { title: `Book — ${params.slug}` },
+      { title: `Book - ${params.slug}` },
       { name: "description", content: "Book an appointment online." },
     ],
   }),
@@ -171,7 +171,7 @@ function BookingPage() {
     const sessionId = params.get("session_id");
     const squareOrder = params.get("square_order");
     if (params.get("deposit") === "cancelled") {
-      toast.error("Deposit not completed. Your slot was released — please try again.");
+      toast.error("Deposit not completed. Your slot was released - please try again.");
       window.history.replaceState({}, "", window.location.pathname);
       return;
     }
@@ -390,7 +390,7 @@ function BookingPage() {
             <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-emerald-50 ring-1 ring-emerald-200">
               <Check className="h-7 w-7 text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-semibold text-slate-900">Almost done — please confirm by text</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Almost done - please confirm by text</h2>
             <p className="mt-2 text-sm text-slate-500">
               {new Date(done.start_at).toLocaleString([], {
                 weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC",
@@ -494,7 +494,7 @@ function BookingPage() {
                       {data?.waitlistEnabled && (
                         waitlistJoined ? (
                           <p className="text-sm font-medium text-emerald-600">
-                            You're on the waitlist — we'll text you the moment a spot opens.
+                            You're on the waitlist - we'll text you the moment a spot opens.
                           </p>
                         ) : (
                           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -624,7 +624,7 @@ function BookingPage() {
                         </p>
                       ) : (
                         <p className="mt-1 text-xs text-slate-500">
-                          We'll text you to confirm — reply YES to confirm or NO to cancel.
+                          We'll text you to confirm - reply YES to confirm or NO to cancel.
                         </p>
                       )}
                     </Field>

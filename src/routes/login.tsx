@@ -10,7 +10,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
   head: () => ({
     meta: [
-      { title: "Sign in — ProcSchedule" },
+      { title: "Sign in - ProcSchedule" },
       { name: "description", content: "Sign in to your ProcSchedule dashboard." },
     ],
   }),
@@ -175,7 +175,7 @@ function LoginPage() {
                 Sign out & use a different account
               </button>
               <p className="mt-4 text-xs text-[#9C9488]/70 text-center">
-                Not you? Sign out first — that keeps your account private on this device.
+                Not you? Sign out first - that keeps your account private on this device.
               </p>
             </div>
           ) : (

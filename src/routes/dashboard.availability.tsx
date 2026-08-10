@@ -14,7 +14,7 @@ export const Route = createFileRoute("/dashboard/availability")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Availability — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Availability - Dashboard" }] }),
 });
 
 type DayState = { active: boolean; start: string; end: string };

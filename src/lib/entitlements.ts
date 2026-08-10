@@ -53,12 +53,12 @@ export const DESIGN_FEE_NAME = "Done-For-You Design";
 export const PLANS: PlanMeta[] = [
   {
     tier: "basic",
-    name: "Basic — The Foundation",
+    name: "Basic - The Foundation",
     monthlyPriceId: "basic_monthly",
     yearlyPriceId: "basic_yearly",
     monthlyCents: 2500,
     yearlyCents: 25000,
-    tagline: "The Foundation — everything you need to take bookings.",
+    tagline: "The Foundation - everything you need to take bookings.",
     features: [
       "Custom-coded booking site (with the $100 setup add-on)",
       "Standard calendar & deposit collection",
@@ -68,12 +68,12 @@ export const PLANS: PlanMeta[] = [
   },
   {
     tier: "pro",
-    name: "Pro — The Retention Engine",
+    name: "Pro - The Retention Engine",
     monthlyPriceId: "pro_monthly",
     yearlyPriceId: "pro_yearly",
     monthlyCents: 4500,
     yearlyCents: 45000,
-    tagline: "The Retention Engine — keep clients coming back on autopilot.",
+    tagline: "The Retention Engine - keep clients coming back on autopilot.",
     features: [
       "Everything in Basic",
       "Predictive service-lifecycle automations (rebook nudges & follow-ups)",
@@ -83,16 +83,16 @@ export const PLANS: PlanMeta[] = [
   },
   {
     tier: "enterprise",
-    name: "Enterprise / Studio — The VIP & Protection Tier",
+    name: "Enterprise / Studio - The VIP & Protection Tier",
     monthlyPriceId: "enterprise_monthly",
     yearlyPriceId: "enterprise_yearly",
     monthlyCents: 6500,
     yearlyCents: 65000,
-    tagline: "The VIP & Protection Tier — protect every slot and reward loyalty.",
+    tagline: "The VIP & Protection Tier - protect every slot and reward loyalty.",
     features: [
       "Everything in Pro",
       "Dynamic VIP tiering & hidden calendars (deposit waivers, priority booking)",
-      'The "No-Show Burn Book" — auto-enforce 100% prepay for flaky clients',
+      'The "No-Show Burn Book" - auto-enforce 100% prepay for flaky clients',
       "Automated waitlist SMS bidding (fill canceled slots instantly)",
       "No-show automation & loyalty emails",
     ],
