@@ -55,3 +55,62 @@ export const sendTestSms = createServerFn({ method: "POST" })
       return { ok: false as const, error: err instanceof Error ? err.message : String(err) };
     }
   });
+
+/**
+ * Read-only diagnostics for the Notifications page: shows where booking texts
+ * will actually go. Mirrors the routing in booking-sms.server.ts exactly
+ * (notify_mobile first, then business_phone). No Twilio calls, no secrets.
+ */
+export const getSmsRoutingPreview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) {
+      return { ok: false as const, error: "You are not a member of any workspace." };
+    }
+
+    const { data: ws } = await supabase
+      .from("workspaces")
+      .select("notify_mobile, business_phone, notification_settings")
+      .eq("id", membership.workspace_id)
+      .maybeSingle();
+
+    const { normalizePhoneToE164 } = await import("@/lib/phone");
+
+    const notifyMobile = (ws?.notify_mobile ?? "").trim();
+    const businessPhone = (ws?.business_phone ?? "").trim();
+    const source: "notify_mobile" | "business_phone" | "none" = notifyMobile
+      ? "notify_mobile"
+      : businessPhone
+        ? "business_phone"
+        : "none";
+    const rawOwner = notifyMobile || businessPhone;
+    const normalizedOwner = rawOwner ? normalizePhoneToE164(rawOwner) : null;
+
+    const { data: eligible } = await supabase.rpc("workspace_has_feature", {
+      _workspace_id: membership.workspace_id,
+      _feature: "sms_booking_confirmations",
+      _env: "live",
+    });
+
+    const prefs = (ws?.notification_settings as Record<string, boolean> | null) ?? {};
+
+    return {
+      ok: true as const,
+      ownerSource: source,
+      ownerRaw: rawOwner || null,
+      ownerNormalized: normalizedOwner,
+      ownerValid: normalizedOwner !== null,
+      planEligible: eligible === true,
+      clientSmsEnabled: prefs.client_sms === true,
+    };
+  });
