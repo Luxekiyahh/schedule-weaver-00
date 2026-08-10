@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { getWorkspaceTimezone, saveWorkspaceTimezone } from "@/lib/tenant.functions";
 
 export const Route = createFileRoute("/dashboard/availability")({
   component: AvailabilityPage,
