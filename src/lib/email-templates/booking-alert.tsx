@@ -26,7 +26,7 @@ const Email = ({
   priceLabel = "",
   addOns = "",
 }: Props) => (
-  <BrandedEmail preview={`New booking: ${customerName} — ${serviceName}`}>
+  <BrandedEmail preview={`New booking: ${customerName} - ${serviceName}`}>
     <Text style={styles.eyebrow}>New booking alert</Text>
     <Text style={styles.h1}>
       {customerName} booked {serviceName}
@@ -56,7 +56,7 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (d: Record<string, any>) =>
-    `New booking: ${d.customerName ?? "A customer"} — ${d.serviceName ?? "service"}`,
+    `New booking: ${d.customerName ?? "A customer"} - ${d.serviceName ?? "service"}`,
   displayName: "New booking alert (owner)",
   previewData: {
     ownerName: "Court",

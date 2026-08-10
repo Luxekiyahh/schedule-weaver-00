@@ -11,7 +11,7 @@ export const Route = createFileRoute("/dashboard/staff")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Team & Providers — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Team & Providers - Dashboard" }] }),
 });
 
 type Role = "owner" | "admin" | "staff" | "client";
@@ -111,7 +111,7 @@ function StaffPage() {
                   <p className="truncate text-sm font-semibold text-foreground">
                     {m.profile?.full_name ?? m.profile?.email ?? "Member"}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">{m.profile?.email ?? "—"}</p>
+                  <p className="truncate text-xs text-muted-foreground">{m.profile?.email ?? "-"}</p>
                 </div>
                 <span className="ml-auto rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                   {m.role}

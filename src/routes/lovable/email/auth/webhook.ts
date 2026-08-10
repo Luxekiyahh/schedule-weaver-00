@@ -12,12 +12,12 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'ProcSchedule — Confirm your email',
+  signup: 'ProcSchedule - Confirm your email',
   invite: "You've been invited to ProcSchedule",
-  magiclink: 'ProcSchedule — Your sign-in link',
-  recovery: 'ProcSchedule — Reset your password',
-  email_change: 'ProcSchedule — Confirm your new email',
-  reauthentication: 'ProcSchedule — Your verification code',
+  magiclink: 'ProcSchedule - Your sign-in link',
+  recovery: 'ProcSchedule - Reset your password',
+  email_change: 'ProcSchedule - Confirm your new email',
+  reauthentication: 'ProcSchedule - Your verification code',
 }
 
 // Template mapping

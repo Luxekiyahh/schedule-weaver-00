@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin/health")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
-  head: () => ({ meta: [{ title: "System health — Procschedule Admin" }] }),
+  head: () => ({ meta: [{ title: "System health - Procschedule Admin" }] }),
 });
 
 function HealthPage() {
@@ -74,7 +74,7 @@ function HealthBody() {
           {data.stripe.pastDueSubscriptions.length === 0 && <Empty text="None." />}
           {data.stripe.pastDueSubscriptions.map((s: any, i: number) => (
             <div key={i} className="py-1 text-xs text-muted-foreground">
-              {s.plan_tier ?? "—"} · <span className="text-rose-600">{s.status}</span> · {s.environment}
+              {s.plan_tier ?? "-"} · <span className="text-rose-600">{s.status}</span> · {s.environment}
             </div>
           ))}
           <div className="mb-2 mt-3 text-xs font-semibold uppercase text-muted-foreground">Recent failed charges ({data.stripe.failedCharges.length})</div>

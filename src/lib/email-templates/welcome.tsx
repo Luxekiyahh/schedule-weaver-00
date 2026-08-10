@@ -43,13 +43,13 @@ const Email = ({
   dashboardUrl = BRAND.dashboardUrl,
   supportEmail = BRAND.supportEmail,
 }: Props) => (
-  <BrandedEmail preview="Welcome to ProcSchedule — everything you need to take bookings">
+  <BrandedEmail preview="Welcome to ProcSchedule - everything you need to take bookings">
     <Text style={styles.eyebrow}>Welcome aboard</Text>
     <Text style={styles.h1}>Welcome to ProcSchedule</Text>
     <Text style={styles.p}>Hi {firstName},</Text>
     <Text style={styles.p}>
       Thanks for creating your ProcSchedule account for <strong>{businessName}</strong>. Your
-      booking business is ready to grow — here's everything you can do:
+      booking business is ready to grow - here's everything you can do:
     </Text>
 
     <Section style={styles.card}>

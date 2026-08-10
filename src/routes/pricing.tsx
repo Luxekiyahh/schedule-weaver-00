@@ -21,13 +21,13 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
   head: () => ({
     meta: [
-      { title: "Pricing — ProcSchedule" },
+      { title: "Pricing - ProcSchedule" },
       {
         name: "description",
         content:
           "Your booking site is built automatically and included in every plan. Plans from $30/mo, or save with annual billing (2 months free).",
       },
-      { property: "og:title", content: "Pricing — ProcSchedule" },
+      { property: "og:title", content: "Pricing - ProcSchedule" },
       {
         property: "og:description",
         content: "Your booking site is built automatically and included in every plan. Plans from $30/mo, 2 months free on annual.",
@@ -117,7 +117,7 @@ function PricingPage() {
         <header className="text-center max-w-2xl mx-auto space-y-4">
           <h1 className="text-4xl font-bold tracking-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>Plans that pay for themselves</h1>
           <p className="text-lg text-muted-foreground">
-            Our wizard builds your branded booking site automatically — included free with every plan. Pick the automation that keeps clients coming back.
+            Our wizard builds your branded booking site automatically - included free with every plan. Pick the automation that keeps clients coming back.
           </p>
 
           {/* Billing period toggle */}
@@ -195,10 +195,10 @@ function PricingPage() {
               <Wand2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">{DESIGN_FEE_NAME} — optional</h3>
+              <h3 className="text-lg font-semibold">{DESIGN_FEE_NAME} - optional</h3>
               <p className="mt-1 text-sm text-muted-foreground max-w-xl">
                 Love your wizard-built site but want more? We'll personally craft custom layouts, premium design, and brand
-                consultation. Competitors charge $500–$2,000+ for custom setup — we do it for a one-time {money(DESIGN_FEE_CENTS)}.
+                consultation. Competitors charge $500–$2,000+ for custom setup - we do it for a one-time {money(DESIGN_FEE_CENTS)}.
               </p>
             </div>
           </div>

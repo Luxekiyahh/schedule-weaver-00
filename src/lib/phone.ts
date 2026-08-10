@@ -1,5 +1,5 @@
 /**
- * Shared phone normalization — safe in both browser and server bundles.
+ * Shared phone normalization - safe in both browser and server bundles.
  *
  * Customer numbers are stored in E.164 (e.g. +15619057383) so Twilio SMS
  * delivery never fails on formatting like "(561) 905-7383" or "561-905-7383".

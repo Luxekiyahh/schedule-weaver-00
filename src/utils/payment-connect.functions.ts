@@ -12,7 +12,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * `workspace_payment_settings`.
  *
  * These are the tenant's real provider keys, so we call the provider APIs
- * directly (api.stripe.com / paypal / square) — NOT the Lovable gateway, which
+ * directly (api.stripe.com / paypal / square) - NOT the Lovable gateway, which
  * only fronts the platform's own managed Stripe account.
  */
 
@@ -206,7 +206,7 @@ export const saveProviderCredentials = createServerFn({ method: "POST" })
     },
   );
 
-/** Disconnect a provider — wipes stored secrets and resets status. */
+/** Disconnect a provider - wipes stored secrets and resets status. */
 export const disconnectProvider = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))

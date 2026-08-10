@@ -23,7 +23,7 @@ export const getBookCatalog = createServerFn({ method: "GET" })
       .eq("slug", data.slug)
       .maybeSingle();
     if (wsErr) throw new Error(wsErr.message);
-    // Platform-admin (master operator) workspaces are not tenants — no storefront.
+    // Platform-admin (master operator) workspaces are not tenants - no storefront.
     if (!workspace || (await isOwnerPlatformAdmin(supabaseAdmin, workspace.owner_id))) {
       return { workspace: null, categories: [], variants: [], lengthOptions: [] } as const;
     }

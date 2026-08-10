@@ -236,7 +236,7 @@ export const THEMES: ThemeOption[] = [
   {
     id: "default",
     label: "Modern Clean",
-    description: "Bright, minimal, and versatile — works for any business.",
+    description: "Bright, minimal, and versatile - works for any business.",
     swatch: ["#4f46e5", "#ec4899", "#f8fafc"],
   },
   {

@@ -31,7 +31,7 @@ export const Route = createFileRoute("/dashboard/catalog")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
-  head: () => ({ meta: [{ title: "Categories & Providers — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Categories & Providers - Dashboard" }] }),
 });
 
 type Category = { id: string; name: string; description: string | null; sort_order: number; active: boolean };
@@ -53,7 +53,7 @@ function money(cents: number) {
   return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
-const UNCATEGORIZED = "—";
+const UNCATEGORIZED = "-";
 
 function CatalogAdminPage() {
   const load = useServerFn(getCatalogAdmin);

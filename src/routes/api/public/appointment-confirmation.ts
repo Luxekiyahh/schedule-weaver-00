@@ -7,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 // Confirmation + owner-alert emails now go through Lovable's queued email
 // system (verified domain notify.procschedule.com) instead of the previous
 // Resend `onboarding@resend.dev` sandbox sender, which only delivered to the
-// Resend account owner — so in practice nobody received booking emails.
+// Resend account owner - so in practice nobody received booking emails.
 
 type AppointmentRecord = {
   id: string;

@@ -5,7 +5,7 @@ import type { StorefrontThemeProps } from "./types";
 import { money } from "./types";
 
 /**
- * Luxury Blush skin — soft, elegant, light. Branding tokens (primary_color,
+ * Luxury Blush skin - soft, elegant, light. Branding tokens (primary_color,
  * font_family, logo_url) are injected dynamically; layout is fixed.
  */
 export function LuxuryBlushLayout({

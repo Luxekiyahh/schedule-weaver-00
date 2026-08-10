@@ -17,7 +17,7 @@ export const Route = createFileRoute("/dashboard/notifications")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/onboarding" });
   },
-  head: () => ({ meta: [{ title: "Notifications — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "Notifications - Dashboard" }] }),
 });
 
 type Settings = {

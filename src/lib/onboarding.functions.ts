@@ -214,7 +214,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     if (!ws) throw new Error("No workspace found for this account.");
     if (ws.onboarded_at) {
       throw new Error(
-        "This account is already set up. Onboarding can only be completed once — manage your site from the dashboard.",
+        "This account is already set up. Onboarding can only be completed once - manage your site from the dashboard.",
       );
     }
     const workspaceId = ws.id;
@@ -279,7 +279,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     );
     if (brandErr) throw new Error(brandErr.message);
 
-    // 3. Categories (replace) — one row per wizard category, or a single
+    // 3. Categories (replace) - one row per wizard category, or a single
     // default category derived from the industry when the wizard didn't
     // supply any.
     await supabaseAdmin.from("service_variants").delete().eq("workspace_id", workspaceId);
@@ -337,8 +337,8 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       insertedServices = svcRows ?? [];
     }
 
-    // 3c. Storefront variants — one base variant per service plus one
-    // variant per add-on (stored as "<Service> — <Add-on>" so the public
+    // 3c. Storefront variants - one base variant per service plus one
+    // variant per add-on (stored as "<Service> - <Add-on>" so the public
     // booking flow surfaces them as additional selectable items).
     if (data.services.length) {
       const variantRows: Array<{
@@ -368,7 +368,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
           variantRows.push({
             workspace_id: workspaceId,
             category_id: cid,
-            name: `${s.name} — ${a.name}`,
+            name: `${s.name} - ${a.name}`,
             description: null,
             price_cents: a.priceCents,
             duration_min: a.durationMinutes || 0,

@@ -49,7 +49,7 @@ function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reconcile from Stripe once before deciding whether to gate — avoids
+  // Reconcile from Stripe once before deciding whether to gate - avoids
   // bouncing a paying tenant whose webhook was missed or mis-tagged.
   useEffect(() => {
     if (!sub.workspaceId || syncStarted.current) return;

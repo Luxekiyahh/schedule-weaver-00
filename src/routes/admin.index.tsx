@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin/")({
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
-  head: () => ({ meta: [{ title: "Admin Overview — Procschedule" }] }),
+  head: () => ({ meta: [{ title: "Admin Overview - Procschedule" }] }),
 });
 
 function AdminOverview() {

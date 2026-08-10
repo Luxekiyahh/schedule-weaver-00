@@ -3,14 +3,14 @@ import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion
 import { Clock, ArrowRight, MapPin, MessageCircle, CalendarClock } from "lucide-react";
 
 /**
- * ALLURING DOLLS — bespoke luxury storefront skin.
+ * ALLURING DOLLS - bespoke luxury storefront skin.
  *
  * Scoped to the "alluringdolls" slug only (see the branch in $slug.tsx).
  * Reads real, live catalog data (categories/variants/length options/hair
- * colors) from getStorefront — the same data pipeline every other tenant's
+ * colors) from getStorefront - the same data pipeline every other tenant's
  * page uses. Only the presentation here is one-off.
  *
- * Design direction: an editorial luxury beauty house — near-black leather
+ * Design direction: an editorial luxury beauty house - near-black leather
  * backdrop with a CSS-only monochrome leopard emboss, layered ambient
  * lighting, brushed champagne-chrome display type (Cinzel / Cormorant),
  * capsule buttons and oversized rounded editorial cards.
@@ -39,7 +39,7 @@ const POLICIES: { label: string; detail: string }[] = [
   {
     label: "Running late",
     detail:
-      "15 minutes grace. After that your appointment is rescheduled or canceled — no late fees accepted to hold your spot.",
+      "15 minutes grace. After that your appointment is rescheduled or canceled - no late fees accepted to hold your spot.",
   },
   { label: "Once booked", detail: "Your hairstyle selection is final and cannot be changed." },
   {
@@ -51,7 +51,7 @@ const POLICIES: { label: string; detail: string }[] = [
   {
     label: "Your own hair",
     detail:
-      "Quick weave & sew-in services require you to bring your own hair — Sensual or Empire preferred.",
+      "Quick weave & sew-in services require you to bring your own hair - Sensual or Empire preferred.",
   },
 ];
 
@@ -258,7 +258,7 @@ export function AlluringDollsStorefront({ data }: { data: any }) {
             {ws.name || "Alluring Dolls"}
           </h1>
           <p className="ad-serif mt-5 text-lg sm:text-xl italic text-[color:var(--ad-smoke)] max-w-md mx-auto leading-relaxed">
-            {data.branding?.hero_subhead || "An intimate luxury beauty studio — bespoke installs, quiet glamour."}
+            {data.branding?.hero_subhead || "An intimate luxury beauty studio - bespoke installs, quiet glamour."}
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-[11px]">
             <a

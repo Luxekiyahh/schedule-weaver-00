@@ -127,7 +127,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
   // NOTE: confirmation SMS is handled separately by
   // sendBookingConfirmedSms (src/lib/sms/booking-sms.server.ts), which is
   // invoked by the callers of this function. SMS is Pro/Enterprise-gated and
-  // logged to sms_send_log there — do not re-add an inline send here.
+  // logged to sms_send_log there - do not re-add an inline send here.
 
   await Promise.allSettled(tasks);
 }

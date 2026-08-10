@@ -318,7 +318,7 @@ export const getStorefront = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!ws) return { workspace: null };
     if (ws.suspended_at) return { workspace: null, suspended: true };
-    // Platform-admin (master operator) workspaces are not tenants — no storefront.
+    // Platform-admin (master operator) workspaces are not tenants - no storefront.
     if (await isOwnerPlatformAdmin(supabaseAdmin, ws.owner_id)) return { workspace: null };
 
     const [branding, categories, variants, lengthOptions, hairColors] = await Promise.all([
@@ -468,7 +468,7 @@ Return ONLY valid JSON matching the schema. No prose, no markdown.`;
       }),
     });
 
-    if (response.status === 429) throw new Error("AI is busy — please retry in a moment.");
+    if (response.status === 429) throw new Error("AI is busy - please retry in a moment.");
     if (response.status === 402) throw new Error("AI credits exhausted. Add credits in Workspace Settings.");
     if (!response.ok) {
       const text = await response.text();

@@ -344,7 +344,7 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
     if (insErr) throw new Error(insErr.message);
     customerId = ins.id;
   } else if (existing?.phone !== phoneE164) {
-    // Keep the stored number in sync with what the customer just entered —
+    // Keep the stored number in sync with what the customer just entered -
     // backfills missing numbers and upgrades legacy formatted values to E.164.
     await supabaseAdmin.from("customers").update({ phone: phoneE164 }).eq("id", customerId);
   }
@@ -483,7 +483,7 @@ export const createDepositCheckout = createServerFn({ method: "POST" })
     const successUrl = `${origin}/booking/${data.slug}?appt=${inserted.appointmentId}&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/booking/${data.slug}?appt=${inserted.appointmentId}&deposit=cancelled`;
     const label =
-      settings.deposit_type === "full" ? `${inserted.service.name}` : `Deposit — ${inserted.service.name}`;
+      settings.deposit_type === "full" ? `${inserted.service.name}` : `Deposit - ${inserted.service.name}`;
 
     const params = new URLSearchParams();
     params.set("mode", "payment");
@@ -638,7 +638,7 @@ export const createSquareDepositCheckout = createServerFn({ method: "POST" })
     const label =
       settings.deposit_type === "full"
         ? `${inserted.service.name}`
-        : `Deposit — ${inserted.service.name}`;
+        : `Deposit - ${inserted.service.name}`;
 
     const base = squareApiBase(creds?.environment);
     const res = await fetch(`${base}/v2/online-checkout/payment-links`, {

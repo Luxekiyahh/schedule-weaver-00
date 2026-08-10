@@ -4,7 +4,7 @@
  * store in `appointments.start_at` / `end_at`).
  *
  * The server runtime is always UTC, so `new Date("2026-08-10T14:00:00")`
- * silently means 14:00 UTC — four/five hours off for a New York salon.
+ * silently means 14:00 UTC - four/five hours off for a New York salon.
  * Always route wall-clock times through `zonedTimeToUtc`.
  */
 
