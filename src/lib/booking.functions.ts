@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePhoneToE164 } from "@/lib/phone";
 import { isOwnerPlatformAdmin } from "@/lib/platform-admin-guard";
+import { zonedTimeToUtc } from "@/lib/timezone";
 
 export const getBookingWorkspace = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
@@ -148,6 +149,16 @@ export const getBookingSlots = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data }) => {
+    // Every wall-clock time below is interpreted in the workspace's timezone,
+    // not the (UTC) server clock.
+    const { data: wsTz } = await supabaseAdmin
+      .from("workspaces")
+      .select("timezone")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    const tz = wsTz?.timezone || "UTC";
+    const dayStart = zonedTimeToUtc(data.date, "00:00", tz);
+    const dayEnd = new Date(zonedTimeToUtc(data.date, "00:00", tz).getTime() + 24 * 3600_000);
     const dow = new Date(`${data.date}T12:00:00Z`).getUTCDay();
     const [{ data: avail }, { data: appts }, { data: exceptions }] = await Promise.all([
       supabaseAdmin
@@ -161,8 +172,10 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         .select("provider_id, start_at, end_at, status")
         .eq("workspace_id", data.workspaceId)
         .in("provider_id", data.memberIds)
-        .gte("start_at", `${data.date}T00:00:00Z`)
-        .lt("start_at", `${data.date}T23:59:59Z`)
+        // Widen by a day on each side so long appointments crossing the local
+        // day boundary are still considered for conflicts.
+        .gte("end_at", new Date(dayStart.getTime() - 24 * 3600_000).toISOString())
+        .lt("start_at", dayEnd.toISOString())
         .neq("status", "cancelled"),
       supabaseAdmin
         .from("schedule_exceptions")
@@ -170,6 +183,7 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         .eq("workspace_id", data.workspaceId)
         .eq("block_date", data.date),
     ]);
+
 
 
     const toMin = (t: string) => {
@@ -197,8 +211,8 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         if (blocked) continue;
         const hh = String(Math.floor(m / 60)).padStart(2, "0");
         const mm = String(m % 60).padStart(2, "0");
-        const slotStartIso = new Date(`${data.date}T${hh}:${mm}:00`).toISOString();
-        const slotStart = new Date(slotStartIso).getTime();
+        const slotStart = zonedTimeToUtc(data.date, `${hh}:${mm}`, tz).getTime();
+
         const slotEnd = slotStart + data.durationMinutes * 60000;
         const conflict = memberAppts.some((ap) => {
           const s = new Date(ap.start_at).getTime();
@@ -251,13 +265,14 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
 
   const { data: wsRow } = await supabaseAdmin
     .from("workspaces")
-    .select("suspended_at, owner_id")
+    .select("suspended_at, owner_id, timezone")
     .eq("id", data.workspaceId)
     .maybeSingle();
   if (wsRow?.suspended_at) throw new Error("This business is not currently accepting bookings.");
   if (await isOwnerPlatformAdmin(supabaseAdmin, wsRow?.owner_id)) {
     throw new Error("This business is not currently accepting bookings.");
   }
+  const tz = wsRow?.timezone || "UTC";
 
   const { data: svc, error: svcErr } = await supabaseAdmin
     .from("services")
@@ -268,8 +283,10 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   if (svcErr) throw new Error(svcErr.message);
   if (!svc || !svc.is_active) throw new Error("Service unavailable");
 
-  const startIso = new Date(`${data.date}T${data.time}:00`).toISOString();
+  // The picked date/time is wall-clock in the workspace's timezone.
+  const startIso = zonedTimeToUtc(data.date, data.time, tz).toISOString();
   const endIso = new Date(new Date(startIso).getTime() + svc.duration_minutes * 60000).toISOString();
+
 
   const toMin = (t: string) => {
     const [h, m] = t.split(":").map(Number);

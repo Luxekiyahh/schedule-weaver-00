@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { getWorkspaceTimezone, saveWorkspaceTimezone } from "@/lib/tenant.functions";
 
 export const Route = createFileRoute("/dashboard/availability")({
   component: AvailabilityPage,
@@ -30,6 +31,31 @@ const DAYS: { dow: number; label: string }[] = [
 
 const DEFAULT: DayState = { active: false, start: "09:00", end: "17:00" };
 
+const TIMEZONES = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Phoenix",
+  "America/Los_Angeles",
+  "America/Anchorage",
+  "Pacific/Honolulu",
+  "America/Toronto",
+  "America/Vancouver",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Madrid",
+  "Africa/Lagos",
+  "Africa/Johannesburg",
+  "Asia/Dubai",
+  "Asia/Kolkata",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "UTC",
+];
+
+
 function AvailabilityPage() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
@@ -41,6 +67,24 @@ function AvailabilityPage() {
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [timezone, setTimezone] = useState("UTC");
+  const [savingTz, setSavingTz] = useState(false);
+
+  const saveTimezone = async (tz: string) => {
+    if (!workspaceId) return;
+    const prev = timezone;
+    setTimezone(tz);
+    setSavingTz(true);
+    try {
+      await saveWorkspaceTimezone({ data: { workspaceId, timezone: tz } });
+      toast.success(`Timezone set to ${tz.replace(/_/g, " ")}`);
+    } catch (e: any) {
+      setTimezone(prev);
+      toast.error(e?.message ?? "Failed to save timezone");
+    } finally {
+      setSavingTz(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -53,6 +97,13 @@ function AvailabilityPage() {
       if (!mem) { setLoading(false); return; }
       setMemberId(mem.id);
       setWorkspaceId(mem.workspace_id);
+      try {
+        const tzRes = await getWorkspaceTimezone({ data: { workspaceId: mem.workspace_id } });
+        setTimezone(tzRes.timezone);
+      } catch {
+        /* keep UTC default */
+      }
+
 
       const { data: avail, error } = await supabase
         .from("provider_availability")
@@ -144,7 +195,39 @@ function AvailabilityPage() {
           </div>
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="mt-8 rounded-2xl border bg-card p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Booking timezone</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                All hours, slots, reminders and texts use this timezone. Current time here:{" "}
+                <span className="text-foreground">
+                  {new Date().toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    timeZone: timezone,
+                  })}
+                </span>
+              </p>
+            </div>
+            <select
+              value={timezone}
+              onChange={(e) => saveTimezone(e.target.value)}
+              disabled={savingTz}
+              className="h-10 rounded-md border bg-background px-3 text-sm text-foreground"
+              aria-label="Booking timezone"
+            >
+              {TIMEZONES.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-hidden rounded-2xl border bg-card shadow-sm">
+
           {DAYS.map(({ dow, label }, idx) => {
             const s = state[dow];
             return (
