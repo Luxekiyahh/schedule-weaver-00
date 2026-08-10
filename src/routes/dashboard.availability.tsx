@@ -30,6 +30,31 @@ const DAYS: { dow: number; label: string }[] = [
 
 const DEFAULT: DayState = { active: false, start: "09:00", end: "17:00" };
 
+const TIMEZONES = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Phoenix",
+  "America/Los_Angeles",
+  "America/Anchorage",
+  "Pacific/Honolulu",
+  "America/Toronto",
+  "America/Vancouver",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Madrid",
+  "Africa/Lagos",
+  "Africa/Johannesburg",
+  "Asia/Dubai",
+  "Asia/Kolkata",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "UTC",
+];
+
+
 function AvailabilityPage() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
