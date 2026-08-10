@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +7,11 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Mail, MessageSquare, Bell } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Mail, MessageSquare, Bell, Route as RouteIcon, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { sendTestSms } from "@/lib/sms/sms.functions";
+import { sendTestSms, getSmsRoutingPreview } from "@/lib/sms/sms.functions";
+import { normalizePhoneToE164 } from "@/lib/phone";
 
 export const Route = createFileRoute("/dashboard/notifications")({
   component: NotificationsPage,
@@ -28,6 +30,16 @@ type Settings = {
 
 const DEFAULTS: Settings = { client_email: true, client_sms: false, provider_email: true };
 
+type RoutingPreview = {
+  ownerSource: "notify_mobile" | "business_phone" | "none";
+  ownerRaw: string | null;
+  businessPhone: string | null;
+  ownerNormalized: string | null;
+  ownerValid: boolean;
+  planEligible: boolean;
+  clientSmsEnabled: boolean;
+};
+
 function NotificationsPage() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULTS);
@@ -39,6 +51,17 @@ function NotificationsPage() {
   const [testPhone, setTestPhone] = useState("");
   const [testing, setTesting] = useState(false);
   const sendTest = useServerFn(sendTestSms);
+  const loadRouting = useServerFn(getSmsRoutingPreview);
+  const [routing, setRouting] = useState<RoutingPreview | null>(null);
+
+  const refreshRouting = useCallback(async () => {
+    try {
+      const res = await loadRouting({});
+      setRouting(res.ok ? res : null);
+    } catch {
+      setRouting(null);
+    }
+  }, [loadRouting]);
 
   async function onTestSms() {
     if (!testPhone.trim()) return;
@@ -78,8 +101,9 @@ function NotificationsPage() {
       setNotifyMobile(ws?.notify_mobile ?? "");
       setInitialNotifyMobile(ws?.notify_mobile ?? "");
       setLoading(false);
+      void refreshRouting();
     })();
-  }, []);
+  }, [refreshRouting]);
 
   const dirty =
     settings.client_email !== initial.client_email ||
@@ -99,6 +123,7 @@ function NotificationsPage() {
     setInitial(settings);
     setInitialNotifyMobile(notifyMobile.trim());
     toast.success("Notification preferences saved");
+    void refreshRouting();
   }
 
   if (loading) {
@@ -179,6 +204,12 @@ function NotificationsPage() {
               onChange={(e) => setNotifyMobile(e.target.value)}
             />
           </div>
+          <RoutingPanel
+            routing={routing}
+            notifyMobileDraft={notifyMobile}
+            clientSmsDraft={settings.client_sms}
+          />
+
           <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
             <Label htmlFor="test_sms" className="text-sm font-medium">Send a test SMS</Label>
             <p className="text-sm text-muted-foreground">Verify Twilio delivery by texting your own phone.</p>
@@ -216,6 +247,98 @@ function NotificationsPage() {
     </div>
   );
 }
+
+function RoutingPanel({ routing, notifyMobileDraft, clientSmsDraft }: {
+  routing: RoutingPreview | null;
+  notifyMobileDraft: string;
+  clientSmsDraft: boolean;
+}) {
+  if (!routing) {
+    return (
+      <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+        Checking where your booking texts will be sent...
+      </div>
+    );
+  }
+
+  const draft = notifyMobileDraft.trim();
+  const source: RoutingPreview["ownerSource"] = draft
+    ? "notify_mobile"
+    : routing.businessPhone
+      ? "business_phone"
+      : "none";
+  const raw = draft || routing.businessPhone || "";
+  const normalized = raw ? normalizePhoneToE164(raw) : null;
+
+  const sourceLabel =
+    source === "notify_mobile"
+      ? "Owner mobile (above)"
+      : source === "business_phone"
+        ? "Business phone (fallback)"
+        : "Not set";
+
+  return (
+    <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <RouteIcon className="h-4 w-4 text-muted-foreground" />
+        <p className="text-sm font-medium">Where your texts go</p>
+        {routing.planEligible ? (
+          <Badge variant="secondary">Booking SMS active</Badge>
+        ) : (
+          <Badge variant="outline">Not on your plan</Badge>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Owner alert goes to</p>
+        {source === "none" ? (
+          <p className="text-sm text-muted-foreground flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
+            No number set, so you won't get a text when a booking comes in. Add an owner mobile above.
+          </p>
+        ) : normalized ? (
+          <p className="text-sm text-muted-foreground flex items-start gap-2">
+            <CheckCircle2 className="h-4 w-4 mt-0.5 text-emerald-500 shrink-0" />
+            <span>
+              <span className="font-medium text-foreground">{normalized}</span> - from {sourceLabel}
+            </span>
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
+            <span>
+              "{raw}" from {sourceLabel} isn't a valid mobile number, so the alert will fail. Use a
+              format like +1 555 123 4567.
+            </span>
+          </p>
+        )}
+        {draft && draft !== (routing.ownerSource === "notify_mobile" ? routing.ownerRaw ?? "" : "") && (
+          <p className="text-xs text-muted-foreground">Previewing your unsaved change - save to apply it.</p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Client text goes to</p>
+        <p className="text-sm text-muted-foreground">
+          The phone number each customer enters at booking. We reformat it to international format
+          before sending so delivery doesn't fail on formatting.
+        </p>
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-sm font-medium">What gets sent</p>
+        <p className="text-sm text-muted-foreground">
+          {routing.planEligible
+            ? clientSmsDraft
+              ? "The 'reply YES to confirm' prompt plus follow-up status texts."
+              : "Only the 'reply YES to confirm' prompt. Follow-up status texts are off while the client text toggle is off."
+            : "No texts. Bookings are confirmed automatically and clients get a confirmation email instead."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
 function Row({ id, title, desc, checked, onChange }: {
   id: string; title: string; desc: string; checked: boolean; onChange: (v: boolean) => void;
