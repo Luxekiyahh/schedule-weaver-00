@@ -2,27 +2,30 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePhoneToE164 } from "@/lib/phone";
+import { isOwnerPlatformAdmin } from "@/lib/platform-admin-guard";
 
 export const getBookingWorkspace = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
   .handler(async ({ data }) => {
     const { data: ws, error } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug, timezone, theme_config")
+      .select("id, name, slug, timezone, theme_config, owner_id")
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!ws)
-      return {
-        workspace: null,
-        services: [],
-        providers: [],
-        serviceProviders: [],
-        categories: [],
-        lengthOptions: [],
-        hairColors: [],
-        payment: null,
-      };
+    const empty = {
+      workspace: null,
+      services: [],
+      providers: [],
+      serviceProviders: [],
+      categories: [],
+      lengthOptions: [],
+      hairColors: [],
+      payment: null,
+    };
+    if (!ws) return empty;
+    // Platform-admin (master operator) workspaces never take public bookings.
+    if (await isOwnerPlatformAdmin(supabaseAdmin, ws.owner_id)) return empty;
 
     const [
       { data: services },
@@ -248,10 +251,13 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
 
   const { data: wsRow } = await supabaseAdmin
     .from("workspaces")
-    .select("suspended_at")
+    .select("suspended_at, owner_id")
     .eq("id", data.workspaceId)
     .maybeSingle();
   if (wsRow?.suspended_at) throw new Error("This business is not currently accepting bookings.");
+  if (await isOwnerPlatformAdmin(supabaseAdmin, wsRow?.owner_id)) {
+    throw new Error("This business is not currently accepting bookings.");
+  }
 
   const { data: svc, error: svcErr } = await supabaseAdmin
     .from("services")
