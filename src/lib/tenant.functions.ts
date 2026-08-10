@@ -546,3 +546,50 @@ export const getCreditBalance = createServerFn({ method: "POST" })
     if (!ws) return { credits: 0 };
     return { credits: ws.ai_credits ?? 0 };
   });
+
+/** Read the workspace's booking timezone. */
+export const getWorkspaceTimezone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertMember(context.userId, data.workspaceId);
+    const { data: ws } = await supabaseAdmin
+      .from("workspaces")
+      .select("timezone")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    return { timezone: ws?.timezone || "UTC" };
+  });
+
+/** Save the workspace's booking timezone (IANA name). */
+export const saveWorkspaceTimezone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        timezone: z
+          .string()
+          .trim()
+          .min(3)
+          .max(64)
+          .refine((tz) => {
+            try {
+              new Intl.DateTimeFormat("en-US", { timeZone: tz });
+              return true;
+            } catch {
+              return false;
+            }
+          }, "Unknown timezone"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.userId, data.workspaceId);
+    const { error } = await supabaseAdmin
+      .from("workspaces")
+      .update({ timezone: data.timezone })
+      .eq("id", data.workspaceId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
