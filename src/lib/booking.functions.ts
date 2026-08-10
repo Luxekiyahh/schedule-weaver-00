@@ -265,13 +265,14 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
 
   const { data: wsRow } = await supabaseAdmin
     .from("workspaces")
-    .select("suspended_at, owner_id")
+    .select("suspended_at, owner_id, timezone")
     .eq("id", data.workspaceId)
     .maybeSingle();
   if (wsRow?.suspended_at) throw new Error("This business is not currently accepting bookings.");
   if (await isOwnerPlatformAdmin(supabaseAdmin, wsRow?.owner_id)) {
     throw new Error("This business is not currently accepting bookings.");
   }
+  const tz = wsRow?.timezone || "UTC";
 
   const { data: svc, error: svcErr } = await supabaseAdmin
     .from("services")
@@ -282,8 +283,10 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
   if (svcErr) throw new Error(svcErr.message);
   if (!svc || !svc.is_active) throw new Error("Service unavailable");
 
-  const startIso = new Date(`${data.date}T${data.time}:00`).toISOString();
+  // The picked date/time is wall-clock in the workspace's timezone.
+  const startIso = zonedTimeToUtc(data.date, data.time, tz).toISOString();
   const endIso = new Date(new Date(startIso).getTime() + svc.duration_minutes * 60000).toISOString();
+
 
   const toMin = (t: string) => {
     const [h, m] = t.split(":").map(Number);
