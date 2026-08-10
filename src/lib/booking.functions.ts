@@ -400,12 +400,32 @@ export const createBooking = createServerFn({ method: "POST" })
     // text message. Inserting as "pending" skips the confirmed-only email
     // webhook; we send the booking-request + owner-alert SMS directly here.
     const res = await prepareAndInsertAppointment(data, "pending");
+    let requestSent = false;
     try {
       const { sendBookingSms } = await import("@/lib/sms/booking-sms.server");
-      await sendBookingSms(res.appointmentId);
+      requestSent = await sendBookingSms(res.appointmentId);
     } catch (err) {
       console.error("[createBooking] SMS dispatch failed", err);
     }
+
+    if (!requestSent) {
+      // No YES/NO text went out (plan not eligible, no phone, Twilio failure),
+      // so nothing could ever promote this booking. Confirm it directly and
+      // fall back to the email confirmation + owner alert.
+      try {
+        await supabaseAdmin
+          .from("appointments")
+          .update({ status: "confirmed" })
+          .eq("id", res.appointmentId)
+          .eq("status", "pending");
+        const { sendAppointmentEmails } = await import("@/lib/email/appointment-emails.server");
+        await sendAppointmentEmails(res.appointmentId);
+      } catch (err) {
+        console.error("[createBooking] fallback confirmation failed", err);
+      }
+      return { ok: true, start_at: res.startIso, end_at: res.endIso, pending: false };
+    }
+
     return { ok: true, start_at: res.startIso, end_at: res.endIso, pending: true };
   });
 
