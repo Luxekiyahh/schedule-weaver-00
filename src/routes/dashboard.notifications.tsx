@@ -30,6 +30,16 @@ type Settings = {
 
 const DEFAULTS: Settings = { client_email: true, client_sms: false, provider_email: true };
 
+type RoutingPreview = {
+  ownerSource: "notify_mobile" | "business_phone" | "none";
+  ownerRaw: string | null;
+  businessPhone: string | null;
+  ownerNormalized: string | null;
+  ownerValid: boolean;
+  planEligible: boolean;
+  clientSmsEnabled: boolean;
+};
+
 function NotificationsPage() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULTS);
