@@ -211,8 +211,8 @@ export const getBookingSlots = createServerFn({ method: "POST" })
         if (blocked) continue;
         const hh = String(Math.floor(m / 60)).padStart(2, "0");
         const mm = String(m % 60).padStart(2, "0");
-        const slotStartIso = new Date(`${data.date}T${hh}:${mm}:00`).toISOString();
-        const slotStart = new Date(slotStartIso).getTime();
+        const slotStart = zonedTimeToUtc(data.date, `${hh}:${mm}`, tz).getTime();
+
         const slotEnd = slotStart + data.durationMinutes * 60000;
         const conflict = memberAppts.some((ap) => {
           const s = new Date(ap.start_at).getTime();
