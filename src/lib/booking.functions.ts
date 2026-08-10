@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePhoneToE164 } from "@/lib/phone";
 import { isOwnerPlatformAdmin } from "@/lib/platform-admin-guard";
+import { zonedTimeToUtc } from "@/lib/timezone";
 
 export const getBookingWorkspace = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
