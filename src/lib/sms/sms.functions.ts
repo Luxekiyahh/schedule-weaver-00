@@ -108,6 +108,7 @@ export const getSmsRoutingPreview = createServerFn({ method: "GET" })
       ok: true as const,
       ownerSource: source,
       ownerRaw: rawOwner || null,
+      businessPhone: businessPhone || null,
       ownerNormalized: normalizedOwner,
       ownerValid: normalizedOwner !== null,
       planEligible: eligible === true,
