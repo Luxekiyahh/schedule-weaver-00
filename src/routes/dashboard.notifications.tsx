@@ -248,6 +248,98 @@ function NotificationsPage() {
   );
 }
 
+function RoutingPanel({ routing, notifyMobileDraft, clientSmsDraft }: {
+  routing: RoutingPreview | null;
+  notifyMobileDraft: string;
+  clientSmsDraft: boolean;
+}) {
+  if (!routing) {
+    return (
+      <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+        Checking where your booking texts will be sent...
+      </div>
+    );
+  }
+
+  const draft = notifyMobileDraft.trim();
+  const source: RoutingPreview["ownerSource"] = draft
+    ? "notify_mobile"
+    : routing.businessPhone
+      ? "business_phone"
+      : "none";
+  const raw = draft || routing.businessPhone || "";
+  const normalized = raw ? normalizePhoneToE164(raw) : null;
+
+  const sourceLabel =
+    source === "notify_mobile"
+      ? "Owner mobile (above)"
+      : source === "business_phone"
+        ? "Business phone (fallback)"
+        : "Not set";
+
+  return (
+    <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <RouteIcon className="h-4 w-4 text-muted-foreground" />
+        <p className="text-sm font-medium">Where your texts go</p>
+        {routing.planEligible ? (
+          <Badge variant="secondary">Booking SMS active</Badge>
+        ) : (
+          <Badge variant="outline">Not on your plan</Badge>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Owner alert goes to</p>
+        {source === "none" ? (
+          <p className="text-sm text-muted-foreground flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
+            No number set, so you won't get a text when a booking comes in. Add an owner mobile above.
+          </p>
+        ) : normalized ? (
+          <p className="text-sm text-muted-foreground flex items-start gap-2">
+            <CheckCircle2 className="h-4 w-4 mt-0.5 text-emerald-500 shrink-0" />
+            <span>
+              <span className="font-medium text-foreground">{normalized}</span> - from {sourceLabel}
+            </span>
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
+            <span>
+              "{raw}" from {sourceLabel} isn't a valid mobile number, so the alert will fail. Use a
+              format like +1 555 123 4567.
+            </span>
+          </p>
+        )}
+        {draft && draft !== (routing.ownerSource === "notify_mobile" ? routing.ownerRaw ?? "" : "") && (
+          <p className="text-xs text-muted-foreground">Previewing your unsaved change - save to apply it.</p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Client text goes to</p>
+        <p className="text-sm text-muted-foreground">
+          The phone number each customer enters at booking. We reformat it to international format
+          before sending so delivery doesn't fail on formatting.
+        </p>
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-sm font-medium">What gets sent</p>
+        <p className="text-sm text-muted-foreground">
+          {routing.planEligible
+            ? clientSmsDraft
+              ? "The 'reply YES to confirm' prompt plus follow-up status texts."
+              : "Only the 'reply YES to confirm' prompt. Follow-up status texts are off while the client text toggle is off."
+            : "No texts. Bookings are confirmed automatically and clients get a confirmation email instead."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
 function Row({ id, title, desc, checked, onChange }: {
   id: string; title: string; desc: string; checked: boolean; onChange: (v: boolean) => void;
 }) {
