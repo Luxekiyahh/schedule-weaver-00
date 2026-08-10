@@ -144,7 +144,39 @@ function AvailabilityPage() {
           </div>
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="mt-8 rounded-2xl border bg-card p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Booking timezone</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                All hours, slots, reminders and texts use this timezone. Current time here:{" "}
+                <span className="text-foreground">
+                  {new Date().toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    timeZone: timezone,
+                  })}
+                </span>
+              </p>
+            </div>
+            <select
+              value={timezone}
+              onChange={(e) => saveTimezone(e.target.value)}
+              disabled={savingTz}
+              className="h-10 rounded-md border bg-background px-3 text-sm text-foreground"
+              aria-label="Booking timezone"
+            >
+              {TIMEZONES.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-hidden rounded-2xl border bg-card shadow-sm">
+
           {DAYS.map(({ dow, label }, idx) => {
             const s = state[dow];
             return (
