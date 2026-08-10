@@ -41,6 +41,17 @@ function NotificationsPage() {
   const [testPhone, setTestPhone] = useState("");
   const [testing, setTesting] = useState(false);
   const sendTest = useServerFn(sendTestSms);
+  const loadRouting = useServerFn(getSmsRoutingPreview);
+  const [routing, setRouting] = useState<RoutingPreview | null>(null);
+
+  const refreshRouting = useCallback(async () => {
+    try {
+      const res = await loadRouting({});
+      setRouting(res.ok ? res : null);
+    } catch {
+      setRouting(null);
+    }
+  }, [loadRouting]);
 
   async function onTestSms() {
     if (!testPhone.trim()) return;
