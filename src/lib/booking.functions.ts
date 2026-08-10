@@ -251,10 +251,13 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
 
   const { data: wsRow } = await supabaseAdmin
     .from("workspaces")
-    .select("suspended_at")
+    .select("suspended_at, owner_id")
     .eq("id", data.workspaceId)
     .maybeSingle();
   if (wsRow?.suspended_at) throw new Error("This business is not currently accepting bookings.");
+  if (await isOwnerPlatformAdmin(supabaseAdmin, wsRow?.owner_id)) {
+    throw new Error("This business is not currently accepting bookings.");
+  }
 
   const { data: svc, error: svcErr } = await supabaseAdmin
     .from("services")
