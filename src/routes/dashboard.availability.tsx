@@ -66,6 +66,24 @@ function AvailabilityPage() {
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [timezone, setTimezone] = useState("UTC");
+  const [savingTz, setSavingTz] = useState(false);
+
+  const saveTimezone = async (tz: string) => {
+    if (!workspaceId) return;
+    const prev = timezone;
+    setTimezone(tz);
+    setSavingTz(true);
+    try {
+      await saveWorkspaceTimezone({ data: { workspaceId, timezone: tz } });
+      toast.success(`Timezone set to ${tz.replace(/_/g, " ")}`);
+    } catch (e: any) {
+      setTimezone(prev);
+      toast.error(e?.message ?? "Failed to save timezone");
+    } finally {
+      setSavingTz(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -78,6 +96,13 @@ function AvailabilityPage() {
       if (!mem) { setLoading(false); return; }
       setMemberId(mem.id);
       setWorkspaceId(mem.workspace_id);
+      try {
+        const tzRes = await getWorkspaceTimezone({ data: { workspaceId: mem.workspace_id } });
+        setTimezone(tzRes.timezone);
+      } catch {
+        /* keep UTC default */
+      }
+
 
       const { data: avail, error } = await supabase
         .from("provider_availability")
