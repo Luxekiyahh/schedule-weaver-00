@@ -292,6 +292,7 @@ function BookingPage() {
     return (
       <AlluringDollsBookingFlow
         workspaceName={ws.name}
+        timezone={(ws as { timezone?: string | null }).timezone ?? null}
         backgroundUrl={adTheme.background_image_url ?? null}
         slotBackgroundUrl={adTheme.slot_background_image_url ?? null}
         services={data.services}
@@ -393,7 +394,7 @@ function BookingPage() {
             <h2 className="text-2xl font-semibold text-slate-900">Almost done - please confirm by text</h2>
             <p className="mt-2 text-sm text-slate-500">
               {new Date(done.start_at).toLocaleString([], {
-                weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC",
+                weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: (ws as { timezone?: string | null }).timezone || "UTC",
               })}
             </p>
             <p className="mt-3 text-sm text-slate-500">

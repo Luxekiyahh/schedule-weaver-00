@@ -72,6 +72,7 @@ const STEP_LABELS = ["Service", "Provider", "Time", "Details"];
 
 export function AlluringDollsBookingFlow({
   workspaceName,
+  timezone,
   backgroundUrl,
   slotBackgroundUrl,
   services,
@@ -106,6 +107,8 @@ export function AlluringDollsBookingFlow({
   onSubmit,
 }: {
   workspaceName: string;
+  /** IANA timezone of the workspace; confirmation times render in it. */
+  timezone?: string | null;
   /** Optional full-page background image (from theme_config). */
   backgroundUrl?: string | null;
   /** Optional image behind the time-slots section (from theme_config). */
@@ -337,7 +340,7 @@ export function AlluringDollsBookingFlow({
                 day: "numeric",
                 hour: "numeric",
                 minute: "2-digit",
-                timeZone: "UTC",
+                timeZone: timezone || "UTC",
               })}
             </p>
             <p className="mt-3 text-sm" style={{ color: "var(--ad-smoke)" }}>
