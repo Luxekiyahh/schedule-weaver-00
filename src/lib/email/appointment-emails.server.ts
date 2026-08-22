@@ -17,7 +17,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
     supabaseAdmin.from("customers").select("full_name, email, phone").eq("id", appt.customer_id).maybeSingle(),
     supabaseAdmin
       .from("workspaces")
-      .select("name, slug, owner_id, theme_config, notification_settings, business_address, business_phone, business_email, business_website")
+      .select("name, slug, owner_id, theme_config, notification_settings, timezone, business_address, business_phone, business_email, business_website")
       .eq("id", appt.workspace_id)
       .maybeSingle(),
     supabaseAdmin
@@ -48,7 +48,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
   const theme = (workspace.theme_config as Record<string, string>) ?? {};
   const primary = theme.primary_color || "#4f46e5";
 
-  const tz = "UTC";
+  const tz = workspace.timezone || "UTC";
   const start = new Date(appt.start_at);
   const end = new Date(appt.end_at);
   const dateLabel = start.toLocaleDateString("en-US", {
