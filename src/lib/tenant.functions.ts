@@ -94,8 +94,8 @@ export const finalizeTenantSignup = createServerFn({ method: "POST" })
       const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId);
       const recipientEmail = userRes?.user?.email;
       if (recipientEmail) {
-        const { enqueueTransactionalEmail } = await import("@/lib/email/dispatch.server");
-        await enqueueTransactionalEmail({
+        const { sendTransactionalEmail } = await import("@/lib/email/dispatch.server");
+        await sendTransactionalEmail({
           templateName: "welcome",
           recipientEmail,
           idempotencyKey: `welcome-${userId}`,

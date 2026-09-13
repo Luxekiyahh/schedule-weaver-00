@@ -336,8 +336,8 @@ export const resendWelcomeEmail = createServerFn({ method: "POST" })
     const email = ownerRes?.user?.email;
     if (!email) throw new Error("Owner has no email on file.");
 
-    const { enqueueTransactionalEmail } = await import("@/lib/email/dispatch.server");
-    const res = await enqueueTransactionalEmail({
+    const { sendTransactionalEmail } = await import("@/lib/email/dispatch.server");
+    const res = await sendTransactionalEmail({
       templateName: "welcome",
       recipientEmail: email,
       idempotencyKey: `welcome-resend-${data.workspaceId}-${Date.now()}`,
