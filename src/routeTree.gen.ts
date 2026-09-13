@@ -37,6 +37,7 @@ import { Route as AdminServicesRouteImport } from './routes/admin.services'
 import { Route as AdminHealthRouteImport } from './routes/admin.health'
 import { Route as AdminDomainsRouteImport } from './routes/admin.domains'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
 import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
 import { Route as AdminTenantsIdRouteImport } from './routes/admin.tenants.$id'
@@ -189,6 +190,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGenerateBrandingRoute =
   ApiPublicGenerateBrandingRouteImport.update({
     id: '/api/public/generate-branding',
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/admin/tenants/$id': typeof AdminTenantsIdRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/waitlist-notify': typeof ApiPublicHooksWaitlistNotifyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/admin/tenants/$id': typeof AdminTenantsIdRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/waitlist-notify': typeof ApiPublicHooksWaitlistNotifyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/admin/tenants/$id': typeof AdminTenantsIdRoute
   '/api/public/appointment-confirmation': typeof ApiPublicAppointmentConfirmationRoute
   '/api/public/generate-branding': typeof ApiPublicGenerateBrandingRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/waitlist-notify': typeof ApiPublicHooksWaitlistNotifyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/admin/tenants/$id'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/api/public/hooks/waitlist-notify'
     | '/api/public/payments/webhook'
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/admin/tenants/$id'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/api/public/hooks/waitlist-notify'
     | '/api/public/payments/webhook'
@@ -491,6 +502,7 @@ export interface FileRouteTypes {
     | '/admin/tenants/$id'
     | '/api/public/appointment-confirmation'
     | '/api/public/generate-branding'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/api/public/hooks/waitlist-notify'
     | '/api/public/payments/webhook'
@@ -522,6 +534,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   ApiPublicAppointmentConfirmationRoute: typeof ApiPublicAppointmentConfirmationRoute
   ApiPublicGenerateBrandingRoute: typeof ApiPublicGenerateBrandingRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksWaitlistNotifyRoute: typeof ApiPublicHooksWaitlistNotifyRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -731,6 +744,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/generate-branding': {
       id: '/api/public/generate-branding'
       path: '/api/public/generate-branding'
@@ -873,6 +893,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   ApiPublicAppointmentConfirmationRoute: ApiPublicAppointmentConfirmationRoute,
   ApiPublicGenerateBrandingRoute: ApiPublicGenerateBrandingRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksWaitlistNotifyRoute: ApiPublicHooksWaitlistNotifyRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
