@@ -1272,8 +1272,36 @@ function StepAvailability({ wizard, patch }: StepProps) {
             <LocationOption value="home" label="I work from home (address kept private)" />
           </RadioGroup>
           {(wizard.locationType === "studio" || wizard.locationType === "home") && (
-            <Input value={wizard.address} onChange={(e) => patch({ address: e.target.value })} placeholder="Street address" className="mt-3" />
+            <Input value={wizard.address} onChange={(e) => patch({ address: e.target.value })} placeholder="Street address, city, state ZIP" className="mt-3" />
           )}
+
+          <div className="mt-4 rounded-xl border bg-card/60 p-4">
+            <p className="text-sm font-semibold">Booking timezone</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {detectedTimezone
+                ? `Detected from your address: ${timezoneLabel(detectedTimezone)}. Change it below if that's not right.`
+                : "We could not detect a timezone from your address, so please pick the one your clients book in."}
+            </p>
+            <select
+              value={effectiveTimezone}
+              onChange={(e) => patch({ timezone: e.target.value })}
+              className="mt-3 h-10 w-full rounded-md border bg-background px-3 text-sm text-foreground"
+              aria-label="Booking timezone"
+            >
+              {(COMMON_TIMEZONES.includes(effectiveTimezone)
+                ? COMMON_TIMEZONES
+                : [effectiveTimezone, ...COMMON_TIMEZONES]
+              ).map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Current time there:{" "}
+              {new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: effectiveTimezone })}
+            </p>
+          </div>
         </section>
 
         {/* Policies */}
@@ -1399,6 +1427,7 @@ function StepReview({
           })),
         hours: wizard.hours.map((h) => ({ dow: h.dow, open: h.open, start: h.start, end: h.end })),
         location: { type: wizard.locationType, address: wizard.address.trim() },
+        timezone: wizard.timezone.trim(),
         businessPhone: wizard.businessPhone.trim(),
         businessEmail: wizard.businessEmail.trim(),
         businessWebsite: wizard.businessWebsite.trim(),
