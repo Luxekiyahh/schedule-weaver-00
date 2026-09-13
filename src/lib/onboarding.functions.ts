@@ -174,6 +174,7 @@ const completeSchema = z.object({
     type: z.enum(["studio", "mobile", "home"]),
     address: z.string().trim().max(300).optional().default(""),
   }),
+  timezone: z.string().trim().max(64).optional().default(""),
   businessPhone: z.string().trim().max(60).optional().default(""),
   businessEmail: z.string().trim().max(160).optional().default(""),
   businessWebsite: z.string().trim().max(200).optional().default(""),
@@ -235,6 +236,15 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       slot_background_image_url: data.slotBgUrl ?? null,
     };
 
+    // Booking timezone: the tenant's explicit pick wins, otherwise derive it
+    // from the business address so slots/emails/texts use their local clock.
+    const { guessTimezoneFromAddress, isValidTimezone } = await import("@/lib/timezone-from-address");
+    const picked = (data.timezone || "").trim();
+    const resolvedTimezone =
+      picked && isValidTimezone(picked)
+        ? picked
+        : (guessTimezoneFromAddress(data.location.address) ?? "UTC");
+
     // 1. Workspace fields
     const { error: updErr } = await supabaseAdmin
       .from("workspaces")
@@ -246,6 +256,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         primary_color: data.primaryColor,
         secondary_color: data.secondaryColor,
         logo_url: data.logoUrl ?? null,
+        timezone: resolvedTimezone,
         business_address: data.location.address || null,
         business_phone: data.businessPhone || null,
         business_email: data.businessEmail || null,
