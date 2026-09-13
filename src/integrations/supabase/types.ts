@@ -1231,6 +1231,7 @@ export type Database = {
           theme_config: Json
           theme_id: string | null
           timezone: string
+          timezone_overridden_at: string | null
           updated_at: string
         }
         Insert: {
@@ -1259,6 +1260,7 @@ export type Database = {
           theme_config?: Json
           theme_id?: string | null
           timezone?: string
+          timezone_overridden_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -1287,6 +1289,7 @@ export type Database = {
           theme_config?: Json
           theme_id?: string | null
           timezone?: string
+          timezone_overridden_at?: string | null
           updated_at?: string
         }
         Relationships: []
