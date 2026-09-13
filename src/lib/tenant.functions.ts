@@ -161,9 +161,23 @@ export const saveBusinessInfo = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertMember(context.userId, data.workspaceId);
+
+    // Keep the booking timezone in step with the address, unless the tenant
+    // explicitly picked one on the Availability page.
+    const { data: current } = await supabaseAdmin
+      .from("workspaces")
+      .select("timezone, timezone_overridden_at")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    const { guessTimezoneFromAddress } = await import("@/lib/timezone-from-address");
+    const derived = guessTimezoneFromAddress(data.businessAddress);
+    const nextTimezone =
+      !current?.timezone_overridden_at && derived ? derived : (current?.timezone ?? "UTC");
+
     const { error } = await supabaseAdmin
       .from("workspaces")
       .update({
+        timezone: nextTimezone,
         business_address: data.businessAddress || null,
         business_phone: data.businessPhone || null,
         business_email: data.businessEmail || null,
@@ -555,10 +569,17 @@ export const getWorkspaceTimezone = createServerFn({ method: "POST" })
     await assertMember(context.userId, data.workspaceId);
     const { data: ws } = await supabaseAdmin
       .from("workspaces")
-      .select("timezone")
+      .select("timezone, timezone_overridden_at, business_address")
       .eq("id", data.workspaceId)
       .maybeSingle();
-    return { timezone: ws?.timezone || "UTC" };
+    const { guessTimezoneFromAddress } = await import("@/lib/timezone-from-address");
+    const suggested = guessTimezoneFromAddress(ws?.business_address ?? null);
+    return {
+      timezone: ws?.timezone || "UTC",
+      suggested,
+      businessAddress: ws?.business_address ?? "",
+      explicitlySet: Boolean(ws?.timezone_overridden_at),
+    };
   });
 
 /** Save the workspace's booking timezone (IANA name). */
@@ -588,7 +609,7 @@ export const saveWorkspaceTimezone = createServerFn({ method: "POST" })
     await assertMember(context.userId, data.workspaceId);
     const { error } = await supabaseAdmin
       .from("workspaces")
-      .update({ timezone: data.timezone })
+      .update({ timezone: data.timezone, timezone_overridden_at: new Date().toISOString() })
       .eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
     return { ok: true };

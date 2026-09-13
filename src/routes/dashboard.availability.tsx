@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getWorkspaceTimezone, saveWorkspaceTimezone } from "@/lib/tenant.functions";
+import { COMMON_TIMEZONES as TIMEZONES, timezoneLabel } from "@/lib/timezone-from-address";
 
 export const Route = createFileRoute("/dashboard/availability")({
   component: AvailabilityPage,
@@ -31,29 +32,6 @@ const DAYS: { dow: number; label: string }[] = [
 
 const DEFAULT: DayState = { active: false, start: "09:00", end: "17:00" };
 
-const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Phoenix",
-  "America/Los_Angeles",
-  "America/Anchorage",
-  "Pacific/Honolulu",
-  "America/Toronto",
-  "America/Vancouver",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Madrid",
-  "Africa/Lagos",
-  "Africa/Johannesburg",
-  "Asia/Dubai",
-  "Asia/Kolkata",
-  "Asia/Singapore",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-  "UTC",
-];
 
 
 function AvailabilityPage() {
@@ -69,6 +47,7 @@ function AvailabilityPage() {
   const [saving, setSaving] = useState(false);
   const [timezone, setTimezone] = useState("UTC");
   const [savingTz, setSavingTz] = useState(false);
+  const [suggestedTz, setSuggestedTz] = useState<string | null>(null);
 
   const saveTimezone = async (tz: string) => {
     if (!workspaceId) return;
@@ -100,6 +79,7 @@ function AvailabilityPage() {
       try {
         const tzRes = await getWorkspaceTimezone({ data: { workspaceId: mem.workspace_id } });
         setTimezone(tzRes.timezone);
+        setSuggestedTz(tzRes.suggested ?? null);
       } catch {
         /* keep UTC default */
       }
@@ -224,6 +204,21 @@ function AvailabilityPage() {
               ))}
             </select>
           </div>
+          {suggestedTz && suggestedTz !== timezone && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+              <p className="text-xs text-muted-foreground">
+                Your business address looks like {timezoneLabel(suggestedTz)}, but bookings are running on{" "}
+                {timezone.replace(/_/g, " ")}.
+              </p>
+              <Button size="sm" variant="outline" disabled={savingTz} onClick={() => saveTimezone(suggestedTz)}>
+                Use {suggestedTz.replace(/_/g, " ")}
+              </Button>
+            </div>
+          )}
+          <p className="mt-3 text-xs text-muted-foreground">
+            Changing this does not move appointments that are already booked, so double-check upcoming bookings
+            on your calendar after you switch.
+          </p>
         </div>
 
         <div className="mt-6 overflow-hidden rounded-2xl border bg-card shadow-sm">
