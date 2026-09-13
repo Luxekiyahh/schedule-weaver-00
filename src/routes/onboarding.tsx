@@ -22,6 +22,12 @@ import { resolveHomePathForUser, signOutAndReset } from "@/lib/auth-signout";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  COMMON_TIMEZONES,
+  browserTimezone,
+  guessTimezoneFromAddress,
+  timezoneLabel,
+} from "@/lib/timezone-from-address";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -1229,6 +1235,12 @@ function StepAvailability({ wizard, patch }: StepProps) {
   }
   const pol = wizard.policies;
   const setPol = (p: Partial<WizardState["policies"]>) => patch({ policies: { ...pol, ...p } });
+
+  const detectedTimezone = useMemo(
+    () => guessTimezoneFromAddress(wizard.address) ?? browserTimezone(),
+    [wizard.address],
+  );
+  const effectiveTimezone = wizard.timezone || detectedTimezone || "UTC";
 
   return (
     <div>
