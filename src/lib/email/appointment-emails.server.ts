@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { enqueueTransactionalEmail } from "./dispatch.server";
+import { sendTransactionalEmail } from "./dispatch.server";
 
 // Hydrates an appointment and enqueues the customer confirmation + owner alert
 // through Lovable's queued email system. Server-only. Safe to call from the
@@ -79,7 +79,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
 
   if (prefs.client_email && customer.email) {
     tasks.push(
-      enqueueTransactionalEmail({
+      sendTransactionalEmail({
         templateName: "booking-confirmation",
         recipientEmail: customer.email,
         idempotencyKey: `booking-confirm-${appt.id}`,
@@ -104,7 +104,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
 
   if (prefs.provider_email && ownerProfile?.email) {
     tasks.push(
-      enqueueTransactionalEmail({
+      sendTransactionalEmail({
         templateName: "booking-alert",
         recipientEmail: ownerProfile.email,
         idempotencyKey: `booking-alert-${appt.id}`,
