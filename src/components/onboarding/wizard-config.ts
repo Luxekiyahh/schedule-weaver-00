@@ -292,6 +292,8 @@ export type WizardState = {
   hours: DayHours[];
   locationType: LocationType;
   address: string;
+  /** IANA booking timezone; auto-detected from the address, editable. */
+  timezone: string;
   businessPhone: string;
   businessEmail: string;
   businessWebsite: string;
@@ -350,6 +352,7 @@ export function initialWizard(): WizardState {
     hours: defaultHours(),
     locationType: "studio",
     address: "",
+    timezone: "",
     businessPhone: "",
     businessEmail: "",
     businessWebsite: "",
