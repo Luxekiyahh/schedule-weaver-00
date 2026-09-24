@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { normalizeTheme, fontClass, cardRadius, layoutPadding, isColorDark } from "@/lib/theme";
 import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
+import { LuxeAllureBookingFlow } from "@/components/LuxeAllureBookingFlow";
 import { AlluringDollsBookingFlow } from "@/components/AlluringDollsBookingFlow";
 
 export const Route = createFileRoute("/booking/$slug")({
@@ -93,6 +94,9 @@ function BookingPage() {
   const [selectedSlot, setSelectedSlot] = useState<{ time: string; member_id: string } | null>(null);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
+  // Luxe Allure Artistry: studio vs on-location glam.
+  const [locationMode, setLocationMode] = useState<"studio" | "travel">("studio");
+  const [travelAddress, setTravelAddress] = useState("");
 
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -202,12 +206,19 @@ function BookingPage() {
     if (!service || !selectedSlot || !selectedDate || !data?.workspace) return;
     setSubmitting(true);
     try {
+      const isLuxe = data.workspace.slug === "luxe-allure-artistry";
+      const locationNote = isLuxe
+        ? locationMode === "travel"
+          ? `Location: on location at ${travelAddress.trim()}`
+          : "Location: at the studio"
+        : "";
       const chosenColor = (data.hairColors ?? []).find((c: any) => c.id === selectedColorId);
-      const notes = chosenColor
+      const baseNotes = chosenColor
         ? [`Hair color: ${chosenColor.code}${chosenColor.label ? ` (${chosenColor.label})` : ""}`, form.notes]
             .filter(Boolean)
             .join("\n")
         : form.notes;
+      const notes = [locationNote, baseNotes].filter(Boolean).join("\n");
       const common = {
         workspaceId: data.workspace.id,
         serviceId: service.id,
@@ -286,6 +297,28 @@ function BookingPage() {
   }
 
   const ws = data.workspace;
+
+  if (ws.slug === "luxe-allure-artistry") {
+    return (
+      <LuxeAllureBookingFlow
+        workspaceName={ws.name}
+        timezone={(ws as { timezone?: string | null }).timezone ?? null}
+        studioAddress={(ws as { business_address?: string | null }).business_address ?? null}
+        services={data.services}
+        depositRequired={depositRequired}
+        step={step} setStep={setStep}
+        serviceId={serviceId} setServiceId={setServiceId}
+        locationMode={locationMode} setLocationMode={setLocationMode}
+        travelAddress={travelAddress} setTravelAddress={setTravelAddress}
+        monthCursor={monthCursor} setMonthCursor={setMonthCursor}
+        selectedDate={selectedDate} setSelectedDate={setSelectedDate}
+        slotsLoading={slotsLoading} slots={slots} selectedSlot={selectedSlot} setSelectedSlot={setSelectedSlot}
+        form={form} setForm={setForm}
+        submitting={submitting} done={done}
+        onSubmit={handleSubmit}
+      />
+    );
+  }
 
   if (ws.slug === "alluringdolls") {
     const adTheme = normalizeTheme((ws as { theme_config?: unknown }).theme_config);
