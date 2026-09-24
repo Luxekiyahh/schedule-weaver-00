@@ -13,18 +13,18 @@ export const getBookCatalog = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { isOwnerPlatformAdmin } = await import("@/lib/platform-admin-guard");
+    const { isStorefrontBlocked } = await import("@/lib/platform-admin-guard");
 
     const { data: workspace, error: wsErr } = await supabaseAdmin
       .from("workspaces")
       .select(
-        "id, name, slug, theme_id, primary_color, secondary_color, font_family, logo_url, owner_id",
+        "id, name, slug, theme_id, primary_color, secondary_color, font_family, logo_url, owner_id, storefront_enabled",
       )
       .eq("slug", data.slug)
       .maybeSingle();
     if (wsErr) throw new Error(wsErr.message);
     // Platform-admin (master operator) workspaces are not tenants - no storefront.
-    if (!workspace || (await isOwnerPlatformAdmin(supabaseAdmin, workspace.owner_id))) {
+    if (!workspace || (await isStorefrontBlocked(supabaseAdmin, workspace))) {
       return { workspace: null, categories: [], variants: [], lengthOptions: [] } as const;
     }
 

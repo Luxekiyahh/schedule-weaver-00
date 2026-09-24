@@ -857,6 +857,7 @@ export type Database = {
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
+          comped: boolean
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
@@ -873,6 +874,7 @@ export type Database = {
         }
         Insert: {
           cancel_at_period_end?: boolean
+          comped?: boolean
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
@@ -889,6 +891,7 @@ export type Database = {
         }
         Update: {
           cancel_at_period_end?: boolean
+          comped?: boolean
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
@@ -1225,6 +1228,7 @@ export type Database = {
           primary_color: string
           secondary_color: string
           slug: string
+          storefront_enabled: boolean
           suspended_at: string | null
           suspended_by: string | null
           suspended_reason: string | null
@@ -1254,6 +1258,7 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           slug: string
+          storefront_enabled?: boolean
           suspended_at?: string | null
           suspended_by?: string | null
           suspended_reason?: string | null
@@ -1283,6 +1288,7 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           slug?: string
+          storefront_enabled?: boolean
           suspended_at?: string | null
           suspended_by?: string | null
           suspended_reason?: string | null

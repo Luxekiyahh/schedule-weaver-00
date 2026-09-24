@@ -17,3 +17,21 @@ export async function isOwnerPlatformAdmin(client: any, ownerId: string | null |
     .maybeSingle();
   return Boolean(data);
 }
+
+/**
+ * Should this workspace's public storefront be hidden?
+ *
+ * Admin-owned workspaces have no storefront, EXCEPT when the workspace is
+ * explicitly flagged `storefront_enabled` (the operator running their own
+ * business on the platform).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function isStorefrontBlocked(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client: any,
+  ws: { owner_id?: string | null; storefront_enabled?: boolean | null } | null | undefined,
+) {
+  if (!ws) return true;
+  if (ws.storefront_enabled) return false;
+  return isOwnerPlatformAdmin(client, ws.owner_id);
+}
