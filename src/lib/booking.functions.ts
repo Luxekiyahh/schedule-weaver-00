@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePhoneToE164 } from "@/lib/phone";
-import { isOwnerPlatformAdmin } from "@/lib/platform-admin-guard";
+import { isStorefrontBlocked } from "@/lib/platform-admin-guard";
 import { zonedTimeToUtc } from "@/lib/timezone";
 
 export const getBookingWorkspace = createServerFn({ method: "POST" })
@@ -10,7 +10,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: ws, error } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, slug, timezone, theme_config, owner_id")
+      .select("id, name, slug, timezone, theme_config, owner_id, storefront_enabled")
       .eq("slug", data.slug)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -26,7 +26,7 @@ export const getBookingWorkspace = createServerFn({ method: "POST" })
     };
     if (!ws) return empty;
     // Platform-admin (master operator) workspaces never take public bookings.
-    if (await isOwnerPlatformAdmin(supabaseAdmin, ws.owner_id)) return empty;
+    if (await isStorefrontBlocked(supabaseAdmin, ws)) return empty;
 
     const [
       { data: services },
@@ -265,11 +265,11 @@ async function prepareAndInsertAppointment(data: BookingInput, status: "confirme
 
   const { data: wsRow } = await supabaseAdmin
     .from("workspaces")
-    .select("suspended_at, owner_id, timezone")
+    .select("suspended_at, owner_id, storefront_enabled, timezone")
     .eq("id", data.workspaceId)
     .maybeSingle();
   if (wsRow?.suspended_at) throw new Error("This business is not currently accepting bookings.");
-  if (await isOwnerPlatformAdmin(supabaseAdmin, wsRow?.owner_id)) {
+  if (await isStorefrontBlocked(supabaseAdmin, wsRow)) {
     throw new Error("This business is not currently accepting bookings.");
   }
   const tz = wsRow?.timezone || "UTC";

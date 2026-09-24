@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isOwnerPlatformAdmin } from "@/lib/platform-admin-guard";
+import { isStorefrontBlocked } from "@/lib/platform-admin-guard";
 
 const slugSchema = z
   .string()
@@ -326,14 +326,15 @@ export const getStorefront = createServerFn({ method: "POST" })
     const { data: ws } = await supabaseAdmin
       .from("workspaces")
       .select(
-        "id, name, slug, timezone, owner_id, domain_status, theme_id, primary_color, secondary_color, font_family, logo_url, suspended_at",
+        "id, name, slug, timezone, owner_id, storefront_enabled, domain_status, theme_id, primary_color, secondary_color, font_family, logo_url, suspended_at",
       )
       .eq("slug", data.slug)
       .maybeSingle();
     if (!ws) return { workspace: null };
     if (ws.suspended_at) return { workspace: null, suspended: true };
-    // Platform-admin (master operator) workspaces are not tenants - no storefront.
-    if (await isOwnerPlatformAdmin(supabaseAdmin, ws.owner_id)) return { workspace: null };
+    // Platform-admin (master operator) workspaces are not tenants - no storefront,
+    // unless the workspace is explicitly flagged as an operator-run business.
+    if (await isStorefrontBlocked(supabaseAdmin, ws)) return { workspace: null };
 
     const [branding, categories, variants, lengthOptions, hairColors] = await Promise.all([
       supabaseAdmin.from("workspace_branding").select("*").eq("workspace_id", ws.id).maybeSingle(),
