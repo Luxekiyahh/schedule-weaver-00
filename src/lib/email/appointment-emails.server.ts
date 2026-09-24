@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendTransactionalEmail } from "./dispatch.server";
+import { resolveAppointmentLocation } from "@/lib/booking-location";
 
 // Hydrates an appointment and enqueues the customer confirmation + owner alert
 // through Lovable's queued email system. Server-only. Safe to call from the
@@ -68,7 +69,8 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
   // Add-ons are appended to the appointment notes as "Add-ons: ..." by the
   // booking flow; extract them for display.
   let addOns = "";
-  let cleanNotes = appt.notes ?? "";
+  const appointmentLocation = resolveAppointmentLocation(appt.notes, workspace.business_address);
+  let cleanNotes = appointmentLocation.notes;
   const match = /Add-ons:\s*(.+)/i.exec(cleanNotes);
   if (match) {
     addOns = match[1].trim();
@@ -93,7 +95,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
           addOns,
           notes: cleanNotes,
           primary,
-          businessAddress: workspace.business_address ?? "",
+          businessAddress: appointmentLocation.location,
           businessPhone: workspace.business_phone ?? "",
           businessEmail: workspace.business_email ?? "",
           businessWebsite: workspace.business_website ?? "",
@@ -118,6 +120,7 @@ export async function sendAppointmentEmails(appointmentId: string): Promise<void
           timeLabel,
           priceLabel,
           addOns,
+          businessAddress: appointmentLocation.location,
           primary,
         },
       }),

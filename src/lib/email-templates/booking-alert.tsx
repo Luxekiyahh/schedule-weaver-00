@@ -13,6 +13,7 @@ interface Props {
   timeLabel?: string;
   priceLabel?: string;
   addOns?: string;
+  businessAddress?: string;
 }
 
 const Email = ({
@@ -25,6 +26,7 @@ const Email = ({
   timeLabel = "",
   priceLabel = "",
   addOns = "",
+  businessAddress = "",
 }: Props) => (
   <BrandedEmail preview={`New booking: ${customerName} - ${serviceName}`}>
     <Text style={styles.eyebrow}>New booking alert</Text>
@@ -42,6 +44,11 @@ const Email = ({
     {addOns ? (
       <Text style={styles.p}>
         <strong>Add-ons:</strong> {addOns}
+      </Text>
+    ) : null}
+    {businessAddress ? (
+      <Text style={styles.p}>
+        <strong>Location:</strong> {businessAddress}
       </Text>
     ) : null}
     <Text style={styles.p}>
@@ -68,5 +75,6 @@ export const template = {
     timeLabel: "10:00 AM – 5:00 PM",
     priceLabel: "$175.00",
     addOns: "Extra Length (+$25)",
+    businessAddress: "Kissimmee, FL 34758",
   },
 } satisfies TemplateEntry;

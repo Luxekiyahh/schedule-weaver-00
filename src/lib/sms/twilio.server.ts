@@ -114,6 +114,7 @@ export function buildOwnerAlertSms(
     serviceName?: string;
     dateLabel?: string;
     timeLabel?: string;
+    businessAddress?: string;
   },
   opts?: { confirmed?: boolean },
 ): string {
@@ -125,6 +126,7 @@ export function buildOwnerAlertSms(
   if (d.serviceName) lines.push(`Service: ${d.serviceName}`);
   if (d.dateLabel) lines.push(`Date: ${d.dateLabel}`);
   if (d.timeLabel) lines.push(`Time: ${d.timeLabel}`);
+  if (d.businessAddress) lines.push(`Location: ${d.businessAddress}`);
   return lines.join("\n");
 }
 
