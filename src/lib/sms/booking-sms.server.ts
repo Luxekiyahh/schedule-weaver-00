@@ -25,6 +25,7 @@ import {
   buildOwnerAlertSms,
 } from "./twilio.server";
 import { logAndSendSms } from "./log-and-send.server";
+import { resolveAppointmentLocation } from "@/lib/booking-location";
 
 type BookingContext = {
   appointmentId: string;
@@ -103,6 +104,8 @@ async function loadBookingContext(appointmentId: string): Promise<BookingContext
   const match = /Add-ons:\s*(.+)/i.exec(appt.notes ?? "");
   if (match) addOns = match[1].trim();
 
+  const appointmentLocation = resolveAppointmentLocation(appt.notes, workspace.business_address);
+
   return {
     appointmentId,
     workspaceId: appt.workspace_id,
@@ -118,7 +121,7 @@ async function loadBookingContext(appointmentId: string): Promise<BookingContext
     timeLabel,
     priceLabel,
     addOns,
-    businessAddress: workspace.business_address ?? "",
+    businessAddress: appointmentLocation.location,
     businessPhone: workspace.business_phone ?? "",
     businessEmail: workspace.business_email ?? "",
     businessWebsite: workspace.business_website ?? "",
@@ -202,6 +205,7 @@ function ownerAlertBody(ctx: BookingContext, confirmed: boolean): string {
       serviceName: ctx.serviceName,
       dateLabel: ctx.dateLabel,
       timeLabel: ctx.timeLabel,
+      businessAddress: ctx.businessAddress,
     },
     { confirmed },
   );

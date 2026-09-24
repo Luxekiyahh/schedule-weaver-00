@@ -29,12 +29,26 @@ import { AlluringDollsBookingFlow } from "@/components/AlluringDollsBookingFlow"
 
 export const Route = createFileRoute("/booking/$slug")({
   component: BookingPage,
-  head: ({ params }) => ({
-    meta: [
-      { title: `Book - ${params.slug}` },
-      { name: "description", content: "Book an appointment online." },
-    ],
-  }),
+  head: ({ params }) => {
+    const isLuxe = params.slug === "luxe-allure-artistry";
+    const title = isLuxe ? "Book Luxe Allure Artistry | Makeup in Kissimmee" : `Book - ${params.slug}`;
+    const description = isLuxe
+      ? "Book soft glam or full glam makeup with Luxe Allure Artistry in Kissimmee, Florida, with studio and travel appointments available."
+      : "Book an appointment online.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: isLuxe
+        ? [{ rel: "icon", type: "image/png", href: "/favicon-luxe-allure.png" }]
+        : [],
+    };
+  },
 });
 
 type Service = {
@@ -210,7 +224,7 @@ function BookingPage() {
       const locationNote = isLuxe
         ? locationMode === "travel"
           ? `Location: on location at ${travelAddress.trim()}`
-          : "Location: at the studio"
+          : "Location: at the studio, Kissimmee, FL 34758"
         : "";
       const chosenColor = (data.hairColors ?? []).find((c: any) => c.id === selectedColorId);
       const baseNotes = chosenColor

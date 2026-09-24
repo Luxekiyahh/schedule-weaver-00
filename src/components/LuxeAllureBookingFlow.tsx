@@ -11,7 +11,7 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
-import heroImage from "@/assets/luxe-allure-hero.jpg";
+import logoAsset from "@/assets/luxe-allure-logo.png.asset.json";
 import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
 
 /**
@@ -224,18 +224,14 @@ export function LuxeAllureBookingFlow(props: {
               </div>
             </div>
           </div>
-          <div className="order-1 lg:order-2 relative min-h-[320px] lg:min-h-[560px]">
+          <div className="order-1 lg:order-2 relative flex min-h-[300px] items-center justify-center overflow-hidden bg-[#050505] px-7 py-14 lg:min-h-[560px]">
+            <div aria-hidden className="absolute inset-5 border border-white/10" />
             <img
-              src={heroImage}
-              alt="Soft glam makeup by Luxe Allure Artistry"
-              width={1600}
-              height={1200}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(90deg, rgba(251,246,240,.95) 0%, rgba(251,246,240,.25) 38%, rgba(251,246,240,0) 70%)" }}
+              src={logoAsset.url}
+              alt="Luxe Allure Artistry logo"
+              width={1693}
+              height={1623}
+              className="relative z-10 h-auto w-full max-w-[620px] object-contain"
             />
           </div>
         </div>

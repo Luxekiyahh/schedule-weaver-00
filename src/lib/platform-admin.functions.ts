@@ -405,7 +405,9 @@ export const resendConfirmationSms = createServerFn({ method: "POST" })
     }).format((service.price_cents || 0) / 100);
 
     const { buildConfirmationSms } = await import("@/lib/sms/twilio.server");
+    const { resolveAppointmentLocation } = await import("@/lib/booking-location");
     const { logAndSendSms } = await import("@/lib/sms/log-and-send.server");
+    const appointmentLocation = resolveAppointmentLocation(appt.notes, workspace.business_address);
     await logAndSendSms({
       to: customer.phone,
       workspaceId: appt.workspace_id,
@@ -417,7 +419,7 @@ export const resendConfirmationSms = createServerFn({ method: "POST" })
         dateLabel,
         timeLabel,
         priceLabel,
-        businessAddress: workspace.business_address ?? undefined,
+        businessAddress: appointmentLocation.location || undefined,
         businessPhone: workspace.business_phone ?? undefined,
         businessEmail: workspace.business_email ?? undefined,
         businessWebsite: workspace.business_website ?? undefined,
