@@ -46,6 +46,7 @@ import {
   checkSlugAvailable,
 } from "@/lib/onboarding.functions";
 import { finalizeTenantSignup } from "@/lib/tenant.functions";
+import { resolveBookingTimezone } from "@/lib/booking-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { LivePreview } from "@/components/onboarding/LivePreview";
 import {
@@ -77,6 +78,10 @@ export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
       { title: "Create your account & booking site - ProcSchedule" },
+      { property: "og:title", content: "Create your account & booking site - ProcSchedule" },
+      { property: "og:description", content: "Set up your ProcSchedule business, services, booking hours and branded booking site." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         name: "description",
         content:
@@ -212,6 +217,9 @@ function OnboardingWizard() {
       return;
     }
     setError(null);
+    if (step === 5) {
+      patch({ timezone: resolveBookingTimezone(wizard.timezone, wizard.address, browserTimezone()) });
+    }
     setStep((s) => Math.min(TOTAL_STEPS, s + 1));
   }
   function back() {
@@ -1240,7 +1248,7 @@ function StepAvailability({ wizard, patch }: StepProps) {
     () => guessTimezoneFromAddress(wizard.address) ?? browserTimezone(),
     [wizard.address],
   );
-  const effectiveTimezone = wizard.timezone || detectedTimezone || "UTC";
+  const effectiveTimezone = resolveBookingTimezone(wizard.timezone, wizard.address, detectedTimezone);
 
   return (
     <div>
@@ -1439,7 +1447,7 @@ function StepReview({
           })),
         hours: wizard.hours.map((h) => ({ dow: h.dow, open: h.open, start: h.start, end: h.end })),
         location: { type: wizard.locationType, address: wizard.address.trim() },
-        timezone: wizard.timezone.trim(),
+        timezone: resolveBookingTimezone(wizard.timezone, wizard.address, browserTimezone()),
         businessPhone: wizard.businessPhone.trim(),
         businessEmail: wizard.businessEmail.trim(),
         businessWebsite: wizard.businessWebsite.trim(),

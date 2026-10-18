@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isStorefrontBlocked } from "@/lib/platform-admin-guard";
+import { businessContactUpdate } from "@/lib/booking-settings";
 
 const slugSchema = z
   .string()
@@ -162,27 +163,9 @@ export const saveBusinessInfo = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertMember(context.userId, data.workspaceId);
 
-    // Keep the booking timezone in step with the address, unless the tenant
-    // explicitly picked one on the Availability page.
-    const { data: current } = await supabaseAdmin
-      .from("workspaces")
-      .select("timezone, timezone_overridden_at")
-      .eq("id", data.workspaceId)
-      .maybeSingle();
-    const { guessTimezoneFromAddress } = await import("@/lib/timezone-from-address");
-    const derived = guessTimezoneFromAddress(data.businessAddress);
-    const nextTimezone =
-      !current?.timezone_overridden_at && derived ? derived : (current?.timezone ?? "UTC");
-
     const { error } = await supabaseAdmin
       .from("workspaces")
-      .update({
-        timezone: nextTimezone,
-        business_address: data.businessAddress || null,
-        business_phone: data.businessPhone || null,
-        business_email: data.businessEmail || null,
-        business_website: data.businessWebsite || null,
-      })
+      .update(businessContactUpdate(data))
       .eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
     return { ok: true };
