@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { resolveBookingTimezone } from "@/lib/booking-settings";
 
 export const checkSlugAvailable = createServerFn({ method: "POST" })
   .inputValidator((input) =>
@@ -238,12 +239,9 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
     // Booking timezone: the tenant's explicit pick wins, otherwise derive it
     // from the business address so slots/emails/texts use their local clock.
-    const { guessTimezoneFromAddress, isValidTimezone } = await import("@/lib/timezone-from-address");
+    const { isValidTimezone } = await import("@/lib/timezone-from-address");
     const picked = (data.timezone || "").trim();
-    const resolvedTimezone =
-      picked && isValidTimezone(picked)
-        ? picked
-        : (guessTimezoneFromAddress(data.location.address) ?? "UTC");
+    const resolvedTimezone = resolveBookingTimezone(picked, data.location.address);
 
     // 1. Workspace fields
     const { error: updErr } = await supabaseAdmin
@@ -257,6 +255,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         secondary_color: data.secondaryColor,
         logo_url: data.logoUrl ?? null,
         timezone: resolvedTimezone,
+        timezone_overridden_at: picked && isValidTimezone(picked) ? new Date().toISOString() : null,
         business_address: data.location.address || null,
         business_phone: data.businessPhone || null,
         business_email: data.businessEmail || null,
