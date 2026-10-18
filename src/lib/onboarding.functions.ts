@@ -239,7 +239,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
     // Booking timezone: the tenant's explicit pick wins, otherwise derive it
     // from the business address so slots/emails/texts use their local clock.
-    const { guessTimezoneFromAddress, isValidTimezone } = await import("@/lib/timezone-from-address");
+    const { isValidTimezone } = await import("@/lib/timezone-from-address");
     const picked = (data.timezone || "").trim();
     const resolvedTimezone = resolveBookingTimezone(picked, data.location.address);
 
