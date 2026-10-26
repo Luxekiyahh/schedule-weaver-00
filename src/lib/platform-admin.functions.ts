@@ -479,9 +479,8 @@ export const pokeEmailQueue = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertPlatformAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // Re-run the cron dispatcher, which processes any queued emails.
-    const { error } = await supabaseAdmin.rpc("email_queue_dispatch");
-    if (error) throw new Error(error.message);
+    // Emails now send immediately through managed delivery; there is no
+    // queue to dispatch. Kept as an audited no-op for the admin UI.
     await supabaseAdmin.from("admin_audit_log").insert({
       actor_id: context.userId,
       action: "poke_email_queue",
