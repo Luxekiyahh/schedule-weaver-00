@@ -11,7 +11,7 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
-import logoAsset from "@/assets/luxe-allure-logo.png.asset.json";
+import logoAsset from "@/assets/luxe-allure-logo-gold.png.asset.json";
 import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
 
 /**
@@ -229,8 +229,8 @@ export function LuxeAllureBookingFlow(props: {
             <img
               src={logoAsset.url}
               alt="Luxe Allure Artistry logo"
-              width={1693}
-              height={1623}
+              width={1367}
+              height={429}
               className="relative z-10 h-auto w-full max-w-[620px] object-contain"
             />
           </div>
