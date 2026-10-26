@@ -1323,15 +1323,6 @@ export type Database = {
         Returns: number
       }
       current_member_id: { Args: { _workspace_id: string }; Returns: string }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
-      email_queue_dispatch: { Args: never; Returns: undefined }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
-      }
       find_customers_by_phone: {
         Args: { _digits: string }
         Returns: {
@@ -1348,23 +1339,6 @@ export type Database = {
       }
       is_platform_admin: { Args: never; Returns: boolean }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
-      }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
-      }
       refund_ai_credit: { Args: { _workspace_id: string }; Returns: number }
       workspace_has_feature:
         | {
