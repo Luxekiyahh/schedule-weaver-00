@@ -9,76 +9,46 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as SlugRouteImport } from './routes/$slug'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as HomeRouteImport } from './routes/home'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as SlugRouteImport } from './routes/$slug'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as AdminDomainsRouteImport } from './routes/admin.domains'
-import { Route as AdminHealthRouteImport } from './routes/admin.health'
-import { Route as AdminServicesRouteImport } from './routes/admin.services'
-import { Route as AdminTenantsRouteImport } from './routes/admin.tenants'
-import { Route as BookSlugRouteImport } from './routes/book.$slug'
-import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
-import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
-import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
-import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
-import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
-import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
-import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
-import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
-import { Route as DashboardPaymentsRouteImport } from './routes/dashboard.payments'
-import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
 import { Route as DashboardStaffRouteImport } from './routes/dashboard.staff'
-import { Route as AdminTenantsIdRouteImport } from './routes/admin.tenants.$id'
-import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
-import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
+import { Route as DashboardServicesRouteImport } from './routes/dashboard.services'
+import { Route as DashboardPaymentsRouteImport } from './routes/dashboard.payments'
+import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
+import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
+import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
+import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
+import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
+import { Route as DashboardAvailabilityRouteImport } from './routes/dashboard.availability'
+import { Route as BookingSlugRouteImport } from './routes/booking.$slug'
+import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AdminTenantsRouteImport } from './routes/admin.tenants'
+import { Route as AdminServicesRouteImport } from './routes/admin.services'
+import { Route as AdminHealthRouteImport } from './routes/admin.health'
+import { Route as AdminDomainsRouteImport } from './routes/admin.domains'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
-import { Route as ApiPublicHooksWaitlistNotifyRouteImport } from './routes/api/public/hooks/waitlist-notify'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicSmsInboundRouteImport } from './routes/api/public/sms/inbound'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as ApiPublicGenerateBrandingRouteImport } from './routes/api/public/generate-branding'
+import { Route as ApiPublicAppointmentConfirmationRouteImport } from './routes/api/public/appointment-confirmation'
+import { Route as AdminTenantsIdRouteImport } from './routes/admin.tenants.$id'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicSmsInboundRouteImport } from './routes/api/public/sms/inbound'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicHooksWaitlistNotifyRouteImport } from './routes/api/public/hooks/waitlist-notify'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlugRoute = SlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -86,9 +56,39 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -96,74 +96,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminDomainsRoute = AdminDomainsRouteImport.update({
-  id: '/admin/domains',
-  path: '/admin/domains',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminHealthRoute = AdminHealthRouteImport.update({
-  id: '/admin/health',
-  path: '/admin/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminServicesRoute = AdminServicesRouteImport.update({
-  id: '/admin/services',
-  path: '/admin/services',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminTenantsRoute = AdminTenantsRouteImport.update({
-  id: '/admin/tenants',
-  path: '/admin/tenants',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookSlugRoute = BookSlugRouteImport.update({
-  id: '/book/$slug',
-  path: '/book/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookingSlugRoute = BookingSlugRouteImport.update({
-  id: '/booking/$slug',
-  path: '/booking/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardAvailabilityRoute = DashboardAvailabilityRouteImport.update({
-  id: '/availability',
-  path: '/availability',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardBillingRoute = DashboardBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCatalogRoute = DashboardCatalogRouteImport.update({
-  id: '/catalog',
-  path: '/catalog',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCustomizeRoute = DashboardCustomizeRouteImport.update({
-  id: '/customize',
-  path: '/customize',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHomeRoute = DashboardHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardPaymentsRoute = DashboardPaymentsRouteImport.update({
-  id: '/payments',
-  path: '/payments',
+const DashboardStaffRoute = DashboardStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardServicesRoute = DashboardServicesRouteImport.update({
@@ -171,48 +106,107 @@ const DashboardServicesRoute = DashboardServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardStaffRoute = DashboardStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
+const DashboardPaymentsRoute = DashboardPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
   getParentRoute: () => DashboardRoute,
 } as any)
-const AdminTenantsIdRoute = AdminTenantsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AdminTenantsRoute,
+const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const ApiPublicAppointmentConfirmationRoute =
-  ApiPublicAppointmentConfirmationRouteImport.update({
-    id: '/api/public/appointment-confirmation',
-    path: '/api/public/appointment-confirmation',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const DashboardHomeRoute = DashboardHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCustomizeRoute = DashboardCustomizeRouteImport.update({
+  id: '/customize',
+  path: '/customize',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCatalogRoute = DashboardCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAvailabilityRoute = DashboardAvailabilityRouteImport.update({
+  id: '/availability',
+  path: '/availability',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const BookingSlugRoute = BookingSlugRouteImport.update({
+  id: '/booking/$slug',
+  path: '/booking/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookSlugRoute = BookSlugRouteImport.update({
+  id: '/book/$slug',
+  path: '/book/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTenantsRoute = AdminTenantsRouteImport.update({
+  id: '/admin/tenants',
+  path: '/admin/tenants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminServicesRoute = AdminServicesRouteImport.update({
+  id: '/admin/services',
+  path: '/admin/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminHealthRoute = AdminHealthRouteImport.update({
+  id: '/admin/health',
+  path: '/admin/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDomainsRoute = AdminDomainsRouteImport.update({
+  id: '/admin/domains',
+  path: '/admin/domains',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGenerateBrandingRoute =
   ApiPublicGenerateBrandingRouteImport.update({
     id: '/api/public/generate-branding',
     path: '/api/public/generate-branding',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
-  id: '/lovable/email/events',
-  path: '/lovable/email/events',
-  getParentRoute: () => rootRouteImport,
+const ApiPublicAppointmentConfirmationRoute =
+  ApiPublicAppointmentConfirmationRouteImport.update({
+    id: '/api/public/appointment-confirmation',
+    path: '/api/public/appointment-confirmation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminTenantsIdRoute = AdminTenantsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminTenantsRoute,
 } as any)
-const ApiPublicHooksWaitlistNotifyRoute =
-  ApiPublicHooksWaitlistNotifyRouteImport.update({
-    id: '/api/public/hooks/waitlist-notify',
-    path: '/api/public/hooks/waitlist-notify',
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicSmsInboundRoute = ApiPublicSmsInboundRouteImport.update({
-  id: '/api/public/sms/inbound',
-  path: '/api/public/sms/inbound',
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
@@ -220,15 +214,21 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
+const ApiPublicSmsInboundRoute = ApiPublicSmsInboundRouteImport.update({
+  id: '/api/public/sms/inbound',
+  path: '/api/public/sms/inbound',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksWaitlistNotifyRoute =
+  ApiPublicHooksWaitlistNotifyRouteImport.update({
+    id: '/api/public/hooks/waitlist-notify',
+    path: '/api/public/hooks/waitlist-notify',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -494,53 +494,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$slug': {
-      id: '/$slug'
-      path: '/$slug'
-      fullPath: '/$slug'
-      preLoaderRoute: typeof SlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -550,11 +508,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -564,102 +564,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/domains': {
-      id: '/admin/domains'
-      path: '/admin/domains'
-      fullPath: '/admin/domains'
-      preLoaderRoute: typeof AdminDomainsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/health': {
-      id: '/admin/health'
-      path: '/admin/health'
-      fullPath: '/admin/health'
-      preLoaderRoute: typeof AdminHealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/services': {
-      id: '/admin/services'
-      path: '/admin/services'
-      fullPath: '/admin/services'
-      preLoaderRoute: typeof AdminServicesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/tenants': {
-      id: '/admin/tenants'
-      path: '/admin/tenants'
-      fullPath: '/admin/tenants'
-      preLoaderRoute: typeof AdminTenantsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/book/$slug': {
-      id: '/book/$slug'
-      path: '/book/$slug'
-      fullPath: '/book/$slug'
-      preLoaderRoute: typeof BookSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/booking/$slug': {
-      id: '/booking/$slug'
-      path: '/booking/$slug'
-      fullPath: '/booking/$slug'
-      preLoaderRoute: typeof BookingSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/availability': {
-      id: '/dashboard/availability'
-      path: '/availability'
-      fullPath: '/dashboard/availability'
-      preLoaderRoute: typeof DashboardAvailabilityRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/billing': {
-      id: '/dashboard/billing'
-      path: '/billing'
-      fullPath: '/dashboard/billing'
-      preLoaderRoute: typeof DashboardBillingRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/calendar': {
-      id: '/dashboard/calendar'
-      path: '/calendar'
-      fullPath: '/dashboard/calendar'
-      preLoaderRoute: typeof DashboardCalendarRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/catalog': {
-      id: '/dashboard/catalog'
-      path: '/catalog'
-      fullPath: '/dashboard/catalog'
-      preLoaderRoute: typeof DashboardCatalogRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/customize': {
-      id: '/dashboard/customize'
-      path: '/customize'
-      fullPath: '/dashboard/customize'
-      preLoaderRoute: typeof DashboardCustomizeRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/home': {
-      id: '/dashboard/home'
-      path: '/home'
-      fullPath: '/dashboard/home'
-      preLoaderRoute: typeof DashboardHomeRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/notifications': {
-      id: '/dashboard/notifications'
-      path: '/notifications'
-      fullPath: '/dashboard/notifications'
-      preLoaderRoute: typeof DashboardNotificationsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/payments': {
-      id: '/dashboard/payments'
-      path: '/payments'
-      fullPath: '/dashboard/payments'
-      preLoaderRoute: typeof DashboardPaymentsRouteImport
+    '/dashboard/staff': {
+      id: '/dashboard/staff'
+      path: '/staff'
+      fullPath: '/dashboard/staff'
+      preLoaderRoute: typeof DashboardStaffRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/services': {
@@ -669,32 +578,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardServicesRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/staff': {
-      id: '/dashboard/staff'
-      path: '/staff'
-      fullPath: '/dashboard/staff'
-      preLoaderRoute: typeof DashboardStaffRouteImport
+    '/dashboard/payments': {
+      id: '/dashboard/payments'
+      path: '/payments'
+      fullPath: '/dashboard/payments'
+      preLoaderRoute: typeof DashboardPaymentsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/admin/tenants/$id': {
-      id: '/admin/tenants/$id'
-      path: '/$id'
-      fullPath: '/admin/tenants/$id'
-      preLoaderRoute: typeof AdminTenantsIdRouteImport
-      parentRoute: typeof AdminTenantsRoute
+    '/dashboard/notifications': {
+      id: '/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof DashboardNotificationsRouteImport
+      parentRoute: typeof DashboardRoute
     }
-    '/api/public/appointment-confirmation': {
-      id: '/api/public/appointment-confirmation'
-      path: '/api/public/appointment-confirmation'
-      fullPath: '/api/public/appointment-confirmation'
-      preLoaderRoute: typeof ApiPublicAppointmentConfirmationRouteImport
+    '/dashboard/home': {
+      id: '/dashboard/home'
+      path: '/home'
+      fullPath: '/dashboard/home'
+      preLoaderRoute: typeof DashboardHomeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/customize': {
+      id: '/dashboard/customize'
+      path: '/customize'
+      fullPath: '/dashboard/customize'
+      preLoaderRoute: typeof DashboardCustomizeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/catalog': {
+      id: '/dashboard/catalog'
+      path: '/catalog'
+      fullPath: '/dashboard/catalog'
+      preLoaderRoute: typeof DashboardCatalogRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/calendar': {
+      id: '/dashboard/calendar'
+      path: '/calendar'
+      fullPath: '/dashboard/calendar'
+      preLoaderRoute: typeof DashboardCalendarRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/availability': {
+      id: '/dashboard/availability'
+      path: '/availability'
+      fullPath: '/dashboard/availability'
+      preLoaderRoute: typeof DashboardAvailabilityRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/booking/$slug': {
+      id: '/booking/$slug'
+      path: '/booking/$slug'
+      fullPath: '/booking/$slug'
+      preLoaderRoute: typeof BookingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/generate-branding': {
-      id: '/api/public/generate-branding'
-      path: '/api/public/generate-branding'
-      fullPath: '/api/public/generate-branding'
-      preLoaderRoute: typeof ApiPublicGenerateBrandingRouteImport
+    '/book/$slug': {
+      id: '/book/$slug'
+      path: '/book/$slug'
+      fullPath: '/book/$slug'
+      preLoaderRoute: typeof BookSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/tenants': {
+      id: '/admin/tenants'
+      path: '/admin/tenants'
+      fullPath: '/admin/tenants'
+      preLoaderRoute: typeof AdminTenantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/services': {
+      id: '/admin/services'
+      path: '/admin/services'
+      fullPath: '/admin/services'
+      preLoaderRoute: typeof AdminServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/health': {
+      id: '/admin/health'
+      path: '/admin/health'
+      fullPath: '/admin/health'
+      preLoaderRoute: typeof AdminHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/domains': {
+      id: '/admin/domains'
+      path: '/admin/domains'
+      fullPath: '/admin/domains'
+      preLoaderRoute: typeof AdminDomainsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/events': {
@@ -704,32 +683,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/waitlist-notify': {
-      id: '/api/public/hooks/waitlist-notify'
-      path: '/api/public/hooks/waitlist-notify'
-      fullPath: '/api/public/hooks/waitlist-notify'
-      preLoaderRoute: typeof ApiPublicHooksWaitlistNotifyRouteImport
+    '/api/public/generate-branding': {
+      id: '/api/public/generate-branding'
+      path: '/api/public/generate-branding'
+      fullPath: '/api/public/generate-branding'
+      preLoaderRoute: typeof ApiPublicGenerateBrandingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+    '/api/public/appointment-confirmation': {
+      id: '/api/public/appointment-confirmation'
+      path: '/api/public/appointment-confirmation'
+      fullPath: '/api/public/appointment-confirmation'
+      preLoaderRoute: typeof ApiPublicAppointmentConfirmationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/sms/inbound': {
-      id: '/api/public/sms/inbound'
-      path: '/api/public/sms/inbound'
-      fullPath: '/api/public/sms/inbound'
-      preLoaderRoute: typeof ApiPublicSmsInboundRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/tenants/$id': {
+      id: '/admin/tenants/$id'
+      path: '/$id'
+      fullPath: '/admin/tenants/$id'
+      preLoaderRoute: typeof AdminTenantsIdRouteImport
+      parentRoute: typeof AdminTenantsRoute
     }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/webhook': {
@@ -739,11 +718,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sms/inbound': {
+      id: '/api/public/sms/inbound'
+      path: '/api/public/sms/inbound'
+      fullPath: '/api/public/sms/inbound'
+      preLoaderRoute: typeof ApiPublicSmsInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/waitlist-notify': {
+      id: '/api/public/hooks/waitlist-notify'
+      path: '/api/public/hooks/waitlist-notify'
+      fullPath: '/api/public/hooks/waitlist-notify'
+      preLoaderRoute: typeof ApiPublicHooksWaitlistNotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
