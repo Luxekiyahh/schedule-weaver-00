@@ -206,25 +206,8 @@ export function LuxeAllureBookingFlow(props: {
 
       {/* Hero */}
       <header className="relative overflow-hidden">
-        <div className="grid lg:grid-cols-2">
-          <div className="order-2 lg:order-1 flex items-center px-7 py-14 sm:px-14 lg:py-24">
-            <div className="la-rise">
-              <p className="la-eyebrow">Makeup Artistry</p>
-              <h1 className="la-serif mt-5 text-5xl leading-[1.05] sm:text-6xl">
-                {workspaceName}
-              </h1>
-              <p className="mt-6 max-w-md text-[15px] leading-relaxed" style={{ color: "var(--la-muted)" }}>
-                Soft, luminous, camera-ready makeup, created for you. Studio appointments in a calm,
-                private space, or on-location glam wherever your day begins.
-              </p>
-              <div className="mt-9 flex flex-wrap items-center gap-6 text-[11px] uppercase tracking-[.28em]" style={{ color: "var(--la-gold)" }}>
-                <span className="inline-flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" /> Soft glam</span>
-                <span className="inline-flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" /> Full glam</span>
-                <span className="inline-flex items-center gap-2"><Car className="h-3.5 w-3.5" /> Travel available</span>
-              </div>
-            </div>
-          </div>
-          <div className="order-1 lg:order-2 relative flex min-h-[300px] items-center justify-center overflow-hidden bg-[#050505] px-7 py-14 lg:min-h-[560px]">
+        <div className="flex flex-col">
+          <div className="relative flex min-h-[260px] items-center justify-center overflow-hidden bg-[#050505] px-7 py-14 sm:min-h-[340px]">
             <div aria-hidden className="absolute inset-5 border border-white/10" />
             <img
               src={logoAsset.url}
@@ -233,6 +216,23 @@ export function LuxeAllureBookingFlow(props: {
               height={429}
               className="relative z-10 h-auto w-full max-w-[620px] object-contain"
             />
+          </div>
+          <div className="flex justify-center px-7 py-14 text-center sm:px-14 sm:py-16">
+            <div className="la-rise flex flex-col items-center">
+              <p className="la-eyebrow">Makeup Artistry</p>
+              <h1 className="la-serif mt-5 text-5xl leading-[1.05] sm:text-6xl">
+                {workspaceName}
+              </h1>
+              <p className="mt-6 max-w-md text-[15px] leading-relaxed" style={{ color: "var(--la-muted)" }}>
+                Soft, luminous, camera-ready makeup, created for you. Studio appointments in a calm,
+                private space, or on-location glam wherever your day begins.
+              </p>
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-6 text-[11px] uppercase tracking-[.28em]" style={{ color: "var(--la-gold)" }}>
+                <span className="inline-flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" /> Soft glam</span>
+                <span className="inline-flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" /> Full glam</span>
+                <span className="inline-flex items-center gap-2"><Car className="h-3.5 w-3.5" /> Travel available</span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
