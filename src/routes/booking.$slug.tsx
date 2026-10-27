@@ -25,15 +25,16 @@ import { toast } from "sonner";
 import { normalizeTheme, fontClass, cardRadius, layoutPadding, isColorDark } from "@/lib/theme";
 import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
 import { LuxeAllureBookingFlow } from "@/components/LuxeAllureBookingFlow";
+import { luxeLocationNote, type LuxeLocationMode } from "@/lib/luxe-booking-locations";
 import { AlluringDollsBookingFlow } from "@/components/AlluringDollsBookingFlow";
 
 export const Route = createFileRoute("/booking/$slug")({
   component: BookingPage,
   head: ({ params }) => {
     const isLuxe = params.slug === "luxe-allure-artistry";
-    const title = isLuxe ? "Book Luxe Allure Artistry | Makeup in Kissimmee" : `Book - ${params.slug}`;
+    const title = isLuxe ? "Book Luxe Allure Artistry | Kissimmee & Lakeland Makeup" : `Book - ${params.slug}`;
     const description = isLuxe
-      ? "Book soft glam or full glam makeup with Luxe Allure Artistry in Kissimmee, Florida, with studio and travel appointments available."
+      ? "Book soft glam or full glam makeup with Luxe Allure Artistry in Kissimmee and Lakeland, Florida, with studio and travel appointments available."
       : "Book an appointment online.";
     return {
       meta: [
@@ -109,7 +110,7 @@ function BookingPage() {
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
   // Luxe Allure Artistry: studio vs on-location glam.
-  const [locationMode, setLocationMode] = useState<"studio" | "travel">("studio");
+  const [locationMode, setLocationMode] = useState<LuxeLocationMode>("studio");
   const [travelAddress, setTravelAddress] = useState("");
 
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", notes: "" });
@@ -222,9 +223,7 @@ function BookingPage() {
     try {
       const isLuxe = data.workspace.slug === "luxe-allure-artistry";
       const locationNote = isLuxe
-        ? locationMode === "travel"
-          ? `Location: on location at ${travelAddress.trim()}`
-          : "Location: at the studio, Kissimmee, FL 34758"
+        ? luxeLocationNote(locationMode, travelAddress)
         : "";
       const chosenColor = (data.hairColors ?? []).find((c: any) => c.id === selectedColorId);
       const baseNotes = chosenColor
@@ -317,7 +316,6 @@ function BookingPage() {
       <LuxeAllureBookingFlow
         workspaceName={ws.name}
         timezone={(ws as { timezone?: string | null }).timezone ?? null}
-        studioAddress={(ws as { business_address?: string | null }).business_address ?? null}
         services={data.services}
         depositRequired={depositRequired}
         step={step} setStep={setStep}

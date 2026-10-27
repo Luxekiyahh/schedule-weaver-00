@@ -13,9 +13,12 @@ export function resolveAppointmentLocation(
 
   const locationChoice = match[1].trim();
   const travelPrefix = "on location at ";
+  const studioPrefix = "at the studio, ";
   const isTravel = locationChoice.toLowerCase().startsWith(travelPrefix);
   const location = isTravel
     ? locationChoice.slice(travelPrefix.length).trim()
+    : locationChoice.toLowerCase().startsWith(studioPrefix)
+      ? locationChoice.slice(studioPrefix.length).trim()
     : studioLocation?.trim() ?? "";
 
   return {
