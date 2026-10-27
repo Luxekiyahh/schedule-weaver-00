@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import logoAsset from "@/assets/luxe-allure-logo-gold.png.asset.json";
 import { isValidPhoneNumber, normalizePhoneToE164 } from "@/lib/phone";
+import { Button } from "@/components/ui/button";
+import { LUXE_STUDIO_LOCATIONS, type LuxeLocationMode } from "@/lib/luxe-booking-locations";
 
 /**
  * LUXE ALLURE ARTISTRY - bespoke booking experience.
@@ -31,7 +33,7 @@ type Service = {
   currency: string;
 };
 type Slot = { time: string; member_id: string };
-export type LocationMode = "studio" | "travel";
+export type LocationMode = LuxeLocationMode;
 
 const STEP_LABELS = ["Service", "Location", "Time", "Details"];
 
@@ -64,7 +66,6 @@ function durationLabel(min: number) {
 export function LuxeAllureBookingFlow(props: {
   workspaceName: string;
   timezone?: string | null;
-  studioAddress?: string | null;
   services: Service[];
   depositRequired: boolean;
   depositLabel?: string | null;
@@ -91,7 +92,7 @@ export function LuxeAllureBookingFlow(props: {
   onSubmit: () => void;
 }) {
   const {
-    workspaceName, timezone, studioAddress, services, depositRequired, depositLabel,
+    workspaceName, timezone, services, depositRequired, depositLabel,
     step, setStep, serviceId, setServiceId, locationMode, setLocationMode,
     travelAddress, setTravelAddress, monthCursor, setMonthCursor,
     selectedDate, setSelectedDate, slotsLoading, slots, selectedSlot, setSelectedSlot,
@@ -99,6 +100,7 @@ export function LuxeAllureBookingFlow(props: {
   } = props;
 
   const service = services.find((s) => s.id === serviceId) ?? null;
+  const studioAddress = LUXE_STUDIO_LOCATIONS.find((location) => location.id === locationMode)?.address;
 
   const days = useMemo(() => {
     const first = startOfMonth(monthCursor);
@@ -118,11 +120,11 @@ export function LuxeAllureBookingFlow(props: {
     form.lastName.trim() &&
     form.email.trim() &&
     phoneOk &&
-    (locationMode === "studio" || travelAddress.trim().length > 4);
+    (locationMode !== "travel" || travelAddress.trim().length > 4);
 
   const canAdvance =
     (step === 1 && !!service) ||
-    (step === 2 && (locationMode === "studio" || travelAddress.trim().length > 4)) ||
+    (step === 2 && (locationMode !== "travel" || travelAddress.trim().length > 4)) ||
     (step === 3 && !!selectedSlot);
 
   return (
@@ -342,33 +344,36 @@ export function LuxeAllureBookingFlow(props: {
               <div className="la-rise">
                 <p className="la-eyebrow">Step two</p>
                 <h2 className="la-serif mt-3 text-3xl">Where shall we glam?</h2>
-                <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                  <button
+                <div className="mt-8 grid gap-4">
+                  {LUXE_STUDIO_LOCATIONS.map((location) => (
+                    <Button
+                      key={location.id}
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setLocationMode(location.id)}
+                      aria-pressed={locationMode === location.id}
+                      data-selected={locationMode === location.id}
+                      className="la-option block h-auto w-full whitespace-normal rounded-sm p-6 text-left font-light"
+                    >
+                      <Home className="h-5 w-5" />
+                      <span className="la-serif mt-4 block text-2xl">{location.city} studio</span>
+                      <span className="mt-2 block text-[13px] leading-relaxed">{location.address}</span>
+                    </Button>
+                  ))}
+                  <Button
                     type="button"
-                    onClick={() => setLocationMode("studio")}
-                    data-selected={locationMode === "studio"}
-                    className="la-option rounded-sm p-6 text-left"
-                  >
-                    <Home className="h-5 w-5" style={{ color: "var(--la-gold)" }} />
-                    <h3 className="la-serif mt-4 text-2xl">At the studio</h3>
-                    <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--la-muted)" }}>
-                      {studioAddress
-                        ? studioAddress
-                        : "A calm, private studio space. The full address is sent with your confirmation."}
-                    </p>
-                  </button>
-                  <button
-                    type="button"
+                    variant="ghost"
                     onClick={() => setLocationMode("travel")}
+                    aria-pressed={locationMode === "travel"}
                     data-selected={locationMode === "travel"}
-                    className="la-option rounded-sm p-6 text-left"
+                    className="la-option block h-auto w-full whitespace-normal rounded-sm p-6 text-left font-light"
                   >
                     <Car className="h-5 w-5" style={{ color: "var(--la-gold)" }} />
-                    <h3 className="la-serif mt-4 text-2xl">I travel to you</h3>
-                    <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--la-muted)" }}>
+                    <span className="la-serif mt-4 block text-2xl">I travel to you</span>
+                    <span className="mt-2 block text-[13px] leading-relaxed" style={{ color: "var(--la-muted)" }}>
                       Home, hotel or venue. Share the address and I will arrive fully set up.
-                    </p>
-                  </button>
+                    </span>
+                  </Button>
                 </div>
 
                 {locationMode === "travel" && (
@@ -537,7 +542,7 @@ export function LuxeAllureBookingFlow(props: {
                         {fmtTime(selectedSlot.time)}
                       </p>
                       <p>
-                        {locationMode === "studio"
+                        {locationMode !== "travel"
                           ? `At the studio${studioAddress ? `, ${studioAddress}` : ""}`
                           : `On location: ${travelAddress}`}
                       </p>
